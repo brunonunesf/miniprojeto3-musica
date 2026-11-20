@@ -52,7 +52,9 @@ A tela de usuários é a demonstração original do esqueleto. Os detalhes estã
 
 Cada integrante pode contribuir com código e documentação. Para implementação, o guia oficial sugere uma branch por feature e revisão por outra pessoa. As responsabilidades serão combinadas entre os três; nenhuma foi atribuída automaticamente.
 
-Por solicitação do time, esta preparação não cria issues nem PRs. O fluxo de issues descrito nos guias fica para quando o time iniciar a implementação.
+As [issues iniciais](https://github.com/brunonunesf/miniprojeto3-musica/issues) organizam o núcleo, os diferenciais musicais e a avaliação de ideias opcionais. São um ponto de partida: qualquer integrante com acesso ao repositório pode criar novas issues, sugerir funcionalidades e discutir mudanças de escopo. Não é necessário estar atribuído a uma issue para propor outra. As responsabilidades serão combinadas pelo time.
+
+Usem o template de feature ou abram uma issue em branco para decisões, dúvidas e novas ideias. O repositório é privado: pessoas sem acesso precisam ser convidadas antes de participar.
 
 **Entrega:** 27/11/2026, conforme o material oficial. O guia de setup menciona um convite do GitHub Classroom para gerar o repositório do time. Como esse convite não foi fornecido, este repositório foi preparado na conta de Bruno; confirmem com a organização se a entrega deverá ser vinculada ou transferida para o Classroom.
 

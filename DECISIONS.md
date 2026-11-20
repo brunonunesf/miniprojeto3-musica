@@ -55,9 +55,11 @@ A conversa menciona aplicação de ML, mas a proposta específica não está des
 ## Organização e entrega
 
 - O time decidirá a divisão das features e revisará as contribuições entre si.
-- Não foram criadas issues ou PRs nesta preparação, conforme pedido de Bruno.
+- Após a preparação inicial, Bruno autorizou a criação das issues iniciais. Elas organizam o trabalho sem fechar o escopo: qualquer integrante com acesso pode abrir novas propostas. Responsáveis permanecem a combinar; nenhum PR de implementação foi criado.
 - O guia oficial menciona GitHub Classroom. O convite não foi fornecido; confirmar o destino exigido para a entrega antes da submissão.
 
 ## Uso de IA
 
 Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sobre música, consultar o material do miniprojeto e preparar o repositório e esta documentação. Não implementou funcionalidades da rede social, não transcreveu áudios e não definiu decisões de produto ausentes da conversa.
+
+Codex também foi usado para organizar e abrir as issues iniciais com critérios de conclusão e dependências sugeridas, mantendo ideias opcionais separadas de compromissos de implementação.

@@ -6,8 +6,16 @@ labels: feature
 ---
 
 **Feature:** <!-- nome da feature; pode ser do CATALOGO.md ou ideia do time -->
-**Dono:** <!-- @username, o mesmo do DECISIONS.md -->
+**Dono:** <!-- opcional ao propor; combinar com o time antes de implementar -->
 **Por que ela entra no produto:** <!-- uma frase -->
+
+## Resultado esperado
+
+<!-- Descreva o que a pessoa poderá fazer e como verificar que funciona. -->
+
+## Dependências e decisões em aberto
+
+<!-- Relacione issues existentes quando necessário. Novas ideias são bem-vindas. -->
 
 ## Checklist
 
