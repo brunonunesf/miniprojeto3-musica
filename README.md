@@ -1,92 +1,61 @@
-# Mini-projeto 3: rede social de nicho
+# Rede social de descoberta musical
 
-Cada time constrói uma rede social para uma comunidade que escolhe (música,
-corrida, leitura, jogos da atlética...). A turma tem 7 times: 4 de 4 pessoas e
-3 de 3. A stack é FastAPI + SQLAlchemy + SQLite no backend e Next.js +
-TypeScript + Tailwind no frontend. Todos partem do mesmo ponto: um exemplo que
-já funciona, só de usuários (do banco até a tela), e a lista de testes do
-núcleo, que cada time implementa. Depois do núcleo, o catálogo traz ideias de
-features, e cada time escolhe as que fazem sentido para o seu nicho. O projeto
-é um exercício para treinar o senso de produto, então cada rede acaba
-diferente da outra.
+Mini-projeto 3 do TRILHA, desenvolvido por **Bruno Nunes (@brunonunesf), Cecília Candeia (@cec1l14) e Daniel Dantas (@dnieldantas)**.
 
-Este é o treino final antes do hackathon de novembro.
+A proposta é descobrir e divulgar músicas pelas recomendações de outras pessoas, registrar como essas descobertas se espalham e reconhecer quem contribui para elas. Isso pode dar visibilidade a artistas pequenos e independentes.
 
-## O que ler
+**MeetMusic é apenas o nome provisório citado na conversa**; o grupo comentou que ele já é usado por outro site. O nome definitivo está em aberto.
 
-| Documento | Para quê |
-|---|---|
-| [RUBRICA.md](RUBRICA.md) | Como vamos avaliar. Leiam hoje. |
-| [CATALOGO.md](CATALOGO.md) | Ideias de features para escolher. |
-| [CONTRATO.md](CONTRATO.md) | Sugestão de rotas, campos e status para as ideias do catálogo. |
-| [DECISIONS.md](DECISIONS.md) | O que o time preenche: produto, decisões, features, uso de IA. |
-| [docs/guias/](docs/guias/) | Setup, autenticação, git em equipe, deploy e outros. |
+## Ideias discutidas
 
-## Como começar
+- **Feed de reviews de músicas**, com curtidas e comentários.
+- **Árvores de recomendações:** uma review publicada a partir de outra se conecta à publicação de origem.
+- **Reputação:** curtidas e novas recomendações geram pontos para quem participa da corrente; a parcela diminui conforme a distância até a publicação que gerou a interação.
+- **Bibliotecas pessoais:** músicas descobertas por meio de outras pessoas e músicas recomendadas pelo próprio usuário.
+- **Perfis e follow:** acompanhar pessoas, suas recomendações, reputação e árvores.
 
-Instalem as dependências uma vez:
+Exemplo: Ana recomenda uma música; Júlia a descobre pelo post de Ana e publica uma review derivada; Pedro faz o mesmo pelo post de Júlia. A corrente fica **Ana → Júlia → Pedro**. Uma curtida no post de Pedro pode pontuar os três, com valores decrescentes. **Curtir não cria uma conexão na árvore; publicar uma review derivada cria.** A fórmula de pontuação ainda precisa ser definida pelo time.
+
+Também foram sugeridos grupos de amigos para comparar e conversar sobre o que ouviram na semana e mensagens diretas. São possibilidades em discussão, sem compromisso de implementação nesta etapa.
+
+## Estado inicial
+
+Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. A rede musical ainda não está implementada. O código de exemplo e os testes do núcleo foram preservados.
+
+- Backend: FastAPI, SQLAlchemy e SQLite.
+- Frontend: Next.js, TypeScript e Tailwind.
+- [Decisões e pontos em aberto](DECISIONS.md).
+- [Instruções originais do projeto](docs/README-base-trilha.md), [avaliação](RUBRICA.md), [catálogo](CATALOGO.md) e [guias](docs/guias/).
+
+### Preparar o ambiente
 
 ```bash
+git clone https://github.com/brunonunesf/miniprojeto3-musica.git
+cd miniprojeto3-musica
 cd backend && uv sync && cd ..
 cd frontend && npm install && cp .env.local.example .env.local && cd ..
+make check
+make seed
+make test
 ```
 
-Depois validem o ambiente:
+Rodar em dois terminais:
 
 ```bash
-make check      # tudo precisa ficar verde
-make seed       # cria 3 usuários de exemplo
-make test       # deve mostrar "4 passed, 10 skipped"
+make dev-back   # http://localhost:8000/docs
+make dev-front  # http://localhost:3000/usuarios
 ```
 
-Para rodar o projeto, abram dois terminais:
+A tela de usuários é a demonstração original do esqueleto. Os detalhes estão no [guia de setup](docs/guias/00-setup.md).
 
-```bash
-make dev-back   # API em localhost:8000, Swagger em localhost:8000/docs
-make dev-front  # site em localhost:3000/usuarios
-```
+## Trabalho em equipe
 
-Se algum comando falhar, vejam o [guia 00](docs/guias/00-setup.md).
+Cada integrante pode contribuir com código e documentação. Para implementação, o guia oficial sugere uma branch por feature e revisão por outra pessoa. As responsabilidades serão combinadas entre os três; nenhuma foi atribuída automaticamente.
 
-## Primeiros passos do time
+Por solicitação do time, esta preparação não cria issues nem PRs. O fluxo de issues descrito nos guias fica para quando o time iniciar a implementação.
 
-1. Leiam o slice de exemplo (`/usuarios`, do model à página). Toda feature
-   nova segue o mesmo caminho.
-2. Escolham o nicho e comecem a seção Produto e a tabela de donos no
-   [DECISIONS.md](DECISIONS.md). Não precisa ficar pronto agora: o arquivo muda
-   junto com o projeto.
-3. Abram uma issue por feature (há um template). O PR que entrega a feature
-   fecha a issue com `Closes #N`.
-4. Façam o núcleo antes do menu. Divisão de trabalho sugerida: [guia 07](docs/guias/07-organizacao-do-time.md).
+**Entrega:** 27/11/2026, conforme o material oficial. O guia de setup menciona um convite do GitHub Classroom para gerar o repositório do time. Como esse convite não foi fornecido, este repositório foi preparado na conta de Bruno; confirmem com a organização se a entrega deverá ser vinculada ou transferida para o Classroom.
 
-## Os testes do núcleo
+## Origem da proposta
 
-Os testes de `backend/tests/test_nucleo.py` são um roteiro. Um teste `skipped`
-é uma tarefa que ainda falta: removam o `@skip`, vejam o teste falhar e
-implementem até passar. Eles ajudam o time, mas não valem nota.
-
-## Estruturas de dados
-
-Quando fizer sentido, guardem a lógica de uma feature numa estrutura de dados
-em `backend/app/core/`, em Python puro, e façam o endpoint usá-la. Usem
-`core/contadores.py` como modelo. Isso conta no critério de organização do
-código, e a estrutura escolhida vale uma boa explicação no `DECISIONS.md`.
-
-## Uso de IA
-
-IA é permitida. Registrem no `DECISIONS.md` onde e como vocês a usaram.
-
-## Prazos
-
-| Marco | Data |
-|---|---|
-| Início | segunda, 16/11/2026 |
-| Entrega final | sexta, 27/11/2026 |
-
-## Guias
-
-Os guias ficam em `docs/guias/`: 00 setup, 01 autenticação (comecem por aqui),
-02 git em equipe, 03 boas práticas, 04 erros clássicos, 05 JWT (opcional),
-06 upload, 07 organização do time, 08 deploy, 09 escrever um teste seu (opcional), 10 do zero ao
-esqueleto. Para ideias com estrutura de dados, vejam `docs/estruturas/` (grafos,
-árvores, heaps e tries).
+Síntese das mensagens de texto sobre música da conversa do grupo em 18 e 19/11/2026, priorizando a proposta detalhada de Daniel em 19/11. Os áudios não foram transcritos e seu conteúdo não foi inferido. O histórico privado, os áudios e os demais anexos não fazem parte do repositório.

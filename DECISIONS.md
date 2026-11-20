@@ -1,69 +1,63 @@
 # Decisões do time
 
-**Time:** _(nomes e usernames do GitHub)_
+**Time:** Bruno Nunes (@brunonunesf), Cecília Candeia (@cec1l14) e Daniel Dantas (@dnieldantas).
 
-Este arquivo acompanha o projeto. Comecem com o que já sabem e atualizem quando
-as decisões mudarem.
+Documento inicial baseado nas mensagens de texto da conversa de WhatsApp. Ideias discutidas não significam funcionalidades prontas nem escopo fechado.
 
 ## Produto
 
-Respondam antes de escolher features. O pitch sai daqui.
+- **Público inicial proposto:** ouvintes que descobrem músicas pelas indicações de amigos e outros ouvintes, com atenção à divulgação de artistas pequenos e independentes. O recorte mais específico ainda será validado pelo time.
+- **Problema:** recomendações isoladas não mostram a corrente de descobertas nem reconhecem as pessoas que ajudaram uma música a chegar a novos ouvintes.
+- **Como a rede resolve:** conectar reviews derivadas às suas origens e tornar visível a contribuição das pessoas por meio de árvores de recomendações e reputação.
+- **Impacto pretendido:** incentivar a descoberta e a divulgação de artistas com menor visibilidade, como Daniel destacou na conversa.
+- **Sinal de sucesso proposto, a validar:** pessoas descobrem uma música por outra pessoa e publicam uma review ligada à recomendação original.
 
-- **Público:** _(quem usa a rede, o mais específico possível: "corredores
-  iniciantes da UFPB", não "pessoas que gostam de esporte")_
-- **Problema:** _(o que essa pessoa tenta fazer hoje e onde isso falha)_
-- **Como a rede resolve:** _(uma ou duas frases)_
-- **Como saberíamos que funcionou:** _(um sinal observável: "a pessoa volta
-  no dia seguinte para ver o treino dos amigos")_
+## Direções de produto registradas
 
-## Decisões de produto
+### 1. Descoberta musical com origem visível
 
-Registrem de 3 a 5 escolhas que mudaram o que a rede é. Boas candidatas: por
-que essas features e não outras, o que ficou de fora, como o seed e a interface
-refletem o nicho. Uma delas vai para o vídeo.
+A referência inicial foi um “Letterboxd de músicas”. A conversa citou Music Board como concorrente e levantou a preocupação com diferenciação. A proposta posterior de Daniel acrescenta árvores de recomendações e reconhecimento de quem divulga. A comparação com concorrentes é um relato da conversa, não uma pesquisa verificada neste repositório.
 
-### 1. _(título curto)_
+### 2. Reviews derivadas criam conexões
 
-- **Contexto:** _(o que estava em jogo)_
-- **Opções:** _(o que vocês consideraram)_
-- **Escolha:** _(o que fizeram)_
-- **O que cortamos e por quê:** _(o custo da escolha)_
+Uma nova review vinculada à anterior cria uma conexão na árvore. Curtir apenas gera uma interação; não adiciona uma pessoa à árvore. Exemplo: Ana → Júlia → Pedro.
 
-Exemplo:
+### 3. Reputação distribuída pela corrente
 
-> **Feed cronológico em vez de "Em alta"**
->
-> - **Contexto:** a comunidade é de corredores que treinam juntos.
-> - **Opções:** feed ranqueado por engajamento ou feed cronológico.
-> - **Escolha:** cronológico, com stories do dia.
-> - **O que cortamos e por quê:** o "Em alta". Quem abre o app quer ver o
->   treino de hoje dos amigos, não o post mais curtido da semana.
+A proposta é que curtidas e novas recomendações gerem pontos, distribuídos também aos participantes anteriores, em parcelas menores conforme a distância. Pesos, profundidade máxima, tratamento de descurtidas, exclusões, repetições e prevenção de abuso continuam em aberto.
 
-## Features
+### 4. Nome e funcionalidades complementares em aberto
 
-Listem as features que o time vai construir, quem é o dono de cada uma e por
-que ela entra no produto. A lista muda junto com o projeto: acrescentem e
-tirem linhas quando mudarem de ideia.
+“MeetMusic” é placeholder: Daniel comentou que o nome já existe. Grupos de amigos, comparação semanal do que ouviram e mensagens diretas foram sugeridos, mas ainda não são compromisso de implementação. Um recorte exclusivamente paraibano foi levantado e considerado limitado; não foi adotado como restrição do produto.
 
-| Feature | Dono | Por quê (1 frase) |
+## Funcionalidades e responsabilidades
+
+Os itens de núcleo vêm da base oficial. Os demais são ideias da conversa; prioridade, escopo e donos serão definidos pelos três.
+
+| Funcionalidade | Situação | Dono |
 |---|---|---|
-| Auth (núcleo) | | |
-| Posts (núcleo) | | |
-| Feed (núcleo) | | |
-| Perfil (núcleo) | | |
-| Follow (núcleo) | | |
-| Curtidas (núcleo) | | |
-| Comentários (núcleo) | | |
-| Seed fake (núcleo) | | |
+| Autenticação, posts, feed, perfil, follow, curtidas e comentários | Núcleo a implementar conforme os testes da base | A combinar |
+| Seed de exemplo no nicho musical | Adaptar ao produto | A combinar |
+| Reviews e árvores de recomendações | Diferencial proposto | A combinar |
+| Reputação distribuída | Proposta; fórmula em aberto | A combinar |
+| Bibliotecas de descobertas e recomendações | Ideia descrita por Daniel | A combinar |
+| Grupos de amigos e conversa sobre a semana musical | Sugestão a avaliar | A combinar |
+| Mensagens diretas | Sugestão a avaliar | A combinar |
 
-## Uma escolha técnica
+## Escolhas técnicas pendentes
 
-Contem uma escolha técnica que o time fez e por quê. Por exemplo, por que usou
-uma estrutura de dados no `core/`, qual o Big O da operação principal, ou o
-que mudaria se a rede crescesse 100 vezes. Se mediram com `make bench`, colem a
-saída e uma frase dizendo o que os números mostram.
+A stack inicial é a do esqueleto oficial: FastAPI + SQLAlchemy + SQLite e Next.js + TypeScript + Tailwind. A árvore de recomendações sugere explorar uma estrutura de árvores, mas nenhuma representação, algoritmo ou complexidade foi escolhida ou medida ainda.
+
+Também faltam definir catálogo e identificação das músicas, eventual integração externa, regras para vincular reviews à origem e exibição das árvores. Não há integração com streaming aprovada.
+
+A conversa menciona aplicação de ML, mas a proposta específica não está descrita nos textos disponíveis. Não se assume que reputação seja ML; a aplicação e sua exigência precisam ser confirmadas pelo time no material do curso.
+
+## Organização e entrega
+
+- O time decidirá a divisão das features e revisará as contribuições entre si.
+- Não foram criadas issues ou PRs nesta preparação, conforme pedido de Bruno.
+- O guia oficial menciona GitHub Classroom. O convite não foi fornecido; confirmar o destino exigido para a entrega antes da submissão.
 
 ## Uso de IA
 
-Ferramenta e para quê. Exemplo: "Claude para gerar o seed de 200 posts sobre
-corrida; o resto foi escrito pelo time."
+Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sobre música, consultar o material do miniprojeto e preparar o repositório e esta documentação. Não implementou funcionalidades da rede social, não transcreveu áudios e não definiu decisões de produto ausentes da conversa.
