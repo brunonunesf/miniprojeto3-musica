@@ -11,6 +11,7 @@ Documento inicial baseado nas mensagens de texto da conversa de WhatsApp. Ideias
 - **Como a rede resolve:** conectar reviews derivadas às suas origens e tornar visível a contribuição das pessoas por meio de árvores de recomendações e reputação.
 - **Impacto pretendido:** incentivar a descoberta e a divulgação de artistas com menor visibilidade, como Daniel destacou na conversa.
 - **Sinal de sucesso proposto, a validar:** pessoas descobrem uma música por outra pessoa e publicam uma review ligada à recomendação original.
+- **Pendente de reunião (Etapa 1):** recorte específico do público (a rubrica valoriza algo como "estudantes da UFPB que querem descobrir artistas independentes locais" mais que "gente que gosta de música") e nome definitivo da rede. Enquanto isso, seed e interface usam o recorte provisório acima.
 
 ## Direções de produto registradas
 
@@ -34,15 +35,37 @@ A proposta é que curtidas e novas recomendações gerem pontos, distribuídos t
 
 Os itens de núcleo vêm da base oficial. Os demais são ideias da conversa; prioridade, escopo e donos serão definidos pelos três.
 
+Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos três. Pessoas A, B e C ainda não foram associadas a nomes.
+
+| Pessoa | Área | Núcleo | Feature musical |
+|---|---|---|---|
+| A (a confirmar) | Frontend | Auth, Perfil | Tela da árvore de recomendações |
+| B (a confirmar) | Backend | Posts, Feed, Curtidas, Comentários | Review com nota e `origem_id` |
+| C (a confirmar) | Dados | Follow, Seed fake | Reputação, estrutura em `core/` e deploy |
+
 | Funcionalidade | Situação | Dono |
 |---|---|---|
-| Autenticação, posts, feed, perfil, follow, curtidas e comentários | Núcleo a implementar conforme os testes da base | A combinar |
-| Seed de exemplo no nicho musical | Adaptar ao produto | A combinar |
-| Reviews e árvores de recomendações | Diferencial proposto | A combinar |
-| Reputação distribuída | Proposta; fórmula em aberto | A combinar |
+| Autenticação | Núcleo a implementar; gargalo, fazer primeiro (bypass `X-User-Id`, depois registro e login) | A |
+| Perfil | Núcleo a implementar | A |
+| Posts, feed, curtidas e comentários | Núcleo a implementar conforme os testes da base | B |
+| Follow | Núcleo a implementar | C |
+| Seed de exemplo no nicho musical | Adaptar ao produto; fazer por último | C |
+| Reviews (música + nota) e árvores de recomendações | Diferencial proposto | B (back), A (tela) |
+| Reputação distribuída | Proposta; versão mínima abaixo | C |
 | Bibliotecas de descobertas e recomendações | Ideia descrita por Daniel | A combinar |
 | Grupos de amigos e conversa sobre a semana musical | Sugestão a avaliar | A combinar |
 | Mensagens diretas | Sugestão a avaliar | A combinar |
+
+## Escopo e cortes (proposta)
+
+- **Entra:** núcleo oficial; review de música com nota; review derivada que aponta para a origem; visualização da árvore; reputação com pontuação decrescente por distância.
+- **Fica de fora, salvo sobra de tempo:** bibliotecas pessoais, grupos, mensagens diretas e integração com streaming. Motivo: o prazo é 27/11 e o núcleo ainda não existe; um diferencial funcionando vale mais que várias ideias incompletas.
+
+## Decisões técnicas propostas (a confirmar na reunião)
+
+1. **Catálogo de músicas:** campos `titulo` e `artista` na própria review, sem API externa.
+2. **Review como post:** a review é um post com campos extras (música, nota, `origem_id`), reaproveitando feed, curtidas e comentários.
+3. **Reputação, versão mínima e provisória:** autor do post que recebeu a interação e seus dois ancestrais mais próximos, com pesos 1, 1/2 e 1/4 e profundidade máxima 3. Descurtidas, repetições e prevenção de abuso seguem em aberto.
 
 ## Escolhas técnicas pendentes
 
@@ -63,3 +86,5 @@ A conversa menciona aplicação de ML, mas a proposta específica não está des
 Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sobre música, consultar o material do miniprojeto e preparar o repositório e esta documentação. Não implementou funcionalidades da rede social, não transcreveu áudios e não definiu decisões de produto ausentes da conversa.
 
 Codex também foi usado para organizar e abrir as issues iniciais com critérios de conclusão e dependências sugeridas, mantendo ideias opcionais separadas de compromissos de implementação.
+
+Claude Code foi usado para analisar a pasta do projeto, propor o plano de etapas até a entrega e redigir as seções de donos, escopo e decisões técnicas propostas acima. Essas propostas ainda dependem de confirmação do time.
