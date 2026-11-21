@@ -39,7 +39,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 | Pessoa | Área | Núcleo | Feature musical |
 |---|---|---|---|
-| A (a confirmar) | Frontend | Auth, Perfil | Tela da árvore de recomendações |
+| A (Cecília) | Frontend | Auth, Perfil | Tela da árvore de recomendações |
 | B (a confirmar) | Backend | Posts, Feed, Curtidas, Comentários | Review com nota e `origem_id` |
 | C (a confirmar) | Dados | Follow, Seed fake | Reputação, estrutura em `core/` e deploy |
 
@@ -87,6 +87,6 @@ Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sob
 
 Codex também foi usado para organizar e abrir as issues iniciais com critérios de conclusão e dependências sugeridas, mantendo ideias opcionais separadas de compromissos de implementação.
 
-Claude Code foi usado para analisar a pasta do projeto, propor o plano de etapas até a entrega e redigir as seções de donos, escopo e decisões técnicas propostas acima. Essas propostas ainda dependem de confirmação do time.
+Claude Code foi usado para analisar a pasta do projeto, propor o plano de etapas até a entrega e redigir as seções de donos, escopo e decisões técnicas propostas acima. Essas propostas estão sendo decididas pelo time.
 
-Claude Code também implementou o backend da autenticação do núcleo (bypass `X-User-Id`, registro, login, `/auth/eu`, model de sessão), atualizou o seed com os usuários `ana`, `bruno` e `carlos` e removeu o `@skip` dos três testes de auth. A implementação segue o guia 01 e foi verificada com `make test` (7 passed, 7 skipped). O código ainda precisa ser revisado por uma pessoa do time.
+Claude Code também implementou o backend da autenticação do núcleo (bypass `X-User-Id`, registro, login, `/auth/eu`, model de sessão) e atualizou o seed com os usuários `ana`, `bruno` e `carlos`. A implementação segue o guia 01 e foi verificada com `make test` (7 passed, 7 skipped). O código ainda precisa ser revisado por uma pessoa do time.
