@@ -13,11 +13,15 @@ from sqlalchemy import select
 
 from app.db import Base, SessionLocal, engine
 from app.models.user import User
+from app.services.auth import gerar_hash
+
+SENHA_SEED = "senha-forte-123"
+HASH_SEED = gerar_hash(SENHA_SEED)
 
 USUARIOS = [
-    User(username="ada", name="Ada Lovelace", bio="a primeira a programar"),
-    User(username="linus", name="Linus Torvalds", bio="just for fun"),
-    User(username="grace", name="Grace Hopper", bio="caçadora de bugs literais"),
+    User(username="ana", name="Ana", bio="descobrindo música nova todo dia", password_hash=HASH_SEED),
+    User(username="bruno", name="Bruno", bio="indie, rock e tudo que vier", password_hash=HASH_SEED),
+    User(username="carlos", name="Carlos", bio="fã de artistas independentes", password_hash=HASH_SEED),
 ]
 
 
