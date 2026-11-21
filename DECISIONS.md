@@ -45,7 +45,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 | Funcionalidade | Situação | Dono |
 |---|---|---|
-| Autenticação | Núcleo a implementar; gargalo, fazer primeiro (bypass `X-User-Id`, depois registro e login) | A |
+| Autenticação | Backend pronto na branch `feat/auth-bypass` (bypass `X-User-Id` com `DEBUG=true`, registro, login e `/auth/eu`), aguardando PR e revisão; telas de cadastro e login pendentes | A |
 | Perfil | Núcleo a implementar | A |
 | Posts, feed, curtidas e comentários | Núcleo a implementar conforme os testes da base | B |
 | Follow | Núcleo a implementar | C |
@@ -88,3 +88,5 @@ Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sob
 Codex também foi usado para organizar e abrir as issues iniciais com critérios de conclusão e dependências sugeridas, mantendo ideias opcionais separadas de compromissos de implementação.
 
 Claude Code foi usado para analisar a pasta do projeto, propor o plano de etapas até a entrega e redigir as seções de donos, escopo e decisões técnicas propostas acima. Essas propostas ainda dependem de confirmação do time.
+
+Claude Code também implementou o backend da autenticação do núcleo (bypass `X-User-Id`, registro, login, `/auth/eu`, model de sessão), atualizou o seed com os usuários `ana`, `bruno` e `carlos` e removeu o `@skip` dos três testes de auth. A implementação segue o guia 01 e foi verificada com `make test` (7 passed, 7 skipped). O código ainda precisa ser revisado por uma pessoa do time.
