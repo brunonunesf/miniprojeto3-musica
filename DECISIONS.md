@@ -59,7 +59,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 ## Escopo e cortes (proposta)
 
 - **Entra:** núcleo oficial; review de música com nota (nota ainda é proposta); review derivada que aponta para a origem; visualização da árvore; reputação com pontuação decrescente por distância.
-- **Fica de fora, salvo sobra de tempo:** bibliotecas pessoais, grupos, mensagens diretas e integração com streaming. Motivo: o prazo é 27/11 e o núcleo ainda não existe; um diferencial funcionando vale mais que várias ideias incompletas.
+- **Prioridade para a demonstração de 27/11:** árvores de recomendações e área personalizada “Descobrir” (#23), após o núcleo necessário. Reputação entra com a fórmula básica 4/2/1; detalhes de interface e otimizações podem evoluir depois. O time tentará entregar o máximo viável conforme o andamento. Bibliotecas, grupos, mensagens diretas e integrações com streaming não são pré-requisitos das duas prioridades.
 
 ## Decisões técnicas propostas (a confirmar na reunião)
 
@@ -73,7 +73,7 @@ A stack inicial é a do esqueleto oficial: FastAPI + SQLAlchemy + SQLite e Next.
 
 Também faltam definir catálogo e identificação das músicas, eventual integração externa, regras para vincular reviews à origem e exibição das árvores. Foram aprovadas issues opcionais para investigar e implementar sugestões de reescuta via Spotify e Deezer; acesso e viabilidade ainda precisam ser validados. Não há compromisso de reprodução de áudio ou de entrega dessas integrações em 27/11.
 
-A conversa menciona aplicação de ML, mas a proposta específica não está descrita nos textos disponíveis. Não se assume que reputação seja ML; a aplicação e sua exigência precisam ser confirmadas pelo time no material do curso.
+O time escolheu usar ML de forma simples na área “Descobrir” (#23): TF-IDF dos metadados musicais e similaridade de cosseno com preferências derivadas de curtidas e reviews. A rubrica disponível não menciona ML como exigência; confirmar com a organização se há instrução adicional. Reputação por fórmula não é ML.
 
 ## Organização e entrega
 
@@ -118,7 +118,7 @@ Jornada: Ana recomenda → Júlia escreve review derivada → Júlia volta a ouv
 
 Integrações e novas evoluções não viram automaticamente compromisso para 27/11. A validação de acesso ao Deezer é uma condição de viabilidade; caso bloqueada, a sincronização permanece pendente.
 
-Continuam em aberto: identidade canônica da música, fórmula final, exclusões e efeito sobre avisos/árvores, auto-interações, visibilidade das bibliotecas, conversão de raiz em derivada ou remoção de origem, exigência de ML e destino Classroom. A edição aprovada não decide trocar a música da review.
+Continuam em aberto: chave técnica da identidade de cada versão musical, evento que registra descoberta, conversão de raiz em derivada ou remoção de origem, exigência externa de ML e destino Classroom. A edição aprovada não decide trocar a música da review. As regras de pontuação, exclusão e privacidade estão nas seções abaixo.
 
 Codex atualizou documentação e issues para registrar estas decisões, preservando as propostas e contribuições recentes do time. Nenhuma funcionalidade foi implementada nesta atualização.
 
@@ -128,7 +128,7 @@ Codex atualizou documentação e issues para registrar estas decisões, preserva
 - **Descurtida:** ao desfazer uma curtida, os pontos que aquela curtida concedeu devem ser retirados. O valor exato segue pendente da fórmula.
 - **Auto-interação:** uma curtida na própria review pode dar uma recompensa pequena. O número exato e a ausência ou presença de propagação aos ancestrais ainda precisam ser acordados.
 - **Exclusão:** avisos de reescuta ligados a uma review excluída devem ser apagados. Reviews feitas por outras pessoas a partir dela devem permanecer. A forma de preservar a árvore e recalcular ou conservar reputação exige decisão adicional.
-- **Bibliotecas:** cada pessoa deve poder escolher se sua biblioteca fica pública ou privada, por meio de controle explícito. A ação que registra uma descoberta e o comportamento ao trocar a visibilidade ainda precisam ser especificados.
+- **Bibliotecas:** descobertas e recomendações terão controles de visibilidade separados. Descobertas começam privadas; recomendações, públicas. O dono pode alterar cada opção. Outras pessoas veem aviso de acesso restrito ao abrir uma lista privada, mesmo por link antigo, sem itens, contagem ou origens. Reviews publicadas permanecem visíveis. O evento que registra uma descoberta continua pendente.
 - **Prazo de 27/11:** o objetivo do time é entregar o máximo que for viável, ajustando o escopo ao andamento. Isso não aprova automaticamente todas as ideias opcionais nem elimina a necessidade de demonstrar os fluxos que forem anunciados como prontos.
 
 A fórmula de reputação e o destino dos descendentes/créditos na exclusão estão sendo discutidos; nenhuma opção apresentada pelo Codex deve ser tratada como decisão antes da resposta do time.
@@ -141,4 +141,15 @@ A fórmula de reputação e o destino dos descendentes/créditos na exclusão es
 - **Exemplo:** Ana → Júlia → Pedro. Uma curtida externa na review de Pedro dá 4 a Pedro, 2 a Júlia e 1 a Ana. Publicar a review de Pedro dá 4 a Júlia e 2 a Ana; não há terceiro ancestral nesse caminho. Uma curtida de Pedro na própria review dá 1 somente a Pedro.
 - **Exclusão:** excluir a review de Ana remove seu conteúdo e seus avisos de reescuta. A review de Júlia e as demais descendentes permanecem ligadas a um registro de origem apagada. O link para a review apagada abre uma página que informa que ela não existe mais, sem mostrar a análise. Mesmo após a exclusão, Ana conserva o crédito de origem: interações futuras com reviews descendentes continuam percorrendo o registro apagado e podem pontuar Ana conforme a fórmula. Ana pode publicar uma nova review da mesma música, como outra raiz, sem ligação automática com a antiga. A nova review não recupera o texto ou os avisos anteriores.
 
-A fórmula usa pontos inteiros, sem arredondamento. Caso o mesmo autor apareça em mais de um nível, a política de acumulação continua pendente; não presumir uma regra antiabuso sem decisão do time.
+A fórmula usa pontos inteiros, sem arredondamento. Caso o mesmo autor apareça em mais de um nível do mesmo evento, recebe somente sua maior parcela. O recálculo após edição de origem aplica a mesma regra.
+
+## Descobrir para você — prioridade de demonstração
+
+- **Local:** área própria “Descobrir”, separada do feed cronológico de pessoas seguidas.
+- **Sinais:** músicas analisadas e curtidas pela pessoa; review própria pesa 3 e curtida em review de outra pessoa pesa 1. Curtida própria não duplica o sinal da review.
+- **Dados:** gêneros, tags e artista associados a cada identidade musical. Não usar texto de review como aprovação automática. Original, remix e versão ao vivo são identidades distintas.
+- **Método inicial:** TF-IDF aprendido do catálogo local e similaridade de cosseno com o perfil de gosto. Não requer áudio, API de streaming ou treinamento supervisionado. É um recomendador simples; sua qualidade depende do catálogo e das interações disponíveis.
+- **Saída:** reviews públicas e ativas de músicas ainda não analisadas, uma por identidade musical, com motivo curto baseado em características compartilhadas. Sem sinais, exibir reviews recentes e variadas e explicar que a personalização começará com interações.
+- **Prioridade:** junto às árvores, é um dos dois diferenciais pretendidos para a demonstração de 27/11. Reputação básica permanece no escopo planejado; a implementação real será ajustada conforme o andamento.
+
+Implementação e validação estão na [issue #23](https://github.com/brunonunesf/miniprojeto3-musica/issues/23). O material consultado não confirma obrigação de ML. O guia de setup cita GitHub Classroom, mas o convite não está disponível; ambos precisam de confirmação externa para encerrar a #1 ou ser acompanhados separadamente com responsável definido.

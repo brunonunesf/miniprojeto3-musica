@@ -30,6 +30,10 @@ O aviso “Ouvi novamente” terá comentário opcional e limite de uma publica�
 
 Essas são decisões de planejamento, ainda não funcionalidades prontas. O registro manual continuará disponível. A fórmula final de reputação e a prioridade das evoluções para a entrega permanecem a combinar em [DECISIONS.md](DECISIONS.md).
 
+## Descobrir para você
+
+A proposta inclui uma área própria de sugestões de reviews, baseada em gêneros, tags e artista das músicas e nas curtidas e análises do usuário. Sem interações, a área mostra reviews recentes e variadas. [Planejamento e critérios da issue #23](https://github.com/brunonunesf/miniprojeto3-musica/issues/23). É uma das prioridades para a demonstração de 27/11, junto às árvores de recomendações.
+
 ## Estado inicial
 
 Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. A rede musical ainda não está implementada. O backend de autenticação já recebeu implementação; as demais funcionalidades evoluem nas issues do time.
