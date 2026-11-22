@@ -63,7 +63,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 ## Decisões técnicas propostas (a confirmar na reunião)
 
-1. **Catálogo de músicas:** campos `titulo` e `artista` na própria review, sem API externa como requisito do núcleo. A identidade canônica ainda precisa ser definida para garantir unicidade por pessoa/música e correspondência futura entre serviços.
+1. **Identificação das músicas:** a decisão de produto é distinguir cada faixa/versionamento selecionado. O modelo técnico deve guardar identificadores de serviço quando disponíveis e identificador local para entradas manuais; não presumir equivalência entre serviços apenas por título/artista.
 2. **Review como post:** a review é um post com campos extras (música, nota, `origem_id`), reaproveitando feed, curtidas e comentários.
 3. **Reputação:** a proposta anterior de pesos 1, 1/2 e 1/4 foi substituída pela decisão de 21/11/2026, descrita abaixo. A prevenção de abuso e o efeito de exclusões continuam em discussão.
 
@@ -71,9 +71,9 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 A stack inicial é a do esqueleto oficial: FastAPI + SQLAlchemy + SQLite e Next.js + TypeScript + Tailwind. A árvore de recomendações sugere explorar uma estrutura de árvores, mas nenhuma representação, algoritmo ou complexidade foi escolhida ou medida ainda.
 
-Também faltam definir catálogo e identificação das músicas, eventual integração externa, regras para vincular reviews à origem e exibição das árvores. Foram aprovadas issues opcionais para investigar e implementar sugestões de reescuta via Spotify e Deezer; acesso e viabilidade ainda precisam ser validados. Não há compromisso de reprodução de áudio ou de entrega dessas integrações em 27/11.
+O modelo técnico de catálogo, os identificadores externos e a interface das árvores serão definidos nas issues de implementação. Foram aprovadas issues opcionais para investigar e implementar sugestões de reescuta via Spotify e Deezer; acesso e viabilidade ainda precisam ser validados. Não há compromisso de reprodução de áudio ou de entrega dessas integrações em 27/11.
 
-O time escolheu usar ML de forma simples na área “Descobrir” (#23): TF-IDF dos metadados musicais e similaridade de cosseno com preferências derivadas de curtidas e reviews. A rubrica disponível não menciona ML como exigência; confirmar com a organização se há instrução adicional. Reputação por fórmula não é ML.
+O time validou o uso de ML de forma simples na área “Descobrir” (#23): TF-IDF dos metadados musicais e similaridade de cosseno com preferências derivadas de curtidas e reviews. A rubrica disponível não menciona ML como exigência; eventual instrução adicional da organização pode ser acompanhada na entrega. Reputação por fórmula não é ML.
 
 ## Organização e entrega
 
@@ -91,47 +91,32 @@ Claude Code foi usado para analisar a pasta do projeto, propor o plano de etapas
 
 Claude Code também implementou o backend da autenticação do núcleo (bypass `X-User-Id`, registro, login, `/auth/eu`, model de sessão) e atualizou o seed com os usuários `ana`, `bruno` e `carlos`. A implementação segue o guia 01 e foi verificada com `make test` (7 passed, 7 skipped). O código ainda precisa ser revisado por uma pessoa do time.
 
-## Decisões confirmadas com Bruno — 21/11/2026
+## Decisões de produto validadas pelo trio — 22/11/2026
 
-Estas definições complementam a discussão do time e orientam as issues; não indicam funcionalidades já implementadas. As propostas de responsáveis e pesos acima permanecem propostas, sem confirmação adicional nesta atualização.
+Bruno informou que Cecília e Daniel revisaram e validaram as decisões de produto discutidas. O nome “MeetMusic” permanece provisório; escolher outro nome não bloqueia as funcionalidades.
 
-| Tema | Decisão |
+| Tema | Regra aprovada |
 |---|---|
-| Público | Descoberta entre amigos, permitindo qualquer música e dando atenção a artistas menores. O time pode refinar o recorte. |
-| Review | Uma por pessoa/música, com texto editável; nova recomendação derivada exige review própria. |
-| Origem | Raiz não tem origem; cada derivada tem exatamente uma. É permitido corrigir a origem para outra review da mesma música sem criar ciclos, preservando os descendentes. |
-| Reputação após correção | Recalcular também as interações antigas conforme a árvore atual; créditos podem aumentar ou diminuir. A fórmula final permanece pendente. |
-| Reescuta | Aviso separado no feed com comentário opcional; uma publicação por pessoa/música a cada intervalo móvel de 24 horas. |
-| Histórico dos avisos | Avisos mantêm sua data/comentário e apontam para a análise atual, identificada como editada quando aplicável. |
-| Efeito do aviso | Não cria nova review, nó ou pontos; curtidas e novas recomendações se vinculam à review original. |
-| Streaming | Integrações opcionais sugerem reescutas, sempre confirmadas pelo usuário antes de publicar; registro manual continua disponível. |
+| Público | Descoberta de músicas entre amigos, com espaço para artistas menores. |
+| Identidade da música | Cada faixa/versionamento selecionado no aplicativo de música é um item próprio: gravação original, remix e versão ao vivo podem receber reviews diferentes. Quando uma faixa vier de Spotify ou Deezer, guardar identificador do serviço; para entrada local, usar identificador interno. Relacionar faixas de serviços diferentes somente após confirmar que representam a mesma gravação. |
+| Review | Uma review ativa e editável por pessoa e item musical. Nova recomendação derivada exige texto próprio e uma única origem. Raiz não tem origem. |
+| Descoberta | Publicar uma review derivada registra na biblioteca que a música foi descoberta a partir daquela origem. Publicar uma review independente registra recomendação própria, sem afirmar descoberta por outra pessoa. Visitar ou curtir não registra escuta. |
+| Origem | O autor pode corrigir para outra review da mesma música sem criar ciclos; descendentes permanecem. Corrigir a origem recalcula pontos antigos e futuros. |
+| Reescuta | Aviso separado no feed com comentário opcional, no máximo um por pessoa/música a cada 24 horas; aponta para a review atual, mas preserva data e comentário do aviso. Não cria nó nem pontua. |
+| Bibliotecas | Controles separados. Descobertas começam privadas e recomendações públicas; o dono pode alternar. Terceiros veem aviso de acesso restrito para lista privada, sem itens, contagem ou origens. Reviews públicas seguem visíveis. |
+| Prioridade | Para 27/11, tentar entregar o máximo viável, com árvores e área “Descobrir” (#23) como diferenciais de demonstração e reputação 4/2/1 básica. |
+| ML | Escolha de produto: recomendar faixas e reviews em “Descobrir” com TF-IDF e similaridade, usando curtidas e reviews como sinais. O material disponível não afirma que ML é obrigação do curso. |
+| Classroom | Não é condição para fechar esta decisão; o time usará o repositório atual como trabalho útil e seguirá as instruções de entrega que receber. |
 
-Jornada: Ana recomenda → Júlia escreve review derivada → Júlia volta a ouvir e publica um aviso com comentário → outra pessoa abre a review de Júlia e continua a corrente. Se Júlia corrigir sua origem, seus descendentes permanecem ligados a ela e os créditos antigos são recalculados.
+**Decisão adiada:** transformar uma raiz em derivada ou remover a origem de uma derivada. A primeira versão permite corrigir uma origem já existente; ampliar esse fluxo exige regra e teste próprios. Spotify e Deezer continuam integrações opcionais para sugerir reescutas confirmadas pelo usuário.
 
-### Issues derivadas
+**Exemplo de corrente:** Ana recomenda; Júlia publica uma review derivada da de Ana; Pedro publica outra a partir da de Júlia. Uma segunda pessoa pode publicar a partir da review de Ana, formando outro ramo. Cada review derivada tem uma origem, e curtidas não acrescentam nós.
 
-- [#18 — Registrar e publicar reescutas](https://github.com/brunonunesf/miniprojeto3-musica/issues/18).
-- [#19 — Corrigir origem](https://github.com/brunonunesf/miniprojeto3-musica/issues/19).
-- [#20 — Recalcular reputação](https://github.com/brunonunesf/miniprojeto3-musica/issues/20).
-- [#21 — Spotify](https://github.com/brunonunesf/miniprojeto3-musica/issues/21).
-- [#22 — Deezer](https://github.com/brunonunesf/miniprojeto3-musica/issues/22).
+### Issues relacionadas
 
-Integrações e novas evoluções não viram automaticamente compromisso para 27/11. A validação de acesso ao Deezer é uma condição de viabilidade; caso bloqueada, a sincronização permanece pendente.
-
-Continuam em aberto: chave técnica da identidade de cada versão musical, evento que registra descoberta, conversão de raiz em derivada ou remoção de origem, exigência externa de ML e destino Classroom. A edição aprovada não decide trocar a música da review. As regras de pontuação, exclusão e privacidade estão nas seções abaixo.
-
-Codex atualizou documentação e issues para registrar estas decisões, preservando as propostas e contribuições recentes do time. Nenhuma funcionalidade foi implementada nesta atualização.
-
-## Regras adicionais confirmadas com Bruno — 21/11/2026
-
-- **Versões de música:** gravação original, remix e versão ao vivo são itens musicais distintos, pois podem suscitar análises diferentes. A unicidade de uma review por pessoa se aplica a cada versão identificada. A chave técnica e o tratamento de edições/remasterizações ainda precisam ser definidos.
-- **Descurtida:** ao desfazer uma curtida, os pontos que aquela curtida concedeu devem ser retirados. O valor exato segue pendente da fórmula.
-- **Auto-interação:** uma curtida na própria review pode dar uma recompensa pequena. O número exato e a ausência ou presença de propagação aos ancestrais ainda precisam ser acordados.
-- **Exclusão:** avisos de reescuta ligados a uma review excluída devem ser apagados. Reviews feitas por outras pessoas a partir dela devem permanecer. A forma de preservar a árvore e recalcular ou conservar reputação exige decisão adicional.
-- **Bibliotecas:** descobertas e recomendações terão controles de visibilidade separados. Descobertas começam privadas; recomendações, públicas. O dono pode alterar cada opção. Outras pessoas veem aviso de acesso restrito ao abrir uma lista privada, mesmo por link antigo, sem itens, contagem ou origens. Reviews publicadas permanecem visíveis. O evento que registra uma descoberta continua pendente.
-- **Prazo de 27/11:** o objetivo do time é entregar o máximo que for viável, ajustando o escopo ao andamento. Isso não aprova automaticamente todas as ideias opcionais nem elimina a necessidade de demonstrar os fluxos que forem anunciados como prontos.
-
-A fórmula de reputação e o destino dos descendentes/créditos na exclusão estão sendo discutidos; nenhuma opção apresentada pelo Codex deve ser tratada como decisão antes da resposta do time.
+- [#9 — Música e review](https://github.com/brunonunesf/miniprojeto3-musica/issues/9); [#10 — Árvore](https://github.com/brunonunesf/miniprojeto3-musica/issues/10); [#11 — Reputação](https://github.com/brunonunesf/miniprojeto3-musica/issues/11); [#12 — Bibliotecas](https://github.com/brunonunesf/miniprojeto3-musica/issues/12).
+- [#18 — Reescutas](https://github.com/brunonunesf/miniprojeto3-musica/issues/18); [#19 — Correção de origem](https://github.com/brunonunesf/miniprojeto3-musica/issues/19); [#20 — Recálculo](https://github.com/brunonunesf/miniprojeto3-musica/issues/20); [#23 — Descobrir](https://github.com/brunonunesf/miniprojeto3-musica/issues/23).
+- [#21 — Spotify](https://github.com/brunonunesf/miniprojeto3-musica/issues/21) e [#22 — Deezer](https://github.com/brunonunesf/miniprojeto3-musica/issues/22) são opcionais.
 
 ## Fórmula e exclusão confirmadas com Bruno — 21/11/2026
 
@@ -152,4 +137,4 @@ A fórmula usa pontos inteiros, sem arredondamento. Caso o mesmo autor apareça 
 - **Saída:** reviews públicas e ativas de músicas ainda não analisadas, uma por identidade musical, com motivo curto baseado em características compartilhadas. Sem sinais, exibir reviews recentes e variadas e explicar que a personalização começará com interações.
 - **Prioridade:** junto às árvores, é um dos dois diferenciais pretendidos para a demonstração de 27/11. Reputação básica permanece no escopo planejado; a implementação real será ajustada conforme o andamento.
 
-Implementação e validação estão na [issue #23](https://github.com/brunonunesf/miniprojeto3-musica/issues/23). O material consultado não confirma obrigação de ML. O guia de setup cita GitHub Classroom, mas o convite não está disponível; ambos precisam de confirmação externa para encerrar a #1 ou ser acompanhados separadamente com responsável definido.
+Implementação e validação estão na [issue #23](https://github.com/brunonunesf/miniprojeto3-musica/issues/23). O material consultado não confirma obrigação de ML. O guia de setup cita GitHub Classroom, mas o convite não está disponível; a decisão do produto não depende dele.
