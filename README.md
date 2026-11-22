@@ -18,9 +18,21 @@ Exemplo: Ana recomenda uma música; Júlia a descobre pelo post de Ana e publica
 
 Também foram sugeridos grupos de amigos para comparar e conversar sobre o que ouviram na semana e mensagens diretas. São possibilidades em discussão, sem compromisso de implementação nesta etapa.
 
+## Decisões recentes e próximas entregas
+
+Cada pessoa terá uma review por música, com texto editável. Reviews derivadas têm uma única origem, que poderá ser corrigida sem criar ciclos; seus descendentes serão preservados e a reputação anterior será recalculada conforme a nova árvore.
+
+O aviso “Ouvi novamente” terá comentário opcional e limite de uma publicação por pessoa/música a cada 24 horas. Ele aponta para a análise atual, sem criar outra review ou pontuar sozinho. Sua data e comentário permanecem nos avisos antigos.
+
+- [#18: reescutas](https://github.com/brunonunesf/miniprojeto3-musica/issues/18).
+- [#19: correção de origem](https://github.com/brunonunesf/miniprojeto3-musica/issues/19) e [#20: recálculo de reputação](https://github.com/brunonunesf/miniprojeto3-musica/issues/20).
+- [#21: Spotify](https://github.com/brunonunesf/miniprojeto3-musica/issues/21) e [#22: Deezer](https://github.com/brunonunesf/miniprojeto3-musica/issues/22): integrações opcionais para sugerir reescutas, com confirmação antes de publicar e dependentes da disponibilidade de acesso às APIs.
+
+Essas são decisões de planejamento, ainda não funcionalidades prontas. O registro manual continuará disponível. A fórmula final de reputação e a prioridade das evoluções para a entrega permanecem a combinar em [DECISIONS.md](DECISIONS.md).
+
 ## Estado inicial
 
-Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. A rede musical ainda não está implementada. O código de exemplo e os testes do núcleo foram preservados.
+Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. A rede musical ainda não está implementada. O backend de autenticação já recebeu implementação; as demais funcionalidades evoluem nas issues do time.
 
 - Backend: FastAPI, SQLAlchemy e SQLite.
 - Frontend: Next.js, TypeScript e Tailwind.
