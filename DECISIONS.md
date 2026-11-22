@@ -121,3 +121,14 @@ Integrações e novas evoluções não viram automaticamente compromisso para 27
 Continuam em aberto: identidade canônica da música, fórmula final, exclusões e efeito sobre avisos/árvores, auto-interações, visibilidade das bibliotecas, conversão de raiz em derivada ou remoção de origem, exigência de ML e destino Classroom. A edição aprovada não decide trocar a música da review.
 
 Codex atualizou documentação e issues para registrar estas decisões, preservando as propostas e contribuições recentes do time. Nenhuma funcionalidade foi implementada nesta atualização.
+
+## Regras adicionais confirmadas com Bruno — 21/11/2026
+
+- **Versões de música:** gravação original, remix e versão ao vivo são itens musicais distintos, pois podem suscitar análises diferentes. A unicidade de uma review por pessoa se aplica a cada versão identificada. A chave técnica e o tratamento de edições/remasterizações ainda precisam ser definidos.
+- **Descurtida:** ao desfazer uma curtida, os pontos que aquela curtida concedeu devem ser retirados. O valor exato segue pendente da fórmula.
+- **Auto-interação:** uma curtida na própria review pode dar uma recompensa pequena. O número exato e a ausência ou presença de propagação aos ancestrais ainda precisam ser acordados.
+- **Exclusão:** avisos de reescuta ligados a uma review excluída devem ser apagados. Reviews feitas por outras pessoas a partir dela devem permanecer. A forma de preservar a árvore e recalcular ou conservar reputação exige decisão adicional.
+- **Bibliotecas:** cada pessoa deve poder escolher se sua biblioteca fica pública ou privada, por meio de controle explícito. A ação que registra uma descoberta e o comportamento ao trocar a visibilidade ainda precisam ser especificados.
+- **Prazo de 27/11:** o objetivo do time é entregar o máximo que for viável, ajustando o escopo ao andamento. Isso não aprova automaticamente todas as ideias opcionais nem elimina a necessidade de demonstrar os fluxos que forem anunciados como prontos.
+
+A fórmula de reputação e o destino dos descendentes/créditos na exclusão estão sendo discutidos; nenhuma opção apresentada pelo Codex deve ser tratada como decisão antes da resposta do time.
