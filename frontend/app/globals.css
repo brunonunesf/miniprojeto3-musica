@@ -1,1 +1,16 @@
 @import "tailwindcss";
+
+@theme {
+  --color-fundo: #fbf5ec;
+  --color-superficie: #fffcf7;
+  --color-texto: #2e1f15;
+  --color-suave: #7b6555;
+  --color-borda: #e8d9c5;
+  --color-marca: #c2410c;
+  --color-marca-forte: #9a3412;
+  --color-destaque: #f2b550;
+  --color-erro-fundo: #fdeae4;
+  --color-erro-borda: #f3c2b4;
+  --color-erro-texto: #9b2c1a;
+  --font-titulo: Georgia, "Times New Roman", serif;
+}
