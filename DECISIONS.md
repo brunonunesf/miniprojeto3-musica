@@ -65,7 +65,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 1. **Catálogo de músicas:** campos `titulo` e `artista` na própria review, sem API externa como requisito do núcleo. A identidade canônica ainda precisa ser definida para garantir unicidade por pessoa/música e correspondência futura entre serviços.
 2. **Review como post:** a review é um post com campos extras (música, nota, `origem_id`), reaproveitando feed, curtidas e comentários.
-3. **Reputação, versão mínima e provisória:** autor do post que recebeu a interação e seus dois ancestrais mais próximos, com pesos 1, 1/2 e 1/4 e profundidade máxima 3. Descurtidas, repetições e prevenção de abuso seguem em aberto.
+3. **Reputação:** a proposta anterior de pesos 1, 1/2 e 1/4 foi substituída pela decisão de 21/11/2026, descrita abaixo. A prevenção de abuso e o efeito de exclusões continuam em discussão.
 
 ## Escolhas técnicas pendentes
 
@@ -132,3 +132,13 @@ Codex atualizou documentação e issues para registrar estas decisões, preserva
 - **Prazo de 27/11:** o objetivo do time é entregar o máximo que for viável, ajustando o escopo ao andamento. Isso não aprova automaticamente todas as ideias opcionais nem elimina a necessidade de demonstrar os fluxos que forem anunciados como prontos.
 
 A fórmula de reputação e o destino dos descendentes/créditos na exclusão estão sendo discutidos; nenhuma opção apresentada pelo Codex deve ser tratada como decisão antes da resposta do time.
+
+## Fórmula e exclusão confirmadas com Bruno — 21/11/2026
+
+- **Curtida de outra pessoa em uma review:** o autor recebe 4 pontos, o autor da review de origem imediata recebe 2 e o ancestral seguinte recebe 1. Níveis anteriores não recebem. O evento de curtida é único por usuário/review; descurtir retira exatamente os pontos que ele concedeu. Recurtir após descurtir volta a conceder uma única vez.
+- **Review derivada:** sua publicação gera 4 pontos para o autor da origem imediata, 2 para o ancestral seguinte e 1 para o próximo ancestral. O autor da nova review não recebe pontos por esse evento. Cada review derivada gera esse evento uma única vez; alterar a origem recalcula os créditos existentes segundo a árvore corrigida, sem criar um novo evento.
+- **Curtida própria:** concede 1 ponto somente ao autor da review, sem propagar para ancestrais; descurtir remove esse ponto. A regra de unicidade também se aplica.
+- **Exemplo:** Ana → Júlia → Pedro. Uma curtida externa na review de Pedro dá 4 a Pedro, 2 a Júlia e 1 a Ana. Publicar a review de Pedro dá 4 a Júlia e 2 a Ana; não há terceiro ancestral nesse caminho. Uma curtida de Pedro na própria review dá 1 somente a Pedro.
+- **Exclusão:** excluir a review de Ana remove seu conteúdo e seus avisos de reescuta. A review de Júlia e as demais descendentes permanecem ligadas a um registro de origem apagada. O link para a review apagada abre uma página que informa que ela não existe mais, sem mostrar a análise. Mesmo após a exclusão, Ana conserva o crédito de origem: interações futuras com reviews descendentes continuam percorrendo o registro apagado e podem pontuar Ana conforme a fórmula. Ana pode publicar uma nova review da mesma música, como outra raiz, sem ligação automática com a antiga. A nova review não recupera o texto ou os avisos anteriores.
+
+A fórmula usa pontos inteiros, sem arredondamento. Caso o mesmo autor apareça em mais de um nível, a política de acumulação continua pendente; não presumir uma regra antiabuso sem decisão do time.
