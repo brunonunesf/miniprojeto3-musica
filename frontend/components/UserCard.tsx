@@ -3,7 +3,7 @@ import type { User } from "@/lib/api";
 export function UserCard({ user }: { user: User }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-borda bg-superficie p-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destaque font-semibold text-texto">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destaque font-semibold text-fundo">
         {user.avatar_url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={user.avatar_url} alt="" className="h-10 w-10 rounded-full object-cover" />

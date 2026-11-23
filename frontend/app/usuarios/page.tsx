@@ -62,7 +62,7 @@ export default function UsuariosPage() {
             pattern="[a-z0-9_]{3,30}"
             title="3–30 caracteres: letras minúsculas, números e _"
             required
-            className="rounded-lg border border-borda bg-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-destaque"
+            className="rounded-lg border border-borda bg-fundo px-2 py-1 text-texto focus:outline-none focus:ring-1 focus:ring-destaque focus:shadow-[0_0_10px_-2px_var(--color-destaque)]"
           />
         </label>
         <label className="flex flex-col text-sm">
@@ -72,13 +72,13 @@ export default function UsuariosPage() {
             onChange={(e) => setName(e.target.value)}
             required
             maxLength={80}
-            className="rounded-lg border border-borda bg-white px-2 py-1 focus:outline-none focus:ring-2 focus:ring-destaque"
+            className="rounded-lg border border-borda bg-fundo px-2 py-1 text-texto focus:outline-none focus:ring-1 focus:ring-destaque focus:shadow-[0_0_10px_-2px_var(--color-destaque)]"
           />
         </label>
         <button
           type="submit"
           disabled={salvando}
-          className="rounded-lg bg-marca px-3 py-1.5 text-sm font-medium text-white hover:bg-marca-forte disabled:opacity-50"
+          className="rounded-lg bg-marca px-3 py-1.5 text-sm font-medium text-fundo shadow-[0_0_14px_-3px_var(--color-marca)] hover:bg-marca-forte disabled:opacity-50 disabled:shadow-none"
         >
           {salvando ? "criando..." : "criar usuário"}
         </button>
