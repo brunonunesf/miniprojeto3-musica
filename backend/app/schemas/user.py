@@ -10,6 +10,12 @@ class UserCreate(BaseModel):
     avatar_url: str = Field(default="", max_length=300)
 
 
+class UserUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    bio: str | None = Field(default=None, max_length=280)
+    avatar_url: str | None = Field(default=None, max_length=300, pattern=r"^(https?://\S+)?$")
+
+
 class UserOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

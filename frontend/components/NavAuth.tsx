@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { sair, temToken } from "@/lib/auth";
+import { useUsuarioAtual } from "@/lib/useUsuarioAtual";
 
 export function NavAuth() {
   const router = useRouter();
   const [logado, setLogado] = useState(false);
+  const usuario = useUsuarioAtual();
 
   useEffect(() => {
     const atualizar = () => setLogado(temToken());
@@ -24,9 +26,16 @@ export function NavAuth() {
 
   if (logado) {
     return (
-      <button onClick={aoSair} className="ml-auto text-sm text-suave hover:text-marca">
-        Sair
-      </button>
+      <div className="ml-auto flex items-center gap-4 text-sm">
+        {usuario && (
+          <Link href={`/usuarios/${usuario.username}`} className="text-suave hover:text-marca">
+            Meu perfil
+          </Link>
+        )}
+        <button onClick={aoSair} className="text-suave hover:text-marca">
+          Sair
+        </button>
+      </div>
     );
   }
 
