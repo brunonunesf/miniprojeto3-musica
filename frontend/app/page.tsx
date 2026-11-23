@@ -1,21 +1,23 @@
 "use client";
 
-import { useExigeLogin } from "@/lib/useExigeLogin";
+import { Cartao } from "@/components/Cartao";
+import { Landing } from "@/components/Landing";
+import { useLogado } from "@/lib/useLogado";
 
 export default function Home() {
-  useExigeLogin();
+  const logado = useLogado();
+
+  if (logado === null) return null;
+  if (!logado) return <Landing />;
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <h1 className="font-titulo text-3xl font-bold">Feed</h1>
-      <p className="text-suave">
-        Aqui nasce o feed do seu nicho (feature do núcleo). Enquanto isso, veja
-        o slice de exemplo em{" "}
-        <a href="/usuarios" className="text-marca underline">
-          /usuarios
-        </a>{" "}
-        — toda feature sua imita aquele caminho.
-      </p>
+      <Cartao>
+        <p className="text-suave">
+          Seu feed vai aparecer aqui. Siga pessoas e recomende uma música para começar.
+        </p>
+      </Cartao>
     </div>
   );
 }

@@ -2,22 +2,16 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
-import { sair, temToken } from "@/lib/auth";
+import { BotaoLink } from "@/components/BotaoLink";
+import { sair } from "@/lib/auth";
+import { useLogado } from "@/lib/useLogado";
 import { useUsuarioAtual } from "@/lib/useUsuarioAtual";
 
 export function NavAuth() {
   const router = useRouter();
-  const [logado, setLogado] = useState(false);
+  const logado = useLogado() === true;
   const usuario = useUsuarioAtual();
-
-  useEffect(() => {
-    const atualizar = () => setLogado(temToken());
-    atualizar();
-    window.addEventListener("auth", atualizar);
-    return () => window.removeEventListener("auth", atualizar);
-  }, []);
 
   function aoSair() {
     sair();
@@ -40,13 +34,11 @@ export function NavAuth() {
   }
 
   return (
-    <div className="ml-auto flex gap-4 text-sm">
+    <div className="ml-auto flex items-center gap-4 text-sm">
       <Link href="/login" className="text-suave hover:text-marca">
         Entrar
       </Link>
-      <Link href="/registro" className="font-medium text-marca hover:text-marca-forte">
-        Cadastrar
-      </Link>
+      <BotaoLink href="/registro">Cadastrar</BotaoLink>
     </div>
   );
 }
