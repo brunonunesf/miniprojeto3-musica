@@ -45,7 +45,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 | Funcionalidade | Situação | Dono |
 |---|---|---|
-| Autenticação | Backend pronto na branch `feat/auth-bypass` (bypass `X-User-Id` com `DEBUG=true`, registro, login e `/auth/eu`), aguardando PR e revisão; telas de cadastro e login pendentes | A |
+| Autenticação | Backend pronto e na `main` (PRs #16 e #17): bypass `X-User-Id` com `DEBUG=true`, registro, login e `/auth/eu`. Telas de cadastro e login prontas na branch `feat/telas-auth`, com PR aberto e aguardando revisão | A |
 | Perfil | Núcleo a implementar | A |
 | Posts, feed, curtidas e comentários | Núcleo a implementar conforme os testes da base | B |
 | Follow | Núcleo a implementar | C |
@@ -67,6 +67,30 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 2. **Review como post:** a review é um post com campos extras (música, nota, `origem_id`), reaproveitando feed, curtidas e comentários.
 3. **Reputação:** a proposta anterior de pesos 1, 1/2 e 1/4 foi substituída pela decisão de 21/11/2026, descrita abaixo. A prevenção de abuso e o efeito de exclusões continuam em discussão.
 
+## Decisões técnicas implementadas — autenticação (22/11/2026)
+
+Seguem o guia 01 e estão na `main`. Dos 10 testes do núcleo, os 3 de autenticação passam; `make test` mostra 7 passed e 7 skipped. Os 7 restantes (posts, feed, perfil, follow, curtidas, comentários e seed) continuam por fazer.
+
+- **Sessão por token opaco em tabela.** O login cria um token aleatório (`secrets.token_urlsafe(32)`) salvo na tabela `sessions`, enviado em `Authorization: Bearer <token>`. É mais simples de depurar e revogar que JWT, que o guia deixa como opcional.
+- **Senha com hash bcrypt.** A senha nunca é guardada nem devolvida. O tamanho vai de 8 a 72 caracteres, porque o bcrypt só considera os 72 primeiros bytes.
+- **Login com uma única resposta de erro.** Usuário inexistente, usuário sem senha e senha errada devolvem o mesmo `401`, para não revelar quais usernames existem. Username repetido no registro devolve `409`.
+- **Bypass só em desenvolvimento.** O header `X-User-Id` só vale com `DEBUG=true`. Essa variável nunca deve ser ligada no deploy; sem ela só o token autentica.
+- **Token no `localStorage` do navegador.** Foi escolhido por ser mais simples de entender e depurar. A troca por cookie `httpOnly` exigiria configurar CORS com credenciais, e o trade-off (XSS contra CSRF) está descrito no guia 01.
+- **A home exige login.** As páginas privadas chamam `useExigeLogin()`. Quem implementar o feed em `app/page.tsx` deve manter essa chamada. Uma resposta `401` com token salvo apaga o token e volta para `/login`.
+- **CORS só para `localhost:3000`.** O frontend precisa rodar nessa porta; em outra, o navegador bloqueia as chamadas e a interface mostra que não conseguiu falar com o backend.
+- **Seed de desenvolvimento** com os usuários `ana`, `bruno` e `carlos`, todos com a mesma senha de desenvolvimento. Esses usuários e essa senha não devem existir no deploy.
+
+## Identidade visual (22/11/2026)
+
+Proposta de Cecília, implementada na branch `feat/telas-auth` e sujeita à revisão do time, já que as cores afetam todas as páginas.
+
+- **Tema escuro com neon.** Fundo quase-preto, cartões um tom acima e texto em branco suave. Magenta marca as ações, ciano marca foco e navegação, e o amarelo fica reservado para notas e pontos. O brilho aparece só no botão principal e no campo em foco, para o neon continuar sendo destaque.
+- **Cores centralizadas.** Ficam em um único bloco `@theme` do `globals.css`; trocar a identidade custa mudar esses valores, não as telas.
+- **Componentes reutilizáveis** em `frontend/components/`: `Botao`, `Cartao`, `Campo` e `MensagemErro`. As próximas telas devem usá-los para evitar repetir classes.
+- **Títulos com fonte serifada.** Dão um tom editorial e combinam com o nicho de música.
+- **Alternativa descartada:** uma paleta quente (creme e laranja), usada por pouco tempo. Foi trocada pelo tema escuro porque combina mais com o clima de show e de música.
+- **Pendente:** nome definitivo da rede e logo. A navbar ainda mostra "Rede da Trilha".
+
 ## Escolhas técnicas pendentes
 
 A stack inicial é a do esqueleto oficial: FastAPI + SQLAlchemy + SQLite e Next.js + TypeScript + Tailwind. A árvore de recomendações sugere explorar uma estrutura de árvores, mas nenhuma representação, algoritmo ou complexidade foi escolhida ou medida ainda.
@@ -78,7 +102,8 @@ O time validou o uso de ML de forma simples na área “Descobrir” (#23): TF-I
 ## Organização e entrega
 
 - O time decidirá a divisão das features e revisará as contribuições entre si.
-- Após a preparação inicial, Bruno autorizou a criação das issues iniciais. Elas organizam o trabalho sem fechar o escopo: qualquer integrante com acesso pode abrir novas propostas. Responsáveis permanecem a combinar; nenhum PR de implementação foi criado.
+- Após a preparação inicial, Bruno autorizou a criação das issues iniciais. Elas organizam o trabalho sem fechar o escopo: qualquer integrante com acesso pode abrir novas propostas. Responsáveis das Pessoas B e C permanecem a combinar.
+- Já foram abertos PRs: o #16 (backend de autenticação) e o #17 (documentação) estão mesclados, e o PR das telas de cadastro e login (`feat/telas-auth`) aguarda revisão. Os PRs mesclados até agora ainda não passaram por revisão de outra pessoa do time; os próximos devem passar.
 - O guia oficial menciona GitHub Classroom. O convite não foi fornecido; confirmar o destino exigido para a entrega antes da submissão.
 
 ## Uso de IA
@@ -90,6 +115,8 @@ Codex também foi usado para organizar e abrir as issues iniciais com critérios
 Claude Code foi usado para analisar a pasta do projeto, propor o plano de etapas até a entrega e redigir as seções de donos, escopo e decisões técnicas propostas acima. Essas propostas estão sendo decididas pelo time.
 
 Claude Code também implementou o backend da autenticação do núcleo (bypass `X-User-Id`, registro, login, `/auth/eu`, model de sessão) e atualizou o seed com os usuários `ana`, `bruno` e `carlos`. A implementação segue o guia 01 e foi verificada com `make test` (7 passed, 7 skipped). O código ainda precisa ser revisado por uma pessoa do time.
+
+Claude Code também implementou o frontend da autenticação (páginas `/registro` e `/login`, token no `localStorage`, guarda de rota, botão de sair na navbar) e aplicou o tema visual escuro com neon, com os componentes reutilizáveis `Botao`, `Cartao`, `Campo` e `MensagemErro`. Foi verificado com `npx tsc --noEmit` e testado à mão no navegador (cadastro, login, erro de senha e sair). Também foi usado para diagnosticar problemas de ambiente (porta do frontend e CORS, processo preso na porta do backend e cache `.next`). O código e as cores ainda precisam ser revisados por uma pessoa do time.
 
 ## Decisões de produto validadas pelo trio — 22/11/2026
 
