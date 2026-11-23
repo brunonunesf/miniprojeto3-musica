@@ -69,13 +69,14 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 ## Decisões técnicas implementadas — autenticação (22/11/2026)
 
-Seguem o guia 01 e estão na `main`. Dos 10 testes do núcleo, os 3 de autenticação passam; `make test` mostra 7 passed e 7 skipped. Os 7 restantes (posts, feed, perfil, follow, curtidas, comentários e seed) continuam por fazer.
+Seguem o guia 01 e estão na `main`. Dos 10 testes do núcleo, os 3 de autenticação passam. Além deles, `backend/tests/test_auth_casos.py` cobre os casos de borda da issue #2: cabeçalho inválido, token falso, login de usuário sem senha, resposta única de erro, ausência de senha e hash nas respostas, limites de senha e bypass com e sem `DEBUG`. `make test` mostra 19 passed e 7 skipped; os 7 restantes (posts, feed, perfil, follow, curtidas, comentários e seed) continuam por fazer.
 
 - **Sessão por token opaco em tabela.** O login cria um token aleatório (`secrets.token_urlsafe(32)`) salvo na tabela `sessions`, enviado em `Authorization: Bearer <token>`. É mais simples de depurar e revogar que JWT, que o guia deixa como opcional.
 - **Senha com hash bcrypt.** A senha nunca é guardada nem devolvida. O tamanho vai de 8 a 72 caracteres, porque o bcrypt só considera os 72 primeiros bytes.
 - **Login com uma única resposta de erro.** Usuário inexistente, usuário sem senha e senha errada devolvem o mesmo `401`, para não revelar quais usernames existem. Username repetido no registro devolve `409`.
 - **Bypass só em desenvolvimento.** O header `X-User-Id` só vale com `DEBUG=true`. Essa variável nunca deve ser ligada no deploy; sem ela só o token autentica.
 - **Token no `localStorage` do navegador.** Foi escolhido por ser mais simples de entender e depurar. A troca por cookie `httpOnly` exigiria configurar CORS com credenciais, e o trade-off (XSS contra CSRF) está descrito no guia 01.
+- **Forma de saída.** Sair apaga o token guardado no navegador, como o guia 01 descreve, e leva para `/login`. Não existe rota de logout no servidor: a sessão não é revogada e o token não expira, então um token copiado antes de sair continua válido. É uma limitação conhecida e aceita para este projeto; se o time decidir revogar, bastaria uma rota `POST /auth/logout` que apague a linha de `sessions` e, se necessário, uma data de validade na tabela.
 - **A home exige login.** As páginas privadas chamam `useExigeLogin()`. Quem implementar o feed em `app/page.tsx` deve manter essa chamada. Uma resposta `401` com token salvo apaga o token e volta para `/login`.
 - **CORS só para `localhost:3000`.** O frontend precisa rodar nessa porta; em outra, o navegador bloqueia as chamadas e a interface mostra que não conseguiu falar com o backend.
 - **Seed de desenvolvimento** com os usuários `ana`, `bruno` e `carlos`, todos com a mesma senha de desenvolvimento. Esses usuários e essa senha não devem existir no deploy.
