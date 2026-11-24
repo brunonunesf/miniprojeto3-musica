@@ -81,3 +81,14 @@ export type Page<T> = {
   offset: number;
   limit: number;
 };
+
+export type Music = {
+  id: number;
+  chave_catalogo: string;
+  titulo: string;
+  artista: string;
+  tipo_versao: "original" | "remix" | "ao_vivo" | "remaster";
+  descricao_versao: string;
+  generos: string[];
+  tags: string[];
+};

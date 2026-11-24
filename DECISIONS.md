@@ -195,3 +195,14 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 
 - Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
 - Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.
+
+
+## Catálogo musical — etapa independente da #9 — 24/11/2026
+
+- Aprovado neste chat: catálogo inicial manual via seed; remaster identificada como edição própria é item distinto, assim como original, remix e ao vivo.
+- Implementado catálogo persistido com ID interno e chave curada estável. Título/artista não são chave de deduplicação. Gêneros e tags são limpos e consistentes; busca Unicode ignora caixa e espaços excedentes, sem juntar gravações.
+- O catálogo inicial contém seis faixas fictícias de demonstração, explicitadas na interface. Seed valida todo o arquivo antes de gravar, atualiza metadados por chave sem alterar IDs e funciona mesmo com usuários existentes. Entradas removidas do arquivo não são apagadas do banco.
+- API autenticada de consulta e página `/musicas`, com seletor reutilizável, busca, paginação e tratamento de carregamento, vazio e erro. Busca em memória é deliberada para o pequeno catálogo manual; reavaliar consultas indexadas ao crescer.
+- A #3 ainda não possui model/rotas de posts nesta base. Vínculo, unicidade concorrente de review, exclusão, detalhe, feed e perfil ficam pendentes de integração. Esta entrega não fecha #9, nem implementa #3, árvores ou reescutas.
+- Novas tabelas são criadas pelo mecanismo existente; não há alteração de tabelas antigas nem exclusão de dados. Na integração futura, alterações na tabela de posts exigem migração explícita.
+- Validação desta etapa: 41 testes de backend passaram e 7 do núcleo permanecem pendentes; build e TypeScript passaram; 2 testes de navegador passaram em desktop e 360 px, com API e SQLite reais isolados. O encaminhamento de requisições no teste com portas alternativas contorna apenas o CORS fixo da porta 3000, sem alterar a configuração da aplicação. Capturas foram inspecionadas sem cortes ou rolagem horizontal.

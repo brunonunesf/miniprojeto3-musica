@@ -1,4 +1,4 @@
-"""Seed mínimo: 3 usuários para o slice de exemplo renderizar.
+"""Seed mínimo: 3 usuários e catálogo musical fictício idempotente.
 
 A versão de verdade (com faker, posts, follows, likes...) é FEATURE DO NÚCLEO —
 é do time. Rode com: make seed
@@ -14,6 +14,7 @@ from sqlalchemy import select
 from app.db import Base, SessionLocal, engine
 from app.models.user import User
 from app.services.auth import gerar_hash
+from seed_music import seed_musicas
 
 SENHA_SEED = "senha-forte-123"
 HASH_SEED = gerar_hash(SENHA_SEED)
@@ -28,6 +29,8 @@ USUARIOS = [
 def main() -> None:
     Base.metadata.create_all(engine)
     with SessionLocal() as db:
+        criadas = seed_musicas(db)
+        print(f"catálogo: {criadas} músicas criadas")
         if db.scalar(select(User).limit(1)):
             print("banco já tem dados — nada a fazer")
             return

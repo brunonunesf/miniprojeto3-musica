@@ -253,3 +253,12 @@ Convenções:
 - Só o autor → `403`. Aceita jpg, png e webp até 2 MB; excesso → `413`.
 - `GET /posts/{id}` ganha `imagem_url`, `null` sem imagem.
 - Arquivo servido como estático.
+
+## Catálogo musical — #9 (etapa independente de posts)
+
+- `GET` 🔒 `/musicas?q=&offset=0&limit=20` → página de músicas; limite 1–100, offset não negativo, busca até 200 caracteres. Busca por termos de título/artista, sem distinção de caixa Unicode; ordenação por título, artista e ID. Busca vazia lista todas.
+- `GET` 🔒 `/musicas/{id}` → música ou `404`; ID positivo obrigatório.
+- Música: `id`, `chave_catalogo`, `titulo`, `artista`, `tipo_versao` (`original`, `remix`, `ao_vivo`, `remaster`), `descricao_versao`, `generos`, `tags`.
+- Sem sessão: `401`; parâmetros inválidos: `422`. Não há cadastro público de música.
+- `make seed` carrega o catálogo manual fictício de `backend/data/musicas.json`, mesmo com usuários existentes. Chave única estável define identidade; atualizar metadados preserva ID. Duplicatas de chave no arquivo são rejeitadas antes da gravação. Não reutilizar uma chave para outra gravação.
+- Integração futura com #3: `musica_id` opcional na criação de posts, `musica` na saída, unicidade de review ativa por autor/música e bloqueio de troca na edição. Esses campos e comportamentos ainda não estão implementados; não existe endpoint de posts nesta etapa.

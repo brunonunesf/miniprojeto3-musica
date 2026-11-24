@@ -111,3 +111,7 @@ Usem o template de feature ou abram uma issue em branco para decisões, dúvidas
 ## Origem da proposta
 
 Síntese das mensagens de texto sobre música da conversa do grupo em 18 e 19/11/2026, priorizando a proposta detalhada de Daniel em 19/11. Os áudios não foram transcritos e seu conteúdo não foi inferido. O histórico privado, os áudios e os demais anexos não fazem parte do repositório.
+
+### Catálogo musical (#9, primeira etapa)
+
+Execute `make seed` e abra `/musicas` após entrar. O seed inclui seis faixas e artistas **fictícios**, com versões original, remix, ao vivo e remaster, além de títulos iguais de artistas distintos. Pode ser repetido em banco com usuários, preservando contas e identidades das músicas. A seleção funciona nesta etapa; publicação de reviews depende da #3. API e contrato estão em `CONTRATO.md`.

@@ -108,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           {estado === "autenticado" && usuario ? (
             <div className="flex min-w-0 flex-wrap items-center gap-4 text-sm">
               <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>Início</Link>
+              <Link href="/musicas" aria-current={pathname === "/musicas" ? "page" : undefined}>Músicas</Link>
               <Link href="/usuarios" aria-current={pathname === "/usuarios" ? "page" : undefined}>Usuários</Link>
               <span className="max-w-36 truncate text-zinc-600" title={usuario.name}>{usuario.name}</span>
               <button onClick={sair} className="font-semibold text-brand-700">Sair</button>
