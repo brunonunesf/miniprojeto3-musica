@@ -76,6 +76,10 @@ A página inicial e `/usuarios` exigem sessão na interface. A tela de usuários
 - Usuário: 3–30 letras minúsculas, números ou `_`. Nome: 1–80 caracteres, sem espaços nas extremidades. Senha: pelo menos 8 caracteres e no máximo 72 bytes UTF-8, sem truncamento; acentos e emojis podem usar vários bytes.
 - O bypass `X-User-Id` só funciona com `DEBUG=true`. Teste a autenticação real com DEBUG desligado.
 
+### Identidade visual
+
+A interface usa laranja e Merriweather. Login e boas-vindas seguem uma composição de capa de álbum, responsiva, com pautas e notas em movimento suave. O título do login usa um alfabeto musical próprio aprovado por Bruno, disponível nas [pranchas de desenho](docs/identidade/README.md). O controle de pausa e a preferência de movimento reduzido permitem uma versão estática.
+
 ### Verificar a autenticação
 
 ```bash
