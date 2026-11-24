@@ -45,7 +45,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 | Funcionalidade | Situação | Dono |
 |---|---|---|
-| Autenticação | Backend pronto e na `main` (PRs #16 e #17): bypass `X-User-Id` com `DEBUG=true`, registro, login e `/auth/eu`. Telas de cadastro e login prontas na branch `feat/telas-auth`, com PR aberto e aguardando revisão | A |
+| Autenticação | Backend na `main` (PRs #16 e #17). Front e reforços no PR #27 (`feat/issue-2-autenticacao`), aguardando revisão. O PR #24 (`feat/telas-auth`) também implementa as telas e precisa ser conciliado pelo time | A |
 | Perfil | Núcleo a implementar | A |
 | Posts, feed, curtidas e comentários | Núcleo a implementar conforme os testes da base | B |
 | Follow | Núcleo a implementar | C |
@@ -69,21 +69,21 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 ## Decisões técnicas implementadas — autenticação (22/11/2026)
 
-Seguem o guia 01 e estão na `main`. Dos 10 testes do núcleo, os 3 de autenticação passam. Além deles, `backend/tests/test_auth_casos.py` cobre os casos de borda da issue #2: cabeçalho inválido, token falso, login de usuário sem senha, resposta única de erro, ausência de senha e hash nas respostas, limites de senha e bypass com e sem `DEBUG`. `make test` mostra 19 passed e 7 skipped; os 7 restantes (posts, feed, perfil, follow, curtidas, comentários e seed) continuam por fazer.
+Seguem o guia 01 e estão na `main`. Dos 10 testes do núcleo, os 3 de autenticação passam. Além deles, `backend/tests/test_auth_casos.py` cobre os casos de borda da issue #2: cabeçalho inválido, token falso, login de usuário sem senha, resposta única de erro, ausência de senha e hash nas respostas, limites de senha e bypass com e sem `DEBUG`. Na versão da `main` de 22/11, `make test` mostrava 19 passed e 7 skipped; os 7 restantes (posts, feed, perfil, follow, curtidas, comentários e seed) continuam por fazer.
 
 - **Sessão por token opaco em tabela.** O login cria um token aleatório (`secrets.token_urlsafe(32)`) salvo na tabela `sessions`, enviado em `Authorization: Bearer <token>`. É mais simples de depurar e revogar que JWT, que o guia deixa como opcional.
-- **Senha com hash bcrypt.** A senha nunca é guardada nem devolvida. O tamanho vai de 8 a 72 caracteres, porque o bcrypt só considera os 72 primeiros bytes.
+- **Senha com hash bcrypt.** A senha nunca é guardada nem devolvida. Nesta branch, o registro valida no mínimo 8 caracteres e no máximo 72 bytes UTF-8 antes do bcrypt, sem truncamento. A contagem anterior somente por caracteres foi corrigida no PR #27.
 - **Login com uma única resposta de erro.** Usuário inexistente, usuário sem senha e senha errada devolvem o mesmo `401`, para não revelar quais usernames existem. Username repetido no registro devolve `409`.
 - **Bypass só em desenvolvimento.** O header `X-User-Id` só vale com `DEBUG=true`. Essa variável nunca deve ser ligada no deploy; sem ela só o token autentica.
 - **Token no `localStorage` do navegador.** Foi escolhido por ser mais simples de entender e depurar. A troca por cookie `httpOnly` exigiria configurar CORS com credenciais, e o trade-off (XSS contra CSRF) está descrito no guia 01.
 - **Forma de saída.** Sair apaga o token guardado no navegador, como o guia 01 descreve, e leva para `/login`. Não existe rota de logout no servidor: a sessão não é revogada e o token não expira, então um token copiado antes de sair continua válido. É uma limitação conhecida e aceita para este projeto; se o time decidir revogar, bastaria uma rota `POST /auth/logout` que apague a linha de `sessions` e, se necessário, uma data de validade na tabela.
-- **A home exige login.** As páginas privadas chamam `useExigeLogin()`. Quem implementar o feed em `app/page.tsx` deve manter essa chamada. Uma resposta `401` com token salvo apaga o token e volta para `/login`.
+- **A home exige login.** Nesta branch, o `AuthProvider` central valida `/auth/eu` antes de montar as páginas privadas. Quem implementar o feed em `app/page.tsx` deve manter a guarda central. Uma resposta `401` com token salvo apaga o token e volta para `/login`.
 - **CORS só para `localhost:3000`.** O frontend precisa rodar nessa porta; em outra, o navegador bloqueia as chamadas e a interface mostra que não conseguiu falar com o backend.
 - **Seed de desenvolvimento** com os usuários `ana`, `bruno` e `carlos`, todos com a mesma senha de desenvolvimento. Esses usuários e essa senha não devem existir no deploy.
 
-## Identidade visual (22/11/2026)
+## Proposta visual da branch `feat/telas-auth` (22/11/2026)
 
-Proposta de Cecília, implementada na branch `feat/telas-auth` e sujeita à revisão do time, já que as cores afetam todas as páginas.
+Proposta de Cecília, implementada na branch `feat/telas-auth` e sujeita à revisão do time, já que as cores afetam todas as páginas. Esta seção registra as escolhas daquele PR; a identidade aprovada por Bruno e aplicada no PR #27 está descrita ao final deste documento.
 
 - **Tema escuro com neon.** Fundo quase-preto, cartões um tom acima e texto em branco suave. Magenta marca as ações, ciano marca foco e navegação, e o amarelo fica reservado para notas e pontos. O brilho aparece só no botão principal e no campo em foco, para o neon continuar sendo destaque.
 - **Cores centralizadas.** Ficam em um único bloco `@theme` do `globals.css`; trocar a identidade custa mudar esses valores, não as telas.
@@ -109,7 +109,7 @@ O time validou o uso de ML de forma simples na área “Descobrir” (#23): TF-I
 
 ## Uso de IA
 
-Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sobre música, consultar o material do miniprojeto e preparar o repositório e esta documentação. Não implementou funcionalidades da rede social, não transcreveu áudios e não definiu decisões de produto ausentes da conversa.
+Na preparação inicial, Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sobre música, consultar o material do miniprojeto e preparar o repositório e esta documentação. Naquela etapa, não implementou funcionalidades da rede social, não transcreveu áudios e não definiu decisões de produto ausentes da conversa.
 
 Codex também foi usado para organizar e abrir as issues iniciais com critérios de conclusão e dependências sugeridas, mantendo ideias opcionais separadas de compromissos de implementação.
 
@@ -166,3 +166,32 @@ A fórmula usa pontos inteiros, sem arredondamento. Caso o mesmo autor apareça 
 - **Prioridade:** junto às árvores, é um dos dois diferenciais pretendidos para a demonstração de 27/11. Reputação básica permanece no escopo planejado; a implementação real será ajustada conforme o andamento.
 
 Implementação e validação estão na [issue #23](https://github.com/brunonunesf/miniprojeto3-musica/issues/23). O material consultado não confirma obrigação de ML. O guia de setup cita GitHub Classroom, mas o convite não está disponível; a decisão do produto não depende dele.
+
+
+## Implementação da autenticação — issue #2 — 24/11/2026
+
+- A base local já continha o backend de autenticação integrado em `main`; a referência anterior a backend ainda isolado em branch estava desatualizada. A conclusão do front foi implementada em `feat/issue-2-autenticacao`, sem alterar branches do time.
+- Escolhas finais aprovadas por Bruno: fundo claro, destaque laranja, Merriweather nos textos e alfabeto musical geométrico próprio no título do login. A entrada automática após cadastro foi mantida. A proposta inicial violeta foi substituída durante a revisão visual. O nome definitivo da rede continua em aberto; não foram adicionadas bibliotecas de componentes ou animação.
+- Sessão centralizada em um provedor de contexto com verificação no carregamento. O token opaco permanece em `localStorage`, conforme o guia 01, e o cliente de API envia Bearer. Página inicial e usuários só são montados após validação de `/auth/eu`; a guarda visual não substitui autorização no backend.
+- Resposta 401 de chamada autenticada limpa o estado e redireciona para login. Erros de rede/servidor preservam o token e permitem repetir a verificação. Respostas antigas não devem invalidar um token já substituído. A saída se propaga entre abas.
+- Logout é local, sem revogação no servidor ou expiração de tokens. Recuperação de senha, e-mail, login social, JWT e cookies ficam fora desta entrega. Não há mudança de esquema, migração ou exclusão de dados.
+- Senhas aceitam mínimo de 8 caracteres e máximo de 72 bytes UTF-8, validado antes do bcrypt. Não há truncamento. Hash vazio/inválido recebe 401 genérico; colisão de username na gravação recebe 409 após rollback. Sessão sem usuário recebe 401.
+- O cadastro usa `/auth/registro`, seguido de `/auth/login`. Se o segundo passo falhar, a conta permanece criada e a interface encaminha ao login com confirmação e usuário preenchido. `/usuarios` mantém o slice de exemplo sem senha e não substitui o cadastro.
+- Foi encontrado o PR #24 de Cecília (`feat/telas-auth`), que também implementa autenticação e tem proposta visual própria, descrita na seção de 22/11. Esta branch é uma implementação alternativa do plano aprovado neste chat, não uma alteração daquele PR. O time precisa conciliar as duas propostas antes de integrar; os PRs de perfil e página inicial também podem se sobrepor ao layout. Nenhum merge foi realizado automaticamente.
+- Codex implementou formulários, provedor de sessão, navegação, guarda, tratamento de erros, ajustes no backend e testes. A revisão por outra pessoa continua pendente.
+- Verificação: 26 testes de backend passaram; 7 testes de outras features seguem pendentes. Build de produção e TypeScript passaram. Os 12 testes de navegador passaram com Google Chrome em desktop e largura de 360 px, incluindo cadastro, login, refresh, Bearer, token inválido, erro 500, conexão interrompida, saída entre abas e teclado. Capturas de login e registro foram inspecionadas visualmente. `make check` passou com banco separado em `/tmp`, sem alterar dados locais.
+
+
+## Identidade visual aprovada — 24/11/2026
+
+- Bruno aprovou o laranja claro `#f58220`, hover `#e67412`, texto de destaque `#ad4c00` e texto escuro dos botões `#431d08`. Os contrastes calculados dos botões normal/hover são 5,71:1 e 4,85:1; links sobre branco têm 5,51:1.
+- Merriweather é carregada por `next/font/google`, servida localmente após o build. Login e página após entrar adotam composição de capa de álbum: arte à esquerda e conteúdo à direita, empilhados abaixo de 900 px. Cadastro e usuários preservam sua largura.
+- Após rejeitar os primeiros adornos sobre letras da Merriweather, Bruno aprovou 52 desenhos geométricos próprios: maiúsculas e minúsculas construídas com hastes, barras e cabeças de notas. As pranchas e a amostra aprovadas estão em `docs/identidade/`; os dados reutilizáveis dos 52 glifos, espaço, pontuação e acentos da frase estão em `frontend/components/music-glyphs.json`.
+- O título “Novas músicas, novas conexões.” usa os vetores aprovados, sem substituir a fonte dos formulários. O lettering é desenho SVG, não uma fonte TTF/WOFF instalada. Os contornos anteriores derivados da Merriweather foram removidos.
+- A entrada revela as duas linhas continuamente em aproximadamente 4 segundos, sem efeito de digitação. Pautas ondulam em ciclo de 18 segundos; notas flutuam em ciclos de 12–20 segundos. O botão pausa/retoma as animações. A preferência de movimento reduzido mostra o título completo e o fundo parado. A interação com o formulário não reinicia a entrada.
+- A home saúda o usuário autenticado, oferece o acesso real a `/usuarios` e informa que o feed está em preparação. Não inclui posts, contagens ou interações fictícias. As regras de autenticação e o banco permanecem inalterados nesta revisão visual.
+- Codex criou os componentes, as animações e os desenhos vetoriais a partir das orientações e da referência visual fornecida por Bruno. As pranchas foram aprovadas antes da aplicação. Não foi usado um novo pacote de fontes ou animação.
+- Validação visual e de comportamento em 1440, 1024, 768 e 360 px: ausência de cortes nos glifos/rolagem horizontal, pausa/retomada, movimento reduzido, nomes longos e ausência de reinício ao digitar. Build de produção e TypeScript passaram. As suítes de backend e navegador são registradas no PR com os resultados finais.
+
+- Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
+- Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.

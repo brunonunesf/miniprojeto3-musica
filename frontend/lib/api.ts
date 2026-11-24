@@ -3,35 +3,47 @@
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-function headers(): HeadersInit {
-  const h: Record<string, string> = { "Content-Type": "application/json" };
-  // Parte 2 do guia 01: leia o token salvo no login e envie em Authorization.
-  return h;
+export class ApiError extends Error {
+  constructor(public status: number, message: string, public fields: Record<string, string> = {}) {
+    super(message);
+    this.name = "ApiError";
+  }
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers: headers(),
-    body: body === undefined ? undefined : JSON.stringify(body),
-    cache: "no-store",
-  });
+  const publicAuth = path === "/auth/login" || path === "/auth/registro";
+  const token = typeof window !== "undefined" && !publicAuth ? localStorage.getItem("token") : null;
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method, headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      cache: "no-store",
+    });
+  } catch {
+    throw new ApiError(0, "Não foi possível conectar. Confira sua conexão e tente novamente.");
+  }
 
-  // 401 com token salvo = token que não vale mais (ex.: o banco foi apagado ou o
-  // servidor do deploy reiniciou). Joga o token fora e volta para o login.
-  if (res.status === 401 && typeof window !== "undefined" && localStorage.getItem("token")) {
+  // Uma resposta antiga não deve encerrar uma sessão que já foi substituída.
+  if (res.status === 401 && token && localStorage.getItem("token") === token) {
     localStorage.removeItem("token");
-    if (window.location.pathname !== "/login") window.location.href = "/login";
+    window.dispatchEvent(new Event("sessao-invalida"));
   }
-
   if (!res.ok) {
-    // 422 = corpo inválido; 409 = conflito (ex.: username repetido). Ver guia 04.
     const erro = await res.json().catch(() => null);
-    const detail = typeof erro?.detail === "string" ? erro.detail : null;
-    throw new Error(detail ?? `${method} ${path} → ${res.status}`);
+    const fields: Record<string, string> = {};
+    if (Array.isArray(erro?.detail)) {
+      for (const item of erro.detail) {
+        const campo = item.loc?.[item.loc.length - 1];
+        if (typeof campo === "string") fields[campo] = "Confira o valor informado.";
+      }
+    }
+    const message = res.status >= 500 ? "O serviço está indisponível. Tente novamente em instantes."
+      : typeof erro?.detail === "string" ? erro.detail : "Confira os campos e tente novamente.";
+    throw new ApiError(res.status, message, fields);
   }
-
-  // 204 No Content (seguir, curtir, apagar...) não tem corpo: não há JSON para ler.
   if (res.status === 204) return undefined as T;
   return res.json();
 }
