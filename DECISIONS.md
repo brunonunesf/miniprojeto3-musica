@@ -45,7 +45,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 
 | Funcionalidade | Situação | Dono |
 |---|---|---|
-| Autenticação | Backend pronto na branch `feat/auth-bypass` (bypass `X-User-Id` com `DEBUG=true`, registro, login e `/auth/eu`), aguardando PR e revisão; telas de cadastro e login pendentes | A |
+| Autenticação | Backend integrado; front e reforços de autenticação implementados em `feat/issue-2-autenticacao`, aguardando revisão do time | A |
 | Perfil | Núcleo a implementar | A |
 | Posts, feed, curtidas e comentários | Núcleo a implementar conforme os testes da base | B |
 | Follow | Núcleo a implementar | C |
@@ -83,7 +83,7 @@ O time validou o uso de ML de forma simples na área “Descobrir” (#23): TF-I
 
 ## Uso de IA
 
-Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sobre música, consultar o material do miniprojeto e preparar o repositório e esta documentação. Não implementou funcionalidades da rede social, não transcreveu áudios e não definiu decisões de produto ausentes da conversa.
+Na preparação inicial, Codex foi usado para ler os textos exportados do WhatsApp, separar as ideias sobre música, consultar o material do miniprojeto e preparar o repositório e esta documentação. Naquela etapa, não implementou funcionalidades da rede social, não transcreveu áudios e não definiu decisões de produto ausentes da conversa.
 
 Codex também foi usado para organizar e abrir as issues iniciais com critérios de conclusão e dependências sugeridas, mantendo ideias opcionais separadas de compromissos de implementação.
 
@@ -138,3 +138,17 @@ A fórmula usa pontos inteiros, sem arredondamento. Caso o mesmo autor apareça 
 - **Prioridade:** junto às árvores, é um dos dois diferenciais pretendidos para a demonstração de 27/11. Reputação básica permanece no escopo planejado; a implementação real será ajustada conforme o andamento.
 
 Implementação e validação estão na [issue #23](https://github.com/brunonunesf/miniprojeto3-musica/issues/23). O material consultado não confirma obrigação de ML. O guia de setup cita GitHub Classroom, mas o convite não está disponível; a decisão do produto não depende dele.
+
+
+## Implementação da autenticação — issue #2 — 24/11/2026
+
+- A base local já continha o backend de autenticação integrado em `main`; a referência anterior a backend ainda isolado em branch estava desatualizada. A conclusão do front foi implementada em `feat/issue-2-autenticacao`, sem alterar branches do time.
+- Escolhas confirmadas por Bruno no planejamento: identidade musical leve, fundo claro, destaque violeta e entrada automática após cadastro. O nome definitivo da rede continua em aberto. Sem novas bibliotecas de componentes ou fontes externas.
+- Sessão centralizada em um provedor de contexto com verificação no carregamento. O token opaco permanece em `localStorage`, conforme o guia 01, e o cliente de API envia Bearer. Página inicial e usuários só são montados após validação de `/auth/eu`; a guarda visual não substitui autorização no backend.
+- Resposta 401 de chamada autenticada limpa o estado e redireciona para login. Erros de rede/servidor preservam o token e permitem repetir a verificação. Respostas antigas não devem invalidar um token já substituído. A saída se propaga entre abas.
+- Logout é local, sem revogação no servidor ou expiração de tokens. Recuperação de senha, e-mail, login social, JWT e cookies ficam fora desta entrega. Não há mudança de esquema, migração ou exclusão de dados.
+- Senhas aceitam mínimo de 8 caracteres e máximo de 72 bytes UTF-8, validado antes do bcrypt. Não há truncamento. Hash vazio/inválido recebe 401 genérico; colisão de username na gravação recebe 409 após rollback. Sessão sem usuário recebe 401.
+- O cadastro usa `/auth/registro`, seguido de `/auth/login`. Se o segundo passo falhar, a conta permanece criada e a interface encaminha ao login com confirmação e usuário preenchido. `/usuarios` mantém o slice de exemplo sem senha e não substitui o cadastro.
+- Foi encontrado o PR #24 de Cecília (`feat/telas-auth`), que também implementa autenticação e propõe paleta quente. Esta branch é uma implementação alternativa do plano aprovado neste chat, não uma alteração daquele PR. O time precisa conciliar as duas propostas antes de integrar; os PRs de perfil e página inicial também podem se sobrepor ao layout. Nenhum merge foi realizado automaticamente.
+- Codex implementou formulários, provedor de sessão, navegação, guarda, tratamento de erros, ajustes no backend e testes. A revisão por outra pessoa continua pendente.
+- Verificação: 26 testes de backend passaram; 7 testes de outras features seguem pendentes. Build de produção e TypeScript passaram. Os 12 testes de navegador passaram com Google Chrome em desktop e largura de 360 px, incluindo cadastro, login, refresh, Bearer, token inválido, erro 500, conexão interrompida, saída entre abas e teclado. Capturas de login e registro foram inspecionadas visualmente. `make check` passou com banco separado em `/tmp`, sem alterar dados locais.

@@ -36,7 +36,7 @@ A proposta inclui uma área própria de sugestões de reviews, baseada em gêner
 
 ## Estado inicial
 
-Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. A rede musical ainda não está implementada. O backend de autenticação já recebeu implementação; as demais funcionalidades evoluem nas issues do time.
+Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. A rede musical ainda não está implementada. A autenticação tem implementação de backend e frontend nesta branch, com cadastro, entrada automática, login, sessão persistente e saída; aguarda revisão do time. As demais funcionalidades evoluem nas issues do time.
 
 - Backend: FastAPI, SQLAlchemy e SQLite.
 - Frontend: Next.js, TypeScript e Tailwind.
@@ -59,10 +59,40 @@ Rodar em dois terminais:
 
 ```bash
 make dev-back   # http://localhost:8000/docs
-make dev-front  # http://localhost:3000/usuarios
+make dev-front  # http://localhost:3000/login
 ```
 
-A tela de usuários é a demonstração original do esqueleto. Os detalhes estão no [guia de setup](docs/guias/00-setup.md).
+Acesse `/registro` para criar uma conta ou `/login` para entrar. O cadastro entra automaticamente. Se a conta for criada mas o login falhar, a tela de login confirma a criação e mantém o usuário preenchido; não é preciso cadastrar novamente.
+
+O seed mínimo oferece `ana`, `bruno` e `carlos`, com a senha de demonstração `senha-forte-123`. `make seed` só popula um banco vazio; contas antigas sem hash não passam a ter senha automaticamente. Não apague um banco existente para testar: use um `DATABASE_URL` separado.
+
+A página inicial e `/usuarios` exigem sessão na interface. A tela de usuários mantém a demonstração original do esqueleto, incluindo criação sem senha; para criar uma conta que possa entrar, use `/registro`. As rotas públicas de usuários mantêm o contrato original. A proteção de cada ação futura deve ser imposta também pelo backend.
+
+### Sessão e validações
+
+- O token opaco fica na chave `token` do `localStorage` e segue em `Authorization: Bearer`. Ao recarregar, `/auth/eu` valida a sessão antes de mostrar as páginas privadas.
+- Uma resposta 401 autenticada limpa a sessão e leva ao login. Falha de conexão ou do servidor durante a verificação preserva o token e oferece nova tentativa, sem mostrar conteúdo privado.
+- “Sair” remove a sessão deste navegador e sincroniza a saída entre abas. Não revoga o token no servidor; não há endpoint de logout nem expiração nesta entrega. `localStorage` segue o guia didático e pode ser lido por scripts da mesma origem.
+- Usuário: 3–30 letras minúsculas, números ou `_`. Nome: 1–80 caracteres, sem espaços nas extremidades. Senha: pelo menos 8 caracteres e no máximo 72 bytes UTF-8, sem truncamento; acentos e emojis podem usar vários bytes.
+- O bypass `X-User-Id` só funciona com `DEBUG=true`. Teste a autenticação real com DEBUG desligado.
+
+### Verificar a autenticação
+
+```bash
+make test
+make check
+cd frontend
+npm run build
+npm run typecheck
+npx playwright install chromium
+npm run test:e2e
+```
+
+Os testes do navegador iniciam frontend de produção e backend nas portas 3000 e 8000, que precisam estar livres. Eles usam um SQLite descartável em pasta temporária, com `DEBUG=false`, sem alterar o banco local. O build deve usar `NEXT_PUBLIC_API_URL=http://localhost:8000` (valor padrão do projeto). Caso já tenha Google Chrome instalado, pode usar `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`.
+
+A suíte cobre desktop e largura de 360 px, cadastro, login, refresh, Bearer, páginas privadas, token inválido, falhas de conexão/servidor, saída entre abas, teclado e validação de formulários. Capturas ficam em `frontend/test-results/`, ignorado pelo Git. Os testes de outras features ainda marcados como pendentes não significam conclusão do núcleo.
+
+Os detalhes de setup estão no [guia de setup](docs/guias/00-setup.md).
 
 ## Trabalho em equipe
 
