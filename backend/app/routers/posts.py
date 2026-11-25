@@ -28,3 +28,13 @@ def editar(dados: PostPatch, post_id: int = Path(gt=0), db: Session = Depends(ge
 def excluir(post_id: int = Path(gt=0), db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     service.excluir(db, post_id, user.id)
     return Response(status_code=204)
+
+
+from app.schemas.republication import RepublicationCreate, RepublicationOut
+from app.services import republications
+
+
+@router.post("/{post_id}/republicacoes", response_model=RepublicationOut, status_code=201)
+def republicar(dados: RepublicationCreate, post_id: int = Path(gt=0),
+               db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return republications.criar(db, post_id, dados, user.id)

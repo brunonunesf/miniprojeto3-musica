@@ -27,11 +27,11 @@ export default function NovaReview() {
   return <div className="space-y-5">
     <h1 className="text-3xl font-bold">Nova review</h1>
     {musica && <p role="status">Selecionada: <strong>{musica.titulo} — {musica.artista}</strong> · {musica.descricao_versao}</p>}
-    <MusicSelector value={musica?.id ?? null} onChange={(_id, m) => { setMusica(m); setExistente(null); setErro(""); }} />
+    <MusicSelector disabled={salvando} value={musica?.id ?? null} onChange={(_id, m) => { setMusica(m); setExistente(null); setErro(""); }} />
     <form onSubmit={publicar} className="space-y-4">
-      <label className="block">Sua review<textarea required maxLength={3000} value={texto} disabled={salvando} onChange={e => setTexto(e.target.value)} className="mt-2 min-h-40 w-full rounded-lg border bg-white p-3" /></label>
+      <label htmlFor="review-texto" className="block">Sua review</label><textarea id="review-texto" required maxLength={3000} value={texto} disabled={salvando} onChange={e => setTexto(e.target.value)} className="mt-2 min-h-40 w-full rounded-lg border bg-white p-3" />
       {erro && <p role="alert">{erro}</p>}
-      {existente && <div className="flex flex-wrap gap-4"><Link className="font-bold text-brand-700" href={`/posts/${existente}`}>Abrir review existente</Link><Link className="font-bold text-brand-700" href={`/posts/${existente}?editar=1`}>Editar review existente</Link></div>}
+      {existente && <div className="flex flex-wrap gap-4"><Link className="font-bold text-brand-700" href={`/posts/${existente}`}>Abrir review existente</Link><Link className="font-bold text-brand-700" href={`/posts/${existente}?editar=1`}>Editar review existente</Link><Link className="font-bold text-brand-700" href={`/posts/${existente}#republicar`}>Republicar review existente</Link></div>}
       <button className="btn-primary disabled:opacity-50" disabled={salvando}>{salvando ? "Publicando…" : "Publicar review"}</button>
     </form>
   </div>;

@@ -278,3 +278,11 @@ Convenções:
 - Empates usam ID estável. Offset pode repetir/pular itens se houver novas atividades entre páginas; atualizar reinicia a paginação. Interface deduplica por `feed_id` e preserva itens anteriores quando carregar mais falha. Sem atualização em tempo real.
 - `GET/POST/DELETE` 🔒 `/usuarios/{username}/follow`: estado `{seguindo: bool}` / seguir `204` / deixar de seguir `204`. Escritas idempotentes; seguir a si próprio: `422`; usuário ausente: `404`.
 - `GET` 🔒 `/usuarios/{username}`: dados públicos e contadores `seguidores`, `seguindo`. Não inclui edição de perfil nem listas de seguidores.
+
+## Republicação — parte 3 (#18)
+
+- `POST` 🔒 `/posts/{id}/republicacoes`, body `{comentario?: str}` (até 280 caracteres após trim) → `201`, `{id, post_id, autor_id, created_at, comentario}`. Somente review musical própria e ativa. Sem sessão: `401`; alheia: `403`; inexistente/apagada: `404`; post sem música: `422`.
+- Uma republicação por pessoa/música a cada intervalo móvel de 24h, com validação atômica no SQLite. Antes do prazo: `429` e header `Retry-After` em segundos. Exatamente após 24h é permitido. Edição não consome nem reinicia o intervalo. Excluir/recriar a review não reinicia o limite.
+- O feed mescla cartão original e avisos. `tipo` é `post` ou `republicacao`, `feed_id` é `tipo:id_do_item` e `feed_at` é a data da atividade. `id` continua sendo o ID da review para compatibilidade; não usá-lo para deduplicar avisos. Empates: tipo e ID do item decrescentes.
+- Cada aviso preserva comentário/data e exibe a review atual; edições não alteram sua posição. Excluir a review remove seus avisos e texto. A janela de limite permanece sem conteúdo de comentário.
+- Republicar não cria review/nó/pontos. As ações sobre conteúdo devem usar `/posts/{id}` da review, nunca `feed_id`; curtidas/comentários/recomendações serão integrados nas respectivas issues.

@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 const senha = "senha-forte-123";
 let sequencia = 0;
@@ -11,7 +12,7 @@ async function cadastrar(page: Page, username = novoUsuario()) {
   await page.getByLabel("Senha", { exact: true }).fill(senha);
   await page.getByRole("button", { name: "Criar conta", exact: true }).click();
   await expect(page.getByRole("button", { name: "Sair", exact: true })).toBeVisible();
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`http://localhost:${process.env.E2E_FRONT_PORT ?? "3000"}/`);
   return username;
 }
 
@@ -29,7 +30,7 @@ test("cadastro, Bearer, refresh, redirecionamento público e saída entre abas",
   expect((await eu).headers().authorization).toBe(`Bearer ${token}`);
   await expect(page.getByRole("button", { name: "Sair", exact: true })).toBeVisible();
   await page.goto("/login");
-  await expect(page).toHaveURL("http://localhost:3000/");
+  await expect(page).toHaveURL(`http://localhost:${process.env.E2E_FRONT_PORT ?? "3000"}/`);
   const outra = await context.newPage();
   await outra.goto("/usuarios");
   await expect(outra.getByRole("heading", { name: "Usuários", exact: true })).toBeVisible();

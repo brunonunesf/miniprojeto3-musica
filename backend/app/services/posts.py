@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 from fastapi import HTTPException
-from sqlalchemy import func, select, text
+from sqlalchemy import delete, func, select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.models.post import Post
+from app.models.republication import Republication
 from app.models.music import Music
 from app.models.user import User
 
@@ -67,6 +68,7 @@ def editar(db: Session, post_id: int, dados, autor_id: int):
 def excluir(db: Session, post_id: int, autor_id: int):
     escrita(db)
     post = proprio(db, post_id, autor_id)
+    db.execute(delete(Republication).where(Republication.post_id == post.id))
     post.texto = ""
     post.deleted_at = agora()
     db.commit()

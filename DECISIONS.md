@@ -223,3 +223,13 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Implementados feed dos seguidos, seguir/deixar de seguir mínimo necessário e links para publicações por pessoa. Perfil completo e listas de seguidores ficam fora desta etapa; o PR #25 não foi alterado.
 - Paginação conserva itens em falha da próxima página, deduplica pela identidade do item e reinicia ao atualizar. Não há push em tempo real; limites de offset sob novas atividades estão documentados no contrato.
 - Validação: 10 testes direcionados passaram (4 do núcleo continuam pendentes nessa seleção), incluindo contrato original de feed/follow, ordenação por edição, texto igual, empates e paginação; build passou. Revisão humana pendente.
+
+
+## Republicação — parte 3 — 25/11/2026
+
+- Bruno confirmou que republicar substitui o recurso obrigatório de “Ouvi novamente” da #18. Não se afirma uma nova escuta; comentário é opcional, até 280 caracteres. Uma republicação por pessoa/música em 24h; edições reais são livres e reposicionam somente o cartão original.
+- Avisos têm identidade/data próprias e apontam ao texto atual da review. Não criam outro nó, review ou pontos. Ainda não há curtidas/comentários/reputação implementados; os avisos abrem a review original para as futuras ações.
+- Decisão+gravação são serializadas com BEGIN IMMEDIATE no SQLite; índice parcial único protege reviews ativas. Janela por autor/música preserva o intervalo mesmo após exclusão e nova review; os avisos e seus comentários são apagados na exclusão.
+- Interface permite republicar no detalhe e apresenta as opções abrir/editar/republicar no conflito de review existente, sem substituir o rascunho. Feed distingue os avisos sem deduplicá-los pelo ID da review.
+- Validação de backend: 50 testes passaram, 4 permanecem pendentes (perfil editável, curtidas, comentários e seed completo). Casos incluem exatamente 24h, concorrência com conexões independentes, edição sem consumo do limite e exclusão. Build/TypeScript passaram. Validação final do navegador registrada no PR.
+- Verificação final: 18 testes de navegador passaram em desktop e 360 px (auth, catálogo, review única, edição, republicação, exclusão, seguir/deixar de seguir e recuperação de paginação). Build e TypeScript passaram; capturas do feed inspecionadas sem cortes ou rolagem horizontal. O cenário adicional de reinício passou em execução direcionada (3 testes de republicação), preservando usuário, catálogo, review e limite. Testes usaram banco/portas isolados sem alterar os servidores e dados locais.

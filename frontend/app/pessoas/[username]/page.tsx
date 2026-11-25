@@ -6,6 +6,10 @@ import { PostCard } from "@/components/PostCard";
 
 export default function Publicacoes({ params }: { params: Promise<{ username: string }> }) {
   const { username } = use(params);
+  return <ListaPublicacoes key={username} username={username} />;
+}
+
+function ListaPublicacoes({ username }: { username: string }) {
   const [pagina, setPagina] = useState<Page<Post> | null>(null);
   const [erro, setErro] = useState("");
   const [offset, setOffset] = useState(0);

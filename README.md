@@ -36,7 +36,7 @@ A proposta inclui uma área própria de sugestões de reviews, baseada em gêner
 
 ## Estado inicial
 
-Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. A rede musical ainda não está implementada. A autenticação tem implementação de backend e frontend nesta branch, com cadastro, entrada automática, login, sessão persistente e saída; aguarda revisão do time. As demais funcionalidades evoluem nas issues do time.
+Este repositório contém a base oficial do [miniprojeto 3](https://github.com/TrilhaUFPB/miniproj3) e a documentação inicial da proposta. Esta sequência de branches inclui autenticação, catálogo, reviews, feed dos seguidos e republicação. As novas entregas aguardam revisão e integração do time; perfil completo, curtidas, comentários, árvores e reputação continuam nas respectivas issues.
 
 - Backend: FastAPI, SQLAlchemy e SQLite.
 - Frontend: Next.js, TypeScript e Tailwind.
@@ -114,4 +114,12 @@ Síntese das mensagens de texto sobre música da conversa do grupo em 18 e 19/11
 
 ### Catálogo musical (#9, primeira etapa)
 
-Execute `make seed` e abra `/musicas` após entrar. O seed inclui seis faixas e artistas **fictícios**, com versões original, remix, ao vivo e remaster, além de títulos iguais de artistas distintos. Pode ser repetido em banco com usuários, preservando contas e identidades das músicas. A seleção funciona nesta etapa; publicação de reviews depende da #3. API e contrato estão em `CONTRATO.md`.
+Execute `make seed` e abra `/musicas` após entrar. O seed inclui seis faixas e artistas **fictícios**, com versões original, remix, ao vivo e remaster, além de títulos iguais de artistas distintos. Pode ser repetido em banco com usuários, preservando contas e identidades das músicas. A seleção é reutilizada no formulário de reviews da etapa seguinte. API e contrato estão em `CONTRATO.md`.
+
+### Reviews, feed e republicação
+
+Após `make seed` e login, use **Escrever review** para selecionar a versão musical e publicar seu texto (até 3000 caracteres). **Minhas reviews** abre suas publicações, com edição, republicação e exclusão confirmada. Uma review ativa por pessoa/versão: tentar outra oferece abrir, editar ou republicar a existente, preservando o rascunho.
+
+Na lista **Usuários**, abra uma pessoa e use **Seguir**. O **Feed** mostra apenas quem você segue. Edições reais de reviews trazem o mesmo cartão ao topo; **Republicar** cria um aviso com comentário opcional (até 280 caracteres), no máximo uma vez por pessoa/música a cada 24h. Atualize o feed para ver novas atividades. Curtidas, comentários, árvore e reputação continuam nas respectivas issues.
+
+As tabelas novas são criadas na inicialização, sem apagar usuários ou catálogo. Esta implementação parte da base sem tabela de posts anterior; não aplica migração a esquemas de posts criados por outras branches. Os PRs são encadeados: catálogo → reviews → feed → republicação, com revisão humana antes de integrar.

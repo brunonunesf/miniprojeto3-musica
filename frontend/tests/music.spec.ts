@@ -1,14 +1,6 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('catálogo real: busca, versões, seleção por teclado, vazio e recuperação de erro', async ({ page }) => {
-  // Portas isoladas preservam os servidores locais. O CORS de produção continua
-  // restrito à porta 3000; o encaminhamento abaixo só existe no teste isolado.
-  if (process.env.E2E_FRONT_PORT) {
-    await page.route(`http://localhost:${process.env.E2E_BACK_PORT}/**`, async route => {
-      const response = await route.fetch();
-      await route.fulfill({ response });
-    });
-  }
   await page.goto('/login');
   await page.getByLabel('Usuário', { exact: true }).fill('ana');
   await page.getByLabel('Senha', { exact: true }).fill('senha-forte-123');

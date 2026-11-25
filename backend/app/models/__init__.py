@@ -7,3 +7,5 @@ from app.models.music import Music  # noqa: F401
 from app.models.post import Post  # noqa: F401
 
 from app.models.follow import Follow  # noqa: F401
+
+from app.models.republication import Republication, RepublicationWindow  # noqa: F401
