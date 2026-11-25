@@ -23,7 +23,17 @@ export const EXEMPLOS_DO_FEED: Post[] = Array.from({ length: 12 }, (_, i) => {
     texto,
     nota: 10 - (i % 5),
     tem_texto: texto !== "",
-    musica: { id: i + 1, titulo, artista, versao: "original", capa_url: "" },
+    musica: {
+      id: i + 1,
+      chave_catalogo: `exemplo-${i + 1}`,
+      titulo,
+      artista,
+      tipo_versao: "original",
+      descricao_versao: "",
+      generos: [],
+      tags: [],
+      capa_url: "",
+    },
     autor: { id: (i % PESSOAS.length) + 1, username, name, bio: "", avatar_url: "", created_at },
     created_at,
   };

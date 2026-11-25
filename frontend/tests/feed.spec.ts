@@ -2,7 +2,10 @@ import { expect, test, type Page, type Route } from "@playwright/test";
 
 function review(id: number) {
   const autor = { id: 99, username: "bia", name: "Bia", bio: "", avatar_url: "", created_at: "2026-11-24T10:00:00Z" };
-  const musica = { id, titulo: `Música ${id}`, artista: "Artista", versao: "original", capa_url: "" };
+  const musica = {
+    id, chave_catalogo: `teste-${id}`, titulo: `Música ${id}`, artista: "Artista",
+    tipo_versao: "ao_vivo", descricao_versao: "Show de teste", generos: [], tags: [], capa_url: "",
+  };
   return { id, texto: "ok", nota: 8, tem_texto: true, musica, autor, created_at: "2026-11-24T10:00:00Z" };
 }
 
@@ -30,6 +33,7 @@ test("carrega mais sem repetir e atualizar recomeça a lista", async ({ page }) 
   });
   await abrirFeed(page);
   await expect(page.getByRole("article")).toHaveCount(2);
+  await expect(page.getByRole("article").first()).toContainText("Ao vivo · Show de teste");
   await page.getByRole("button", { name: "Carregar mais" }).click();
   await expect(page.getByRole("article")).toHaveCount(3);
   await expect(page.getByRole("button", { name: "Carregar mais" })).toHaveCount(0);
