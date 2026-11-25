@@ -200,25 +200,27 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
 - Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.
 
-## Posts e reviews — issues #3 e #9 — 24/11/2026
+## Posts e reviews — issues #3 e #9 — 25/11/2026
 
-Inspirado no Letterboxd, o post da rede **é uma review de uma música**: a música e a nota são obrigatórias e o texto é opcional. Uma review pode ser só a nota.
+Inspirado no Letterboxd, o post da rede **é uma review de uma música do catálogo**: a música e a nota são obrigatórias e o texto é opcional. Uma review pode ser só a nota. A pessoa **escolhe** a música em um catálogo curado; não digita uma música nova.
 
-- **Rotas:** `POST /posts` (201), `GET /posts/{id}`, `PATCH /posts/{id}` e `DELETE /posts/{id}` (204). Todas exigem login.
-- **Corpo de `POST /posts`:** `{"musica": {"titulo", "artista", "versao"?}, "nota": 0 a 10, "texto"?}`. Esta é uma **evolução do contrato do núcleo**, que aceitava só `texto`; o `test_posts_crud` foi adaptado sem remover nenhuma verificação. Os testes ainda `@skip` de feed, curtidas, comentários e perfil usam o formato antigo e serão adaptados quando cada feature for implementada.
-- **Resposta:** `id`, `texto`, `nota`, `musica` (`id`, `titulo`, `artista`, `versao`), `autor` (usuário completo) e `created_at`.
+- **Rotas de posts:** `POST /posts` (201), `GET /posts/{id}`, `PATCH /posts/{id}` e `DELETE /posts/{id}` (204). Todas exigem login.
+- **Corpo de `POST /posts`:** `{"musica_id": int, "nota": 0 a 10, "texto"?}`. Esta é uma **evolução do contrato do núcleo**, que aceitava só `texto`; o `test_posts_crud` foi adaptado sem remover nenhuma verificação. Os testes ainda `@skip` de feed, curtidas, comentários e perfil usam o formato antigo e serão adaptados quando cada feature for implementada. Um `musica_id` fora do catálogo devolve `422`.
+- **Resposta:** `id`, `texto`, `tem_texto`, `nota`, `musica` (todos os dados do catálogo), `autor` (usuário completo) e `created_at`.
+- **Rotas do catálogo:** `GET /musicas?q=&offset=&limit=` (busca por termos de título e artista, sem diferença de caixa, paginada, limite de 1 a 100) e `GET /musicas/{id}`. Exigem login. Não há cadastro de música pela API.
+- **Catálogo:** o backend importa `backend/data/musicas.json` (entrega de dados do Bruno, #32) a cada subida, de forma idempotente: a chave curada `chave_catalogo` identifica a gravação e o `id` do banco é atribuído uma vez e preservado. Um catálogo inválido impede a subida, em vez de gravar parte dele. A busca filtra em Python (a comparação Unicode do SQLite não ignora caixa nem acento) e custa O(n) por consulta, o que é aceitável para um catálogo curado pequeno.
+- **Identidade da música:** a chave curada é a identidade; título e artista iguais não unem gravações. Original, remix, ao vivo e remaster são músicas distintas e recebem reviews distintas.
 - **Nota:** inteira de 0 a 10, obrigatória e editável. Escala provisória, aprovada "por enquanto"; meia nota ou estrelas podem vir depois. Nota fora do intervalo ou decimal devolve `422`.
 - **Texto:** opcional, até 5000 caracteres, com espaços das pontas removidos. O limite é generoso, na linha do Letterboxd, porque o feed mostra só o indicador e o texto completo aparece apenas no detalhe; ele existe para proteger a API e o banco. O valor foi proposto por Daniel e a #3 pede que o time o confirme. Quando houver review derivada (#10), o DECISIONS.md já exige texto próprio nela.
-- **Catálogo manual de músicas:** a pessoa informa título e artista (e, opcionalmente, a versão; o padrão é `original`) ao fazer a review. Se a gravação já existe, ela é reaproveitada. Não há integração com serviço externo.
-- **Identidade da música:** a chave é título, artista e versão **normalizados** (sem acento, sem diferença de maiúsculas e com espaços colapsados). Assim "Águas de Março" e "  aguas de marco " são a mesma gravação, mas original, remix e ao vivo são músicas diferentes, e o mesmo título com outro artista também. Músicas de serviços diferentes não são presumidas equivalentes.
-- **Forma da review no feed (decisão de produto):** cartão compacto com a **capa**, o **nome da música** e a **nota**, mais um **indicador de que existe texto**; clicar na review abre o detalhe com o texto completo. Para isso a resposta traz `musica.capa_url` e `tem_texto` (verdadeiro quando há texto). A capa é um endereço `http(s)` informado ao cadastrar a música; não há upload nem busca automática de capas. Uma música sem capa mostra um substituto na interface, e outra review da mesma música pode completar a capa que faltava. O feed (#6) e a tela são as próximas etapas.
-- **Uma review por pessoa e música.** Uma segunda review da mesma música pelo mesmo autor devolve `409`; apagar a review libera uma nova. A oferta de edição ou reescuta fica para a #18.
-- **A música não muda na edição.** `PATCH` altera só nota e texto; trocar a música de uma review é decisão pendente da #9.
+- **Forma da review no feed (decisão de produto):** cartão compacto com a **capa**, o **nome da música** e a **nota**, mais um **indicador de que existe texto** (`tem_texto`); clicar na review abre o detalhe com o texto completo.
+- **Capa:** a música tem `capa_url` opcional, hoje vazia, porque o catálogo ainda não traz esse campo. Quando o Bruno o incluir nos dados, a importação o grava sem mudança no backend. Enquanto isso, a interface mostra uma imagem substituta.
+- **Uma review por pessoa e versão.** Uma segunda review da mesma versão pelo mesmo autor devolve `409`; apagar a review libera uma nova. A oferta de edição ou reescuta fica para a #18.
+- **A música não muda na edição.** `PATCH` altera só nota e texto, e um `musica_id` enviado ali é ignorado; trocar a música de uma review é decisão pendente da #9.
 - **Autoria vem da sessão.** Um `autor_id` enviado pelo cliente é ignorado. Editar ou excluir review de outra pessoa devolve `403` sem alterar o banco; review inexistente devolve `404`, verificado antes da permissão.
 - **Preparação da árvore:** `origem_id` ainda não existe. Será uma coluna opcional do `Post` na #10, sem quebrar o contrato acima.
 - **Exclusão:** por enquanto apaga a review. A política para descendentes de uma review excluída será definida junto com a #10.
 - **Esquema do banco:** as tabelas `posts` e `musicas` são novas. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
-- Claude Code implementou o CRUD de reviews, o catálogo manual de músicas e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (56 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
+- Claude Code implementou o CRUD de reviews, a importação e as rotas do catálogo e seus testes (`test_posts_crud`, `test_posts.py` e `test_musicas.py`). Foi verificado com `make test` (73 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
 
 ## Perfil — conciliação com a identidade aprovada (25/11/2026)
 

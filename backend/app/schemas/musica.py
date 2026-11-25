@@ -1,24 +1,22 @@
-from typing import Annotated
-
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
-
-Titulo = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=200)]
-Versao = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=60)]
-
-
-class MusicaIn(BaseModel):
-    titulo: Titulo
-    artista: Titulo
-    versao: Versao = "original"
-    # endereço da imagem da capa; só http(s), como o avatar. Vazio = sem capa.
-    capa_url: str = Field(default="", max_length=300, pattern=r"^(https?://\S+)?$")
+from pydantic import BaseModel, ConfigDict
 
 
 class MusicaOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+    chave_catalogo: str
     titulo: str
     artista: str
-    versao: str
+    tipo_versao: str
+    descricao_versao: str
+    generos: list[str]
+    tags: list[str]
     capa_url: str
+
+
+class MusicaPage(BaseModel):
+    items: list[MusicaOut]
+    total: int
+    offset: int
+    limit: int

@@ -2,14 +2,16 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.models.musica import Musica
 from app.models.post import Post
 from app.models.user import User
 from app.schemas.post import PostCreate, PostUpdate
-from app.services import musicas
 
 
 def criar(db: Session, autor: User, dados: PostCreate) -> Post:
-    musica = musicas.obter_ou_criar(db, dados.musica)
+    musica = db.get(Musica, dados.musica_id)
+    if not musica:
+        raise HTTPException(status_code=422, detail="música não encontrada no catálogo")
 
     ja_avaliou = db.scalar(
         select(Post.id).where(Post.autor_id == autor.id, Post.musica_id == musica.id)

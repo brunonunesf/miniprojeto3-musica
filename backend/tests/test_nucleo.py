@@ -60,12 +60,12 @@ def test_auth_eu(client, logar):
 # ---------- POSTS ----------
 
 
-def test_posts_crud(client, logar):
+def test_posts_crud(client, logar, id_da_musica):
     ana = logar("ana")
     bia = logar("bia")
 
-    # o post é uma review: música + nota (0 a 10) obrigatórias, texto opcional
-    review = {"musica": {"titulo": "Águas de Março", "artista": "Elis Regina"}, "nota": 9}
+    # o post é uma review: música do catálogo + nota (0 a 10) obrigatórias, texto opcional
+    review = {"musica_id": id_da_musica(ana), "nota": 9}
     r = client.post("/posts", json={**review, "texto": "meu primeiro post"}, headers=ana)
     assert r.status_code == 201
     post_id = r.json()["id"]

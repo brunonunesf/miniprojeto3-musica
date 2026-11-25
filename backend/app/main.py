@@ -7,7 +7,8 @@ from sqlalchemy import select
 from app.core.contadores import contador_iniciais
 from app.db import Base, SessionLocal, engine
 from app.models.user import User
-from app.routers import auth, posts, users
+from app.routers import auth, musicas, posts, users
+from app.services import musicas as servico_musicas
 
 
 @asynccontextmanager
@@ -16,6 +17,7 @@ async def lifespan(app: FastAPI):
     # Reconstrói as estruturas do core/ a partir do banco (memória zera a cada
     # restart — inclusive no --reload; ver core/README.md).
     with SessionLocal() as db:
+        servico_musicas.importar_catalogo(db)  # catálogo curado; repetir é seguro
         usernames = list(db.scalars(select(User.username)))
     contador_iniciais.reconstruir(usernames)
     yield
@@ -34,4 +36,5 @@ app.add_middleware(
 # 1 linha por feature — registre o seu router aqui.
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(musicas.router)
 app.include_router(posts.router)
