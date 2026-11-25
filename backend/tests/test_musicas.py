@@ -78,22 +78,54 @@ def test_importar_o_catalogo_de_novo_preserva_os_ids(client, logar):
     assert client.get("/musicas?limit=100", headers=ana).json()["items"] == antes
 
 
-def test_importar_trata_a_capa_opcional_do_catalogo(client, logar, monkeypatch):
-    ana = logar("ana")
-    base = {
-        "tipo_versao": "original",
-        "descricao_versao": "",
-        "generos": ["indie"],
-        "tags": ["calma"],
-    }
-    catalogo = [
-        {**base, "chave_catalogo": "sem-capa", "titulo": "Sem Capa", "artista": "A", "capa_url": None},
-        {**base, "chave_catalogo": "com-capa", "titulo": "Com Capa", "artista": "B", "capa_url": "https://exemplo.com/c.jpg"},
-    ]
-    monkeypatch.setattr(service, "carregar_catalogo", lambda: catalogo)
+def test_capas_ausentes_nulas_e_validas_na_importacao(client, logar, monkeypatch):
+    import copy
+    from catalogo_musical import carregar_catalogo, validar_catalogo
 
+    ana = logar('ana')
+    originais = carregar_catalogo()
+    registros = copy.deepcopy(originais)
+    registros[0].pop('capa_url')
+    registros[1]['capa_url'] = None
+    # Exercita URL >300 caracteres, até o limite aceito de 2048.
+    prefixo = 'https://images.example.com/'
+    url = prefixo + 'a' * (2048 - len(prefixo))
+    registros[2]['capa_url'] = url
+    registros = validar_catalogo(registros)
+    monkeypatch.setattr(service, 'carregar_catalogo', lambda: copy.deepcopy(registros))
+    antes = client.get('/musicas?limit=100', headers=ana).json()['items']
+    ids = {m['chave_catalogo']: m['id'] for m in antes}
     with SessionLocal() as db:
-        assert service.importar_catalogo(db) == 2  # catálogo com capa None não derruba a importação
+        assert service.importar_catalogo(db) == 0
+        assert service.importar_catalogo(db) == 0
+    depois = client.get('/musicas?limit=100', headers=ana)
+    assert depois.status_code == 200
+    por_chave = {m['chave_catalogo']: m for m in depois.json()['items']}
+    assert por_chave[registros[0]['chave_catalogo']]['capa_url'] == ''
+    assert por_chave[registros[1]['chave_catalogo']]['capa_url'] == ''
+    com_capa = por_chave[registros[2]['chave_catalogo']]
+    assert com_capa['capa_url'] == url
+    assert client.get(f"/musicas/{com_capa['id']}", headers=ana).json()['capa_url'] == url
+    assert {k: m['id'] for k, m in por_chave.items()} == ids
+    # Remover capa existente também não pode gravar NULL ou mudar a identidade.
+    registros[2]['capa_url'] = None
+    with SessionLocal() as db:
+        assert service.importar_catalogo(db) == 0
+    assert client.get(f"/musicas/{com_capa['id']}", headers=ana).json()['capa_url'] == ''
+    assert originais[2]['capa_url'] is None
 
-    achadas = {m["titulo"]: m["capa_url"] for m in client.get("/musicas?q=capa", headers=ana).json()["items"]}
-    assert achadas == {"Sem Capa": "", "Com Capa": "https://exemplo.com/c.jpg"}
+
+def test_reiniciar_aplicacao_preserva_catalogo_e_credenciais(client, logar):
+    from fastapi.testclient import TestClient
+    from app.main import app
+
+    ana = logar('ana')
+    antes = client.get('/musicas?limit=100', headers=ana).json()
+    # O banco não é apagado entre inicializações: reproduz o erro da segunda subida.
+    with TestClient(app) as segunda_subida:
+        resposta = segunda_subida.get('/musicas?limit=100', headers=ana)
+        assert resposta.status_code == 200
+        assert resposta.json() == antes
+        assert segunda_subida.post('/auth/login', json={
+            'username': 'ana', 'password': 'senha-forte-123',
+        }).status_code == 200

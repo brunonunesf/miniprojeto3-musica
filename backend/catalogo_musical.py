@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, ValidationError, ValidationInfo, field_validator
 
 CATALOGO_PADRAO = Path(__file__).resolve().parent / "data" / "musicas.json"
 
@@ -19,6 +19,7 @@ class MusicaCatalogo(BaseModel):
     descricao_versao: str = Field(max_length=200)
     generos: list[str] = Field(min_length=1)
     tags: list[str] = Field(min_length=1)
+    capa_url: HttpUrl | None = Field(default=None, max_length=2048)
 
     @field_validator("titulo", "artista", "descricao_versao", mode="before")
     @classmethod
@@ -68,7 +69,7 @@ def validar_catalogo(conteudo: object) -> list[dict]:
             )
         else:
             chaves[musica.chave_catalogo] = indice
-        registros.append(musica.model_dump())
+        registros.append(musica.model_dump(mode="json"))
 
     if erros:
         raise ErroCatalogo("\n".join(erros))
