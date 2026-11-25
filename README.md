@@ -111,3 +111,7 @@ Usem o template de feature ou abram uma issue em branco para decisões, dúvidas
 ## Origem da proposta
 
 Síntese das mensagens de texto sobre música da conversa do grupo em 18 e 19/11/2026, priorizando a proposta detalhada de Daniel em 19/11. Os áudios não foram transcritos e seu conteúdo não foi inferido. O histórico privado, os áudios e os demais anexos não fazem parte do repositório.
+
+## Feed e descoberta — planejamento visual aprovado em 25/11
+
+O feed continua cronológico, com reviews dos seguidos. Pesquisa e músicas mais avaliadas na comunidade formam uma área própria; Descobrir mantém sugestões personalizadas. Veja o [plano, contratos e responsabilidades](docs/feed-e-descoberta.md) e o [rascunho visual aprovado](docs/planejamento/feed-descoberta-rascunho.png). São entregas planejadas, ainda dependentes das implementações e integrações nas issues.
