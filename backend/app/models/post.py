@@ -16,7 +16,7 @@ class Post(Base):
     __table_args__ = (UniqueConstraint("autor_id", "musica_id"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    texto: Mapped[str] = mapped_column(String(500), default="")
+    texto: Mapped[str] = mapped_column(String(5000), default="")
     nota: Mapped[int]
     autor_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     musica_id: Mapped[int] = mapped_column(ForeignKey("musicas.id"), index=True)

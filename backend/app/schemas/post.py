@@ -7,7 +7,7 @@ from app.schemas.musica import MusicaIn, MusicaOut
 from app.schemas.user import UserOut
 
 # strip antes de validar. O texto é opcional: uma review pode ter só a nota.
-Texto = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
+Texto = Annotated[str, StringConstraints(strip_whitespace=True, max_length=5000)]
 Nota = Annotated[int, Field(ge=0, le=10)]
 
 

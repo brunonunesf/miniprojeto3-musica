@@ -96,11 +96,14 @@ def test_texto_invalido_devolve_422(client, logar):
     ana = logar("ana")
     post_id = client.post("/posts", json=review(texto="ok"), headers=ana).json()["id"]
 
-    assert client.post("/posts", json=review("Outra", texto="x" * 501), headers=ana).status_code == 422
-    assert client.patch(f"/posts/{post_id}", json={"texto": "x" * 501}, headers=ana).status_code == 422
+    assert client.post("/posts", json=review("Outra", texto="x" * 5001), headers=ana).status_code == 422
+    assert client.patch(f"/posts/{post_id}", json={"texto": "x" * 5001}, headers=ana).status_code == 422
     assert client.patch(f"/posts/{post_id}", json={}, headers=ana).status_code == 422
 
     assert client.get(f"/posts/{post_id}", headers=ana).json()["texto"] == "ok"
+
+    # o limite em si é aceito
+    assert client.patch(f"/posts/{post_id}", json={"texto": "x" * 5000}, headers=ana).status_code == 200
 
 
 def test_editar_so_a_nota_preserva_o_texto(client, logar):
