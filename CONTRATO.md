@@ -262,3 +262,11 @@ Convenções:
 - Sem sessão: `401`; parâmetros inválidos: `422`. Não há cadastro público de música.
 - `make seed` carrega o catálogo manual fictício de `backend/data/musicas.json`, mesmo com usuários existentes. Chave única estável define identidade; atualizar metadados preserva ID. Duplicatas de chave no arquivo são rejeitadas antes da gravação. Não reutilizar uma chave para outra gravação.
 - Integração futura com #3: `musica_id` opcional na criação de posts, `musica` na saída, unicidade de review ativa por autor/música e bloqueio de troca na edição. Esses campos e comportamentos ainda não estão implementados; não existe endpoint de posts nesta etapa.
+
+## Reviews — #3/#9
+
+- `POST` 🔒 `/posts` aceita `{texto, musica_id?}` e retorna `201` com `id`, `texto`, `autor`, `musica` (ou null), `created_at`, `edited_at`. Texto: 1–3000 caracteres após trim. Campos desconhecidos são recusados; autoria vem da sessão.
+- `GET/PATCH/DELETE` 🔒 `/posts/{id}`: `200/200/204`; PATCH aceita somente `{texto}`. Outra pessoa não altera (`403`); inexistente/apagada: `404`; referência musical inválida ou troca de música: `422`.
+- Review ativa repetida: `409`, `detail: {message, post_id}`. Índice parcial único autor/música no SQLite protege concorrência. Posts sem música não sofrem essa restrição.
+- `GET` 🔒 `/usuarios/{username}/posts?offset=0&limit=20`: página de publicações ativas, criação decrescente; limite 1–100.
+- Exclusão apaga texto e marca data de exclusão, preservando ID, autor e música para futuras árvores. Não restaura conteúdo nem reutiliza ID. Datas são UTC ISO 8601.

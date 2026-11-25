@@ -206,3 +206,12 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - A #3 ainda não possui model/rotas de posts nesta base. Vínculo, unicidade concorrente de review, exclusão, detalhe, feed e perfil ficam pendentes de integração. Esta entrega não fecha #9, nem implementa #3, árvores ou reescutas.
 - Novas tabelas são criadas pelo mecanismo existente; não há alteração de tabelas antigas nem exclusão de dados. Na integração futura, alterações na tabela de posts exigem migração explícita.
 - Validação desta etapa: 41 testes de backend passaram e 7 do núcleo permanecem pendentes; build e TypeScript passaram; 2 testes de navegador passaram em desktop e 360 px, com API e SQLite reais isolados. O encaminhamento de requisições no teste com portas alternativas contorna apenas o CORS fixo da porta 3000, sem alterar a configuração da aplicação. Capturas foram inspecionadas sem cortes ou rolagem horizontal.
+
+
+## Reviews — parte 1 — 25/11/2026
+
+- Implementado CRUD necessário da #3 e vínculo musical da #9, com texto até 3000 caracteres, autoria por sessão e música imutável na edição. Posts somente de texto continuam aceitos pela API.
+- Uma review ativa por pessoa/música, protegida por índice único parcial no banco. Conflito retorna a review existente; formulário mantém rascunho e oferece abrir/editar. A interface de publicação exige música.
+- Exclusão limpa o texto e mantém referência sem conteúdo para futuras árvores; nova review usa outro ID. Ainda não há árvore ou mecanismo de reputação.
+- Novas tabelas são criadas pelo mecanismo existente. A base inspecionada não tinha modelo/tabela de posts gerenciada pelo projeto; não se executa ALTER nem se apagam dados antigos.
+- Criados formulário, detalhe com edição/exclusão e listagem pública autenticada de posts por pessoa. Validação: 45 testes de backend passaram (6 pendentes do núcleo), incluindo concorrência em conexões independentes, e build passou. Revisão humana pendente.

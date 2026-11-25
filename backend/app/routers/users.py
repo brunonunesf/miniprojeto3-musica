@@ -35,3 +35,14 @@ def stats_por_inicial():
 def criar_usuario(dados: UserCreate, db: Session = Depends(get_db)):
     # ponytail: criação sem senha — o guia de auth evolui isto para o registro real
     return service.criar(db, dados)
+
+
+from app.deps import get_current_user
+from app.schemas.post import PostPage
+from app.services import posts as posts_service
+
+
+@router.get("/{username}/posts", response_model=PostPage, dependencies=[Depends(get_current_user)])
+def posts_do_usuario(username: str, offset: int = Query(0, ge=0),
+                     limit: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)):
+    return posts_service.listar_autor(db, username, offset, limit)

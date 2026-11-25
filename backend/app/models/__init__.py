@@ -3,3 +3,5 @@ from app.models.session import Session  # noqa: F401
 from app.models.user import User  # noqa: F401
 
 from app.models.music import Music  # noqa: F401
+
+from app.models.post import Post  # noqa: F401

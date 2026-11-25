@@ -4,7 +4,7 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export class ApiError extends Error {
-  constructor(public status: number, message: string, public fields: Record<string, string> = {}) {
+  constructor(public status: number, message: string, public fields: Record<string, string> = {}, public postId?: number) {
     super(message);
     this.name = "ApiError";
   }
@@ -41,8 +41,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       }
     }
     const message = res.status >= 500 ? "O serviço está indisponível. Tente novamente em instantes."
-      : typeof erro?.detail === "string" ? erro.detail : "Confira os campos e tente novamente.";
-    throw new ApiError(res.status, message, fields);
+      : typeof erro?.detail === "string" ? erro.detail : typeof erro?.detail?.message === "string" ? erro.detail.message : "Confira os campos e tente novamente.";
+    throw new ApiError(res.status, message, fields, typeof erro?.detail?.post_id === "number" ? erro.detail.post_id : undefined);
   }
   if (res.status === 204) return undefined as T;
   return res.json();
@@ -91,4 +91,9 @@ export type Music = {
   descricao_versao: string;
   generos: string[];
   tags: string[];
+};
+
+export type Post = {
+  id: number; texto: string; autor: User; musica: Music | null;
+  created_at: string; edited_at: string | null;
 };
