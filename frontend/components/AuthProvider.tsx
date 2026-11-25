@@ -6,7 +6,11 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { ApiError, apiGet, apiPost, type User } from "@/lib/api";
 
 type Estado = "verificando" | "autenticado" | "visitante" | "erro";
-type Sessao = { usuario: User | null; entrar: (username: string, password: string) => Promise<void> };
+type Sessao = {
+  usuario: User | null;
+  entrar: (username: string, password: string) => Promise<void>;
+  atualizarUsuario: (novo: User) => void;
+};
 const Contexto = createContext<Sessao | null>(null);
 
 export function useSessao() {
@@ -88,6 +92,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await verificar();
   }
 
+  function atualizarUsuario(novo: User) {
+    setUsuario((atual) => (atual?.id === novo.id ? novo : atual));
+  }
+
   function sair() {
     localStorage.removeItem("token");
     limpar();
@@ -97,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const liberado = (publica && estado === "visitante") || (!publica && estado === "autenticado");
 
   return (
-    <Contexto.Provider value={{ usuario, entrar }}>
+    <Contexto.Provider value={{ usuario, entrar, atualizarUsuario }}>
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
       <header className="border-b border-zinc-200 bg-white">
         <nav aria-label="Navegação principal" className={`mx-auto flex ${ampla ? "max-w-[1152px]" : "max-w-3xl"} flex-wrap items-center justify-between gap-3 px-4 py-4`}>
@@ -109,7 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             <div className="flex min-w-0 flex-wrap items-center gap-4 text-sm">
               <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>Início</Link>
               <Link href="/usuarios" aria-current={pathname === "/usuarios" ? "page" : undefined}>Usuários</Link>
-              <span className="max-w-36 truncate text-zinc-600" title={usuario.name}>{usuario.name}</span>
+              <Link href={`/usuarios/${usuario.username}`} aria-current={pathname === `/usuarios/${usuario.username}` ? "page" : undefined} className="max-w-36 truncate text-zinc-600" title={`Meu perfil: ${usuario.name}`}>{usuario.name}</Link>
               <button onClick={sair} className="font-semibold text-brand-700">Sair</button>
             </div>
           ) : estado === "visitante" ? (

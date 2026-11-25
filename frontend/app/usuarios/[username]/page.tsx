@@ -1,0 +1,145 @@
+"use client";
+
+import { useParams } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+
+import { useSessao } from "@/components/AuthProvider";
+import { Avatar } from "@/components/Avatar";
+import { apiGet, apiPatch, type User } from "@/lib/api";
+
+function membroDesde(dataIso: string): string {
+  return new Date(dataIso).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+}
+
+export default function PerfilPage() {
+  const { username } = useParams<{ username: string }>();
+  // A key recria o componente a cada perfil: nenhum estado passa de um para outro.
+  return <Perfil key={username} username={username} />;
+}
+
+function Perfil({ username }: { username: string }) {
+  const { usuario, atualizarUsuario } = useSessao();
+  const [perfil, setPerfil] = useState<User | null>(null);
+  const [erro, setErro] = useState("");
+  const [tentativa, setTentativa] = useState(0);
+  const [editando, setEditando] = useState(false);
+
+  useEffect(() => {
+    // Descarta a resposta se a pessoa já saiu deste perfil.
+    let ativa = true;
+    setErro("");
+    apiGet<User>(`/usuarios/${encodeURIComponent(username)}`).then(
+      (resposta) => {
+        if (ativa) setPerfil(resposta);
+      },
+      (falha: Error) => {
+        if (ativa) setErro(falha.message);
+      },
+    );
+    return () => {
+      ativa = false;
+    };
+  }, [username, tentativa]);
+
+  function aoSalvar(novo: User) {
+    setPerfil(novo);
+    atualizarUsuario(novo);
+    setEditando(false);
+  }
+
+  if (erro) {
+    return (
+      <div role="alert" className="rounded-2xl border border-zinc-200 bg-white p-6">
+        <p className="mb-4">{erro}</p>
+        <button className="btn-primary" onClick={() => setTentativa((n) => n + 1)}>
+          Tentar novamente
+        </button>
+      </div>
+    );
+  }
+  if (!perfil) return <p role="status" className="text-zinc-600">Carregando perfil…</p>;
+
+  return (
+    <div className="space-y-6">
+      <section className="flex flex-wrap items-center gap-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
+        <Avatar user={perfil} tamanho="xl" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <h1 className="break-words text-3xl font-bold tracking-tight">{perfil.name}</h1>
+          <p className="break-words text-brand-700">@{perfil.username}</p>
+          {perfil.bio && <p className="whitespace-pre-wrap break-words">{perfil.bio}</p>}
+          <p className="text-sm text-zinc-500">Na rede desde {membroDesde(perfil.created_at)}</p>
+        </div>
+        {usuario?.id === perfil.id && !editando && (
+          <button className="btn-primary" onClick={() => setEditando(true)}>
+            Editar perfil
+          </button>
+        )}
+      </section>
+
+      {editando && (
+        <FormularioPerfil perfil={perfil} aoSalvar={aoSalvar} aoCancelar={() => setEditando(false)} />
+      )}
+    </div>
+  );
+}
+
+type PropsFormulario = {
+  perfil: User;
+  aoSalvar: (novo: User) => void;
+  aoCancelar: () => void;
+};
+
+function FormularioPerfil({ perfil, aoSalvar, aoCancelar }: PropsFormulario) {
+  const [name, setName] = useState(perfil.name);
+  const [bio, setBio] = useState(perfil.bio);
+  const [avatarUrl, setAvatarUrl] = useState(perfil.avatar_url);
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState("");
+
+  async function salvar(evento: FormEvent) {
+    evento.preventDefault();
+    if (!name.trim()) {
+      setErro("Informe um nome.");
+      return;
+    }
+    setSalvando(true);
+    setErro("");
+    try {
+      const dados = { name: name.trim(), bio, avatar_url: avatarUrl.trim() };
+      aoSalvar(await apiPatch<User>("/usuarios/eu", dados));
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : "Não foi possível salvar.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <section className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm" aria-labelledby="titulo-edicao">
+      <h2 id="titulo-edicao" className="mb-5 text-xl font-semibold">Editar perfil</h2>
+      <form onSubmit={salvar} aria-busy={salvando} className="space-y-5">
+        <div>
+          <label htmlFor="name" className="field-label">Nome</label>
+          <input id="name" required maxLength={80} value={name} onChange={(e) => setName(e.target.value)} className="field-input" />
+        </div>
+        <div>
+          <label htmlFor="bio" className="field-label">Bio</label>
+          <textarea id="bio" maxLength={280} rows={3} value={bio} onChange={(e) => setBio(e.target.value)} className="field-input resize-y" />
+        </div>
+        <div>
+          <label htmlFor="avatar" className="field-label">Foto (endereço de uma imagem)</label>
+          <input id="avatar" type="url" maxLength={300} placeholder="https://exemplo.com/foto.png" value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} className="field-input" />
+        </div>
+        {erro && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{erro}</p>}
+        <div className="flex flex-wrap items-center gap-4">
+          <button type="submit" disabled={salvando} className="btn-primary">
+            {salvando ? "Salvando…" : "Salvar"}
+          </button>
+          <button type="button" onClick={aoCancelar} className="text-sm font-semibold text-brand-700">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
