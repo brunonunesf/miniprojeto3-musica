@@ -144,3 +144,45 @@ def test_texto_e_gravado_sem_espacos_nas_pontas(client, logar):
     r = client.post("/posts", json=review(texto="  oi  "), headers=ana)
 
     assert r.json()["texto"] == "oi"
+
+
+def test_capa_e_indicador_de_texto(client, logar):
+    ana = logar("ana")
+    capa = "https://exemplo.com/capa.jpg"
+    musica = {"titulo": "Águas de Março", "artista": "Elis Regina", "capa_url": capa}
+
+    so_nota = client.post("/posts", json={"musica": musica, "nota": 8}, headers=ana).json()
+    com_texto = client.post(
+        "/posts",
+        json={"musica": {**musica, "titulo": "Romaria"}, "nota": 9, "texto": "linda"},
+        headers=ana,
+    ).json()
+
+    assert so_nota["musica"]["capa_url"] == capa
+    assert so_nota["tem_texto"] is False
+    assert com_texto["tem_texto"] is True
+
+
+def test_musica_sem_capa_e_completada_por_outra_review(client, logar):
+    ana = logar("ana")
+    bia = logar("bia")
+    capa = "https://exemplo.com/capa.jpg"
+
+    sem_capa = client.post("/posts", json=review(), headers=ana).json()
+    com_capa = client.post(
+        "/posts",
+        json={"musica": {**review()["musica"], "capa_url": capa}, "nota": 7},
+        headers=bia,
+    ).json()
+
+    assert sem_capa["musica"]["capa_url"] == ""
+    assert com_capa["musica"]["capa_url"] == capa
+    assert client.get(f"/posts/{sem_capa['id']}", headers=ana).json()["musica"]["capa_url"] == capa
+
+
+def test_capa_so_aceita_endereco_http(client, logar):
+    ana = logar("ana")
+
+    for capa in ["javascript:alert(1)", "ftp://x.com/a.png", "sem espaço http://x"]:
+        musica = {**review()["musica"], "capa_url": capa}
+        assert client.post("/posts", json={"musica": musica, "nota": 5}, headers=ana).status_code == 422

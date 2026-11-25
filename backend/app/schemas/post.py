@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Annotated, Self
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, computed_field, model_validator
 
 from app.schemas.musica import MusicaIn, MusicaOut
 from app.schemas.user import UserOut
@@ -38,3 +38,9 @@ class PostOut(BaseModel):
     musica: MusicaOut
     autor: UserOut
     created_at: datetime
+
+    @computed_field
+    @property
+    def tem_texto(self) -> bool:
+        """Indicador do feed: a review tem texto para abrir e ler."""
+        return bool(self.texto)
