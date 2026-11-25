@@ -124,4 +124,4 @@ e interrompe sem carga enquanto faltar o adaptador de persistência do backend.
 O seed antigo de três usuários continua disponível em `make seed-minimo`;
 a orientação anterior de `make seed` para essas contas foi substituída.
 Consulte [cenários, versões musicais e pendências](docs/demo-issue-13.md).
-A #13 permanece aberta; persistência completa e reset ainda não estão entregues.
+A #13 permanece aberta; persistência completa e validação do reset com a rede real ainda estão pendentes. O mecanismo de reset com backup está implementado; exige `--reset-demo --confirmar-reset --aplicacao-parada` e o adaptador real do backend.

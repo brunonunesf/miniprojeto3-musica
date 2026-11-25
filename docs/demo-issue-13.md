@@ -60,10 +60,10 @@ A validação não abre banco e funciona independentemente da API. Para a futura
 
 ```sh
 DATABASE_URL=sqlite:///./demo/issue13.db uv run python scripts/seed.py
-DATABASE_URL=sqlite:///./demo/issue13.db uv run python scripts/seed.py --reset-demo
+DATABASE_URL=sqlite:///./demo/issue13.db uv run python scripts/seed.py --reset-demo --confirmar-reset --aplicacao-parada
 ```
 
-O caminho aceito é exclusivamente `backend/demo/issue13.db`. O seed verifica o contrato antes de gravar e atualmente encerra com código 1 explicando a falta do adaptador. O reset também encerra com código 1 preservando o banco: está bloqueado até existir reconstrução completa. Não há exclusão automática nem carga parcial. `make seed` usa esse novo comando e exige o banco de demonstração; `make seed-minimo` mantém o comportamento anterior de três usuários, exclusivamente para compatibilidade, e não satisfaz a #13.
+O caminho aceito é exclusivamente `backend/demo/issue13.db`. O seed verifica o contrato antes de gravar e atualmente encerra com código 1 explicando a falta do adaptador. O reset reconstrói um temporário, valida e guarda backup antes da troca atômica. Sem adaptador real disponível, encerra com código 1 preservando o banco. Não há exclusão automática nem carga parcial. `make seed` usa esse novo comando e exige o banco de demonstração; `make seed-minimo` mantém o comportamento anterior de três usuários, exclusivamente para compatibilidade, e não satisfaz a #13.
 
 A orquestração `seed_fake(db, adaptador=None)` recebe sessão exclusiva da carga. Quando integrado, `verificar(db, cenario)` somente lê e valida modelos, capacidades e colisões; `gravar(db, cenario, senha)` usa flush, sem commit/rollback. A orquestração controla a transação e registra `issue13-v1` em `demo_seed_cargas`. Não executar em sessão com mudanças pendentes. Uma marca aplicada evita qualquer reposição de conteúdo apagado, curtidas ou follows removidos. Não usar contagens atuais como critério de repopulação. Alterações futuras de massa exigem nova versão e estratégia explícita; não reaplicar a v1.
 
@@ -72,7 +72,7 @@ A orquestração `seed_fake(db, adaptador=None)` recebe sessão exclusiva da car
 - Daniel: alinhar adaptador aos modelos de músicas/posts (#3), follows (#4), curtidas (#6) e origens/eventos (#10); revisar importação por chave da #39, colisões e migrações necessárias. Nunca importar metadados por chamada externa a cada renderização.
 - Bruno: cenários, catálogo, validação, orquestração e contratos de árvores (#41), reputação (#43) e recomendador (#55).
 - Adaptador real ainda não implementado: não há modelos de posts/follows/likes nesta base. Não criar modelos paralelos ou SQL baseado em nomes de colunas presumidos para contornar a integração.
-- Reset real: após integração, verificar requisitos antes de apagar, restringir ao banco de demo, reconstruir e testar resultado equivalente ao cenário inicial. Continua pendente.
+- Mecanismo de reset implementado e testado independentemente dos modelos. Validação do reset com a rede real permanece pendente do adaptador de Daniel.
 - Bibliotecas/reescutas/correção entram somente conforme módulos integrados. Não há implementação de API, frontend, OAuth ou streaming nesta entrega.
 
 ## Roteiro e evidências
@@ -97,3 +97,45 @@ Codex organizou decisões, consultou metadados públicos da playlist e preparou 
 - `make check`: passou usando SQLite separado em `/tmp`.
 - Testes adicionais cobrem referências Spotify, determinismo, ciclos, duplicatas, preflight sem escrita, colisão, rollback/repetição e preservação de ações via adaptador de teste. Esses testes não comprovam a persistência real nem o reset integrado.
 - Pendente: adaptador real, reset funcional, instalação limpa da rede populada, validação de algoritmos integrados e evidências de interface.
+
+
+## Continuação aprovada: adaptador, reset e primeiro marco
+
+Daniel entrega os modelos e serviços nas próprias issues. A #13 não criará modelos paralelos. Primeiro marco: carga real e validação pelas APIs; árvores/reputação/Descobrir integram progressivamente, sem encerrar a #13 antecipadamente.
+
+### Contrato proposto para o backend
+
+Após inspecionar os modelos entregues, disponibilizar `app.services.demo_seed.criar_adaptador()`, uma fábrica sem argumentos ou efeitos de escrita. O seed resolve essa fábrica automaticamente; sua ausência produz erro de integração antes de criar banco/carga. Esse caminho é uma proposta a Daniel, não uma interface já entregue por ele.
+
+O objeto retornado implementa:
+
+- `preparar_banco(engine)`: aplicar o esquema oficial e migrações em banco temporário vazio; fechar todas as conexões próprias. Não usar metadados ou SQL de modelos presumidos.
+- `verificar(db, cenario)`: somente leitura; conferir esquema, capacidades, colisões, referências e importação por chave estável; rejeitar carga inteira se faltar requisito. Persistência de origem é obrigatória para este cenário.
+- `gravar(db, cenario, senha)`: gerar hashes com o serviço oficial, importar músicas, resolver IDs, gravar reviews em ordem de origem, follows/likes e eventos conforme regras entregues. Não controlar commit/rollback.
+- `validar(db, cenario)`: verificar a carga inicial completa: 25/20/50/20/30, identidades, origens/ciclos, referências, unicidade, hashes e credenciais das contas protagonistas/Ryan. Lançar erro se houver divergência. Nunca preencher pontos ou rankings fictícios para satisfazer a validação.
+
+O orquestrador exige sessão exclusiva sem mudanças pendentes; registra versão junto com os dados. A marca não é apagada para reparar ações de ensaio. O banco inicial também é preparado em temporário antes de sua publicação.
+
+### Reset e restauração
+
+1. Parar backend e quaisquer processos conectados ao banco de demo.
+2. Executar o comando de reset acima, com ambas as declarações explícitas. São recusados links simbólicos, hard links e caminhos diferentes, além de WAL/SHM/journal pendentes. Não remover esses arquivos manualmente para forçar o reset; encerrar conexões e concluir checkpoint usando as ferramentas SQLite apropriadas.
+3. O comando prepara e valida um novo banco no mesmo diretório. Validação semântica vem do adaptador; integridade SQLite e foreign keys também são conferidas.
+4. O banco anterior é copiado pela API SQLite de backup para `issue13-backup-<data UTC>-<sufixo>.db`. Erro no backup impede troca; cópias incompletas são removidas. Backups válidos ficam locais e são ignorados pelo Git por `*.db`.
+5. Fechar conexões antes da substituição atômica. Mudança detectada no arquivo original cancela a operação. A parada da aplicação é requisito declarado pelo operador; a detecção de alterações não substitui essa condição.
+6. O comando informa caminhos do banco e backup. Não há limpeza automática de backups.
+
+Para restaurar: parar a aplicação, conferir integridade do backup escolhido, manter uma cópia do estado atual se necessário e copiar o backup para um arquivo temporário no mesmo diretório; somente após validar esse temporário, substituir `backend/demo/issue13.db` com `os.replace`. Não restaurar enquanto houver conexões ou arquivos WAL/journal ativos. A restauração recupera as ações do ensaio e a marca de carga daquela cópia.
+
+### Validação integrada ainda pendente
+
+Após modelos e fábrica reais estarem disponíveis: preparar banco limpo; autenticar Bruno, Cecília, Daniel e Ryan pelas APIs; conferir ausência de hashes nas respostas, músicas/reviews, follows, likes e feed conforme contratos reais. Ativar `test_seed_fake_popula_a_rede` quando existirem seus requisitos. Testar reset e preservação de ações pelos serviços reais. Não criar testes com nomes de rotas ou campos supostos.
+
+Depois: árvore via API; reputação segundo fórmula aprovada; fallback/personalização do Descobrir; evidências visuais quando houver telas integradas. O primeiro marco não encerra a #13.
+
+### Resultado desta continuação
+
+- 56 testes de dados passaram no ambiente isolado instalado a partir do lockfile.
+- `make test`: 38 passed, 7 skipped; `make check` com banco separado e `make seed-validar` passaram.
+- Testes do reset usam SQLite real em diretórios descartáveis: backup/restauração lógica, falha de preparação/backup/replace, confirmações, caminhos, symlink, WAL, alteração durante preparação e foreign keys inválidas. Testes da fábrica e validação semântica usam adaptador de teste explicitamente identificado.
+- Nenhum reset foi executado no banco dos ensaios. Adaptador de produção e testes HTTP com reviews/follows/likes ainda não podem ser implementados sem os modelos e serviços do Daniel.

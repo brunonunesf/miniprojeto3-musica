@@ -114,3 +114,33 @@ def test_cli_validacao_e_reset_preservam_banco(tmp_path):
         resultado = subprocess.run(comando + argumentos, env=env, capture_output=True, text=True)
         assert resultado.returncode == 1
         assert banco.read_bytes() == b'nao apagar'
+
+
+def test_carregamento_automatico_valida_contrato(monkeypatch):
+    import seed_demo
+    from types import SimpleNamespace
+    class Completo(AdaptadorTeste):
+        def preparar_banco(self, engine):
+            pass
+        def validar(self, db, cenario):
+            pass
+    adapter = Completo()
+    monkeypatch.setattr(seed_demo, 'find_spec', lambda nome: object())
+    monkeypatch.setattr(seed_demo, 'import_module', lambda nome: SimpleNamespace(criar_adaptador=lambda: adapter))
+    assert seed_demo.carregar_adaptador() is adapter
+    monkeypatch.setattr(seed_demo, 'import_module', lambda nome: SimpleNamespace(criar_adaptador=lambda: AdaptadorTeste()))
+    with pytest.raises(IntegracaoPendente, match='preparar_banco'):
+        seed_demo.carregar_adaptador()
+
+
+def test_banco_temporario_exige_validacao_semantica(tmp_path):
+    from seed_demo import preparar_validar_banco
+    class Completo(AdaptadorTeste):
+        def preparar_banco(self, engine):
+            with engine.begin() as conexao:
+                conexao.execute(text('create table acoes (tipo text, valor text)'))
+        def validar(self, db, cenario):
+            assert db.execute(text('select count(*) from acoes')).scalar() == 3
+            raise ValueError('validação real rejeitou a carga')
+    with pytest.raises(ValueError, match='validação real'):
+        preparar_validar_banco(tmp_path / 'novo.db', Completo())

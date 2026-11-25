@@ -218,3 +218,11 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Banco exclusivo de demonstração; preservar ações dos ensaios e registrar carga aplicada. Reexecução não restaura registros removidos. Reset separado e explícito; sem carga parcial: requisitos ausentes interrompem antes de gravar.
 - Implementados definição/validação independente e orquestração com contrato de adaptador. Persistência real, reset funcional e validação integrada continuam pendentes dos modelos do backend; não são considerados entregues.
 - Detalhes, nomes, faixas, contratos, roteiro e limites: [docs/demo-issue-13.md](docs/demo-issue-13.md). Bruno prepara dados; Daniel alinha persistência; algoritmos continuam nas #41/#43/#55.
+
+
+## Issue #13 — continuação do contrato e reset — 25/11/2026
+
+- Bruno confirmou: Daniel entrega os modelos/serviços; não criar persistência paralela na #13. Primeiro marco é carga e APIs; as demais integrações seguem progressivamente.
+- Reset com backup anterior, reconstrução/validação em temporário e substituição atômica; aplicação parada e confirmação explícita obrigatórias. Cópias locais não são apagadas automaticamente.
+- Implementado mecanismo independente dos modelos e ligação automática à fábrica proposta `app.services.demo_seed.criar_adaptador()`. O adaptador requer verificar/gravar/preparar_banco/validar. A interface concreta precisa ser alinhada aos modelos entregues por Daniel.
+- Os modelos necessários continuam ausentes na base consultada. Adaptador real, carga pela API e validação do reset com a rede real permanecem pendentes; testes de infraestrutura não comprovam essas entregas.
