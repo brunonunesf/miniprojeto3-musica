@@ -152,6 +152,30 @@ def test_a_musica_nao_muda_na_edicao(client, logar, id_da_musica):
     assert r.json()["musica"]["id"] == musica_id
 
 
+def test_ids_gigantes_devolvem_422_e_nao_500(client, logar, id_da_musica):
+    ana = logar("ana")
+    enorme = 10**30  # maior que o inteiro do banco
+    post_id = client.post("/posts", json={"musica_id": id_da_musica(ana), "nota": 9}, headers=ana).json()["id"]
+
+    assert client.post("/posts", json={"musica_id": enorme, "nota": 5}, headers=ana).status_code == 422
+    assert client.get(f"/posts/{enorme}", headers=ana).status_code == 422
+    assert client.patch(f"/posts/{enorme}", json={"nota": 5}, headers=ana).status_code == 422
+    assert client.delete(f"/posts/{enorme}", headers=ana).status_code == 422
+    assert client.get(f"/posts/{post_id}", headers=ana).status_code == 200
+
+
+def test_envios_simultaneos_da_mesma_review_criam_so_uma(client, logar, id_da_musica):
+    from concurrent.futures import ThreadPoolExecutor
+
+    ana = logar("ana")
+    corpo = {"musica_id": id_da_musica(ana), "nota": 9}
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        respostas = list(pool.map(lambda _: client.post("/posts", json=corpo, headers=ana), range(6)))
+
+    assert sorted(r.status_code for r in respostas) == [201, 409, 409, 409, 409, 409]
+
+
 def test_post_inexistente_devolve_404(client, logar):
     ana = logar("ana")
 

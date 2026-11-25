@@ -1,3 +1,5 @@
+import unicodedata
+
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -24,12 +26,20 @@ def importar_catalogo(db: Session) -> int:
     return novas
 
 
+def _para_busca(texto: str) -> str:
+    """Minúsculas e sem acento: "Maré", "MARE" e "mare" viram a mesma coisa."""
+    sem_acento = "".join(
+        c for c in unicodedata.normalize("NFKD", texto) if not unicodedata.combining(c)
+    )
+    return sem_acento.casefold()
+
+
 def listar(db: Session, q: str, offset: int, limit: int) -> tuple[list[Musica], int]:
-    # casefold em Python: o SQLite não compara maiúsculas e acentos de forma Unicode.
+    # Comparação em Python: o SQLite não ignora maiúsculas e acentos de forma Unicode.
     # Custo O(n) por busca, aceitável para um catálogo curado pequeno.
-    termos = q.casefold().split()
+    termos = _para_busca(q).split()
     musicas = list(db.scalars(select(Musica)))
-    achadas = [m for m in musicas if all(t in f"{m.titulo} {m.artista}".casefold() for t in termos)]
+    achadas = [m for m in musicas if all(t in _para_busca(f"{m.titulo} {m.artista}") for t in termos)]
     achadas.sort(key=lambda m: (m.titulo.casefold(), m.artista.casefold(), m.id))
     return achadas[offset : offset + limit], len(achadas)
 

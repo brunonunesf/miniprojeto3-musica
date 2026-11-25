@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.db import get_db
 from app.deps import get_current_user
 from app.models.user import User
+from app.schemas.ids import ID_MAXIMO
 from app.schemas.musica import MusicaOut, MusicaPage
 from app.services import musicas as service
 
@@ -24,7 +25,7 @@ def listar_musicas(
 
 @router.get("/{musica_id}", response_model=MusicaOut)
 def ver_musica(
-    musica_id: int = Path(ge=1),
+    musica_id: int = Path(ge=1, le=ID_MAXIMO),
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):

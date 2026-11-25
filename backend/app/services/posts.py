@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.models.musica import Musica
@@ -13,15 +13,14 @@ def criar(db: Session, autor: User, dados: PostCreate) -> Post:
     if not musica:
         raise HTTPException(status_code=422, detail="música não encontrada no catálogo")
 
-    ja_avaliou = db.scalar(
-        select(Post.id).where(Post.autor_id == autor.id, Post.musica_id == musica.id)
-    )
-    if ja_avaliou:
-        raise HTTPException(status_code=409, detail="você já fez uma review desta música")
-
     post = Post(texto=dados.texto, nota=dados.nota, autor_id=autor.id, musica_id=musica.id)
     db.add(post)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        # a restrição única (autor, música) do banco decide, inclusive em envios simultâneos
+        db.rollback()
+        raise HTTPException(status_code=409, detail="você já fez uma review desta música")
     db.refresh(post)
     return post
 

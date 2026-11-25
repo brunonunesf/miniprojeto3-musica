@@ -3,6 +3,7 @@ from typing import Annotated, Self
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, computed_field, model_validator
 
+from app.schemas.ids import ID_MAXIMO
 from app.schemas.musica import MusicaOut
 from app.schemas.user import UserOut
 
@@ -12,7 +13,7 @@ Nota = Annotated[int, Field(ge=0, le=10)]
 
 
 class PostCreate(BaseModel):
-    musica_id: int = Field(ge=1)  # escolhida no catálogo (GET /musicas)
+    musica_id: int = Field(ge=1, le=ID_MAXIMO)  # escolhida no catálogo (GET /musicas)
     nota: Nota
     texto: Texto = ""
 

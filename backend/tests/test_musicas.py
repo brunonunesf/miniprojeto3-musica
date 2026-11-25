@@ -27,6 +27,10 @@ def test_busca_ignora_caixa_e_espacos_sobrando(client, logar):
     r = client.get("/musicas?q=lua MARÉ", headers=ana)  # termos de campos diferentes
     assert r.json()["total"] == 1
 
+    # sem acento também acha: "mare" encontra "Maré"
+    assert client.get("/musicas?q=mare", headers=ana).json()["total"] == 1
+    assert client.get("/musicas?q=MARE", headers=ana).json()["total"] == 1
+
     assert client.get("/musicas?q=inexistente", headers=ana).json()["items"] == []
 
 
@@ -58,7 +62,9 @@ def test_consultar_musica(client, logar):
 def test_parametros_invalidos_devolvem_422(client, logar):
     ana = logar("ana")
 
-    for caminho in ["/musicas/0", "/musicas?limit=101", "/musicas?limit=0", "/musicas?offset=-1"]:
+    enorme = 10**30  # maior que o inteiro do banco: deve ser 422, não estourar em 500
+    caminhos = ["/musicas/0", f"/musicas/{enorme}", "/musicas?limit=101", "/musicas?limit=0", "/musicas?offset=-1"]
+    for caminho in caminhos:
         assert client.get(caminho, headers=ana).status_code == 422
 
 
