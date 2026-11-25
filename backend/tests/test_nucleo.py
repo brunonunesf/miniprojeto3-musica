@@ -60,12 +60,13 @@ def test_auth_eu(client, logar):
 # ---------- POSTS ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar POST/GET/PATCH/DELETE /posts (núcleo; imite o slice)")
 def test_posts_crud(client, logar):
     ana = logar("ana")
     bia = logar("bia")
 
-    r = client.post("/posts", json={"texto": "meu primeiro post"}, headers=ana)
+    # o post é uma review: música + nota (0 a 10) obrigatórias, texto opcional
+    review = {"musica": {"titulo": "Águas de Março", "artista": "Elis Regina"}, "nota": 9}
+    r = client.post("/posts", json={**review, "texto": "meu primeiro post"}, headers=ana)
     assert r.status_code == 201
     post_id = r.json()["id"]
 

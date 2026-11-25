@@ -75,6 +75,24 @@ export type User = {
   created_at: string;
 };
 
+export type Musica = {
+  id: number;
+  titulo: string;
+  artista: string;
+  versao: string;
+  capa_url: string;
+};
+
+export type Post = {
+  id: number;
+  texto: string;
+  nota: number;
+  tem_texto: boolean;
+  musica: Musica;
+  autor: User;
+  created_at: string;
+};
+
 export type Page<T> = {
   items: T[];
   total: number;
