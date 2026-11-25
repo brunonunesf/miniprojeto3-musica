@@ -15,7 +15,7 @@ export function BotaoSeguir({ perfil, aoMudar }: Props) {
     setEnviando(true);
     setErro("");
     try {
-      await definirSeguir(perfil.username, !perfil.sigo);
+      await definirSeguir(perfil.username, !perfil.eu_sigo);
       // O estado e os contadores vêm do servidor, nunca de uma conta feita aqui.
       aoMudar(await buscarPerfil(perfil.username));
     } catch (falha) {
@@ -27,8 +27,8 @@ export function BotaoSeguir({ perfil, aoMudar }: Props) {
 
   return (
     <div className="space-y-2">
-      <button className="btn-primary" disabled={enviando} aria-pressed={perfil.sigo} onClick={alternar}>
-        {enviando ? "Enviando…" : perfil.sigo ? "Deixar de seguir" : "Seguir"}
+      <button className="btn-primary" disabled={enviando} aria-pressed={perfil.eu_sigo} onClick={alternar}>
+        {enviando ? "Enviando…" : perfil.eu_sigo ? "Deixar de seguir" : "Seguir"}
       </button>
       {erro && <MensagemErro>{erro}</MensagemErro>}
     </div>

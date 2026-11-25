@@ -1,39 +1,51 @@
 import unicodedata
 
+from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models.musica import Musica
-from app.schemas.musica import MusicaIn
+from catalogo_musical import carregar_catalogo
 
 
-def _normalizar(texto: str) -> str:
+def importar_catalogo(db: Session) -> int:
+    """Grava o catálogo curado no banco; repetir é seguro e preserva o id de cada chave.
+
+    Devolve quantas músicas novas entraram. Um catálogo inválido levanta erro antes de gravar.
+    """
+    novas = 0
+    for registro in carregar_catalogo():
+        musica = db.scalar(select(Musica).where(Musica.chave_catalogo == registro["chave_catalogo"]))
+        if musica is None:
+            db.add(Musica(**registro))
+            novas += 1
+        else:
+            for campo, valor in registro.items():
+                setattr(musica, campo, valor)
+    db.commit()
+    return novas
+
+
+def _para_busca(texto: str) -> str:
+    """Minúsculas e sem acento: "Maré", "MARE" e "mare" viram a mesma coisa."""
     sem_acento = "".join(
         c for c in unicodedata.normalize("NFKD", texto) if not unicodedata.combining(c)
     )
-    return " ".join(sem_acento.casefold().split())
+    return sem_acento.casefold()
 
 
-def gerar_chave(dados: MusicaIn) -> str:
-    return "|".join(_normalizar(c) for c in (dados.titulo, dados.artista, dados.versao))
+def listar(db: Session, q: str, offset: int, limit: int) -> tuple[list[Musica], int]:
+    # Comparação em Python: o SQLite não ignora maiúsculas e acentos de forma Unicode.
+    # Custo O(n) por busca, aceitável para um catálogo curado pequeno.
+    termos = _para_busca(q).split()
+    musicas = list(db.scalars(select(Musica)))
+    achadas = [m for m in musicas if all(t in _para_busca(f"{m.titulo} {m.artista}") for t in termos)]
+    achadas.sort(key=lambda m: (m.titulo.casefold(), m.artista.casefold(), m.id))
+    return achadas[offset : offset + limit], len(achadas)
 
 
-def obter_ou_criar(db: Session, dados: MusicaIn) -> Musica:
-    """Catálogo manual: reaproveita a música se a mesma gravação já foi cadastrada."""
-    chave = gerar_chave(dados)
-    musica = db.scalar(select(Musica).where(Musica.chave == chave))
-    if musica:
-        if dados.capa_url and not musica.capa_url:
-            musica.capa_url = dados.capa_url  # completa a capa que faltava
-        return musica
-
-    musica = Musica(
-        titulo=dados.titulo,
-        artista=dados.artista,
-        versao=dados.versao,
-        capa_url=dados.capa_url,
-        chave=chave,
-    )
-    db.add(musica)
-    db.flush()  # gera o id; quem chamou decide o commit
+def consultar(db: Session, musica_id: int) -> Musica:
+    musica = db.get(Musica, musica_id)
+    if not musica:
+        raise HTTPException(status_code=404, detail="música não encontrada")
     return musica

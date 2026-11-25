@@ -2,7 +2,7 @@ import { ApiError, apiDelete, apiGet, apiPost, type Page, type Post, type User }
 import { EXEMPLOS_DO_FEED } from "@/lib/feedExemplos";
 
 /** Os contadores são opcionais enquanto o backend não tem a relação de seguir. */
-export type Perfil = User & { seguidores?: number; seguindo?: number; sigo?: boolean };
+export type Perfil = User & { seguidores?: number; seguindo?: number; eu_sigo?: boolean };
 
 // Ligado só em desenvolvimento, enquanto o backend não tem follow nem posts por usuário.
 export const PERFIL_SIMULADO = process.env.NEXT_PUBLIC_PERFIL_SIMULADO === "true";
@@ -15,8 +15,8 @@ const rota = (username: string) => `/usuarios/${encodeURIComponent(username)}`;
 export async function buscarPerfil(username: string): Promise<Perfil> {
   const perfil = await apiGet<Perfil>(rota(username));
   if (!PERFIL_SIMULADO) return perfil;
-  const sigo = seguidosDeExemplo.has(username);
-  return { ...perfil, sigo, seguidores: sigo ? 4 : 3, seguindo: 5 };
+  const eu_sigo = seguidosDeExemplo.has(username);
+  return { ...perfil, eu_sigo, seguidores: eu_sigo ? 4 : 3, seguindo: 5 };
 }
 
 export async function definirSeguir(username: string, seguir: boolean): Promise<void> {

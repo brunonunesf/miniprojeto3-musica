@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Capa } from "@/components/Capa";
 import type { Post } from "@/lib/api";
+import { nomeDaVersao } from "@/lib/musica";
 
 type Props = {
   post: Post;
@@ -27,7 +28,7 @@ export function ReviewCard({ post, exemplo = false }: Props) {
         <div className="min-w-0 flex-1 space-y-1">
           <h2 className="break-words text-xl font-bold">{post.musica.titulo}</h2>
           <p className="break-words text-zinc-700">{post.musica.artista}</p>
-          <p className="break-words text-sm text-zinc-500">Versão: {post.musica.versao}</p>
+          <p className="break-words text-sm text-zinc-500">{nomeDaVersao(post.musica)}</p>
         </div>
         <p className="text-2xl font-bold text-brand-700">{post.nota}<span className="text-sm text-zinc-500">/10</span></p>
       </div>

@@ -1,7 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const bia = { id: 999, username: "bia_exemplo", name: "Bia", bio: "", avatar_url: "", created_at: "2026-11-24T10:00:00Z" };
-const musica = { id: 1, titulo: "Maré", artista: "Faroleiros", versao: "original", capa_url: "" };
+const musica = {
+  id: 1, chave_catalogo: "teste-1", titulo: "Maré", artista: "Faroleiros",
+  tipo_versao: "original", descricao_versao: "", generos: [], tags: [], capa_url: "",
+};
 const review = (id: number) => ({ id, texto: "", nota: 7, tem_texto: false, musica, autor: bia, created_at: bia.created_at });
 
 const naApi = (caminho: string) => (url: URL) => url.port === "8000" && url.pathname === caminho;
@@ -20,14 +23,14 @@ async function entrar(page: Page) {
 
 test("seguir atualiza pelo servidor, trava cliques e mantém o estado em falha", async ({ page }) => {
   await entrar(page);
-  let sigo = false;
+  let eu_sigo = false;
   let falhar = false;
   let envios = 0;
   let liberar = () => {};
   const espera = new Promise<void>((resolve) => (liberar = resolve));
   await page.route(rotaPerfil, (route) => {
     if (route.request().resourceType() !== "fetch") return route.fallback();
-    return route.fulfill({ json: { ...bia, sigo, seguidores: sigo ? 8 : 7, seguindo: 2 } });
+    return route.fulfill({ json: { ...bia, eu_sigo, seguidores: eu_sigo ? 8 : 7, seguindo: 2 } });
   });
   await page.route(rotaPosts, (route) => route.fulfill({ json: { items: [], total: 0, offset: 0, limit: 10 } }));
   await page.route(rotaSeguir, async (route) => {
@@ -35,7 +38,7 @@ test("seguir atualiza pelo servidor, trava cliques e mantém o estado em falha",
     envios++;
     if (falhar) return route.abort();
     await espera;
-    sigo = route.request().method() === "POST";
+    eu_sigo = route.request().method() === "POST";
     return route.fulfill({ status: 204 });
   });
 

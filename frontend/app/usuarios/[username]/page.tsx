@@ -73,13 +73,13 @@ function PerfilDe({ username }: { username: string }) {
           {perfil.bio && <p className="whitespace-pre-wrap break-words">{perfil.bio}</p>}
           {perfil.seguidores !== undefined && (
             <p className="flex flex-wrap gap-4 text-sm">
-              <span><strong>{perfil.seguidores}</strong> seguidores</span>
+              <span><strong>{perfil.seguidores}</strong> {perfil.seguidores === 1 ? "seguidor" : "seguidores"}</span>
               <span><strong>{perfil.seguindo}</strong> seguindo</span>
             </p>
           )}
           <p className="text-sm text-zinc-500">Na rede desde {membroDesde(perfil.created_at)}</p>
         </div>
-        {usuario?.id !== perfil.id && perfil.sigo !== undefined && (
+        {usuario?.id !== perfil.id && perfil.eu_sigo !== undefined && (
           <BotaoSeguir perfil={perfil} aoMudar={setPerfil} />
         )}
         {usuario?.id === perfil.id && !editando && (
