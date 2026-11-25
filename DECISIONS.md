@@ -276,3 +276,13 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
+
+
+## Tela da árvore de recomendações — issue #42 (25/11/2026)
+
+- `/posts/[id]/arvore` mostra a corrente como lista hierárquica, com a review atual destacada e o caminho "Descoberta via …".
+- Contrato **proposto** para o backend: `GET /posts/{id}/arvore` devolve `{musica, raiz}`, e cada nó tem `id`, `apagada`, `autor`, `nota` e `filhos`. Falta combinar com Daniel e Bruno.
+- Review apagada mantém os ramos e não mostra autoria nem conteúdo. O backend também não deve enviá-los.
+- Com `NEXT_PUBLIC_ARVORE_SIMULADA=true`, a tela usa uma corrente fictícia e avisa isso.
+- Publicar review derivada, corrigir origem e exibir reputação, também da #42, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.

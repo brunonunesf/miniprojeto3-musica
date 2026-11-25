@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { MensagemErro } from "@/components/MensagemErro";
 import { ReviewCard } from "@/components/ReviewCard";
 import type { Post } from "@/lib/api";
+import { ARVORE_SIMULADA } from "@/lib/arvore";
 import { buscarFeed, FEED_SIMULADO } from "@/lib/feed";
 
 type Feed = { items: Post[]; proximo: number; temMais: boolean };
@@ -64,6 +65,12 @@ export default function FeedPage() {
         <p className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
           Dados de exemplo: estas reviews são fictícias e não vêm do servidor.
         </p>
+      )}
+
+      {ARVORE_SIMULADA && (
+        <Link href="/posts/3/arvore" className="inline-block font-semibold text-brand-700">
+          Ver uma árvore de exemplo
+        </Link>
       )}
 
       {feed?.items.map((post) => <ReviewCard key={post.id} post={post} exemplo={FEED_SIMULADO} />)}

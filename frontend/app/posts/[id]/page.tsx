@@ -72,6 +72,10 @@ function Review({ id }: { id: string }) {
         </p>
       </article>
 
+      <Link href={`/posts/${post.id}/arvore`} className="inline-block font-semibold text-brand-700">
+        Ver árvore de recomendações
+      </Link>
+
       {minha && (editando ? (
         <EdicaoReview
           post={post}
