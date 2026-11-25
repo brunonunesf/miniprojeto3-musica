@@ -9,6 +9,9 @@ import { ApiError, apiPost } from "@/lib/api";
 
 type Campos = "username" | "name" | "password";
 
+// Espelha NOMES_RESERVADOS de backend/app/schemas/user.py.
+const NOMES_RESERVADOS = ["eu", "stats"];
+
 export function AuthForm({ registro = false }: { registro?: boolean }) {
   const [username, setUsername] = useState("");
   const [name, setName] = useState("");
@@ -40,6 +43,7 @@ export function AuthForm({ registro = false }: { registro?: boolean }) {
     if (!password) campos.password = "Informe sua senha.";
     if (registro) {
       if (!/^[a-z0-9_]{3,30}$/.test(username)) campos.username = "Use de 3 a 30 letras minúsculas, números ou _.";
+      if (NOMES_RESERVADOS.includes(username)) campos.username = "Esse usuário é reservado. Escolha outro.";
       if (!name.trim() || name.trim().length > 80) campos.name = "Informe um nome de 1 a 80 caracteres.";
       if (Array.from(password).length < 8) campos.password = "Use pelo menos 8 caracteres.";
     }

@@ -208,3 +208,22 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Review única, edição e republicação ficam documentadas como requisitos futuros. Daniel integra persistência, vínculo e validações; Cecília integra seleção/apresentação. Troca da música de uma review continua pendente. A issue #9 não é concluída somente com estes dados.
 - O PR exclusivo de dados substitui o #28, preservando sua branch com API/seletor como referência. Os PRs #29–#31 permanecem fechados, sem incorporar suas implementações. O trabalho parte da main atual; a alteração anterior de responsabilidades já consta nessa base e foi preservada.
 - Validação: 37 testes de dados passaram sem carregar a infraestrutura de API/banco, incluindo bloqueio explícito de imports da aplicação e das bibliotecas de banco. O validador aprovou as seis entradas. Não foram alterados modelos persistidos, rotas, frontend ou o seed de usuários.
+
+## Perfil — conciliação com a identidade aprovada (25/11/2026)
+
+- As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.
+- `eu` e `stats` são usernames reservados, porque colidem com rotas fixas de `/usuarios`.
+- Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
+- Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Página inicial pública (25/11/2026)
+
+- `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
+- A apresentação usa a arte da identidade aprovada; o fundo de ondas neon foi descartado. Claude Code fez a adaptação.
+
+
+## Catálogo — ajuste da revisão do PR #32 — 25/11/2026
+
+- Bruno autorizou adicionar `capa_url` opcional: ausente ou `null` representa música sem capa; valor preenchido deve ser URL absoluta HTTP/HTTPS de até 2048 caracteres. O carregador devolve texto JSON compatível e não consulta/baixa a imagem.
+- As seis faixas fictícias permanecem sem imagens inventadas; `capa_url: null` explícito. A interface pode apresentar fallback, sob responsabilidade do front. Persistência/exposição pela API continuam com o backend.
+- Conflito em DECISIONS.md resolvido preservando o registro de dados e os registros recentes da main sobre perfil e página inicial. Sem merge do PR nem reescrita do histórico.

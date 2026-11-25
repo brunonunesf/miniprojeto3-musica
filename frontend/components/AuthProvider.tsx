@@ -6,7 +6,11 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 import { ApiError, apiGet, apiPost, type User } from "@/lib/api";
 
 type Estado = "verificando" | "autenticado" | "visitante" | "erro";
-type Sessao = { usuario: User | null; entrar: (username: string, password: string) => Promise<void> };
+type Sessao = {
+  usuario: User | null;
+  entrar: (username: string, password: string) => Promise<void>;
+  atualizarUsuario: (novo: User) => void;
+};
 const Contexto = createContext<Sessao | null>(null);
 
 export function useSessao() {
@@ -23,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const publica = pathname === "/login" || pathname === "/registro";
+  // A home atende os dois casos: apresentação para visitantes, início para quem entrou.
+  const aberta = pathname === "/";
   const ampla = pathname === "/login" || pathname === "/";
 
   const limpar = useCallback((mensagem = "") => {
@@ -31,6 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setEstado("visitante");
     setAviso(mensagem);
   }, []);
+
+  const expirar = useCallback(() => {
+    limpar("Sua sessão não é mais válida. Entre novamente.");
+    router.replace("/login");
+  }, [limpar, router]);
 
   const verificar = useCallback(async () => {
     const atual = ++versao.current;
@@ -49,35 +60,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (erro) {
       if (atual !== versao.current) return;
       if (erro instanceof ApiError && erro.status === 401) {
-        limpar("Sua sessão não é mais válida. Entre novamente.");
+        expirar();
       } else {
         setEstado("erro");
       }
     }
-  }, [limpar]);
+  }, [expirar]);
 
   useEffect(() => {
-    const invalida = () => limpar("Sua sessão não é mais válida. Entre novamente.");
     const storage = (event: StorageEvent) => {
       if (event.key === "token" || event.key === null) {
         if (!localStorage.getItem("token")) limpar("Você saiu da conta em outra aba.");
         else void verificar();
       }
     };
-    window.addEventListener("sessao-invalida", invalida);
+    window.addEventListener("sessao-invalida", expirar);
     window.addEventListener("storage", storage);
     void verificar();
     return () => {
       versao.current += 1;
-      window.removeEventListener("sessao-invalida", invalida);
+      window.removeEventListener("sessao-invalida", expirar);
       window.removeEventListener("storage", storage);
     };
-  }, [limpar, verificar]);
+  }, [expirar, limpar, verificar]);
 
   useEffect(() => {
-    if (estado === "visitante" && !publica) router.replace("/login");
+    if (estado === "visitante" && !publica && !aberta) router.replace("/login");
     if (estado === "autenticado" && publica) router.replace("/");
-  }, [estado, publica, router]);
+  }, [estado, publica, aberta, router]);
 
   async function entrar(username: string, password: string) {
     const atual = ++versao.current;
@@ -88,16 +98,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await verificar();
   }
 
+  function atualizarUsuario(novo: User) {
+    setUsuario((atual) => (atual?.id === novo.id ? novo : atual));
+  }
+
   function sair() {
     localStorage.removeItem("token");
     limpar();
     router.replace("/login");
   }
 
-  const liberado = (publica && estado === "visitante") || (!publica && estado === "autenticado");
+  const liberado =
+    (estado === "visitante" && (publica || aberta)) || (estado === "autenticado" && !publica);
 
   return (
-    <Contexto.Provider value={{ usuario, entrar }}>
+    <Contexto.Provider value={{ usuario, entrar, atualizarUsuario }}>
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
       <header className="border-b border-zinc-200 bg-white">
         <nav aria-label="Navegação principal" className={`mx-auto flex ${ampla ? "max-w-[1152px]" : "max-w-3xl"} flex-wrap items-center justify-between gap-3 px-4 py-4`}>
@@ -109,7 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             <div className="flex min-w-0 flex-wrap items-center gap-4 text-sm">
               <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>Início</Link>
               <Link href="/usuarios" aria-current={pathname === "/usuarios" ? "page" : undefined}>Usuários</Link>
-              <span className="max-w-36 truncate text-zinc-600" title={usuario.name}>{usuario.name}</span>
+              <Link href={`/usuarios/${usuario.username}`} aria-current={pathname === `/usuarios/${usuario.username}` ? "page" : undefined} className="max-w-36 truncate text-zinc-600" title={`Meu perfil: ${usuario.name}`}>{usuario.name}</Link>
               <button onClick={sair} className="font-semibold text-brand-700">Sair</button>
             </div>
           ) : estado === "visitante" ? (
