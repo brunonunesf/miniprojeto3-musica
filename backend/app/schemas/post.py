@@ -1,20 +1,32 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Self
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
+from app.schemas.musica import MusicaIn, MusicaOut
 from app.schemas.user import UserOut
 
-# strip antes de validar: "   " vira "" e é recusado (min_length=1).
-Texto = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=500)]
+# strip antes de validar. O texto é opcional: uma review pode ter só a nota.
+Texto = Annotated[str, StringConstraints(strip_whitespace=True, max_length=500)]
+Nota = Annotated[int, Field(ge=0, le=10)]
 
 
 class PostCreate(BaseModel):
-    texto: Texto
+    musica: MusicaIn
+    nota: Nota
+    texto: Texto = ""
 
 
 class PostUpdate(BaseModel):
-    texto: Texto
+    # a música não muda na edição: trocá-la é decisão pendente (issue #9)
+    nota: Nota | None = None
+    texto: Texto | None = None
+
+    @model_validator(mode="after")
+    def exigir_algum_campo(self) -> Self:
+        if self.nota is None and self.texto is None:
+            raise ValueError("informe nota ou texto")
+        return self
 
 
 class PostOut(BaseModel):
@@ -22,5 +34,7 @@ class PostOut(BaseModel):
 
     id: int
     texto: str
+    nota: int
+    musica: MusicaOut
     autor: UserOut
     created_at: datetime

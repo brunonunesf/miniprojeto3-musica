@@ -47,7 +47,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 |---|---|---|
 | Autenticação | Backend na `main` (PRs #16 e #17). Front e reforços no PR #27 (`feat/issue-2-autenticacao`), aguardando revisão. O PR #24 (`feat/telas-auth`) também implementa as telas e precisa ser conciliado pelo time | A |
 | Perfil | Núcleo a implementar | A |
-| Posts, feed, curtidas e comentários | CRUD de posts na branch `feat/posts` (issue #3). Feed, curtidas e comentários ainda a implementar conforme os testes da base | B |
+| Posts, feed, curtidas e comentários | CRUD de posts como review de música (música e nota obrigatórias) na branch `feat/posts` (issues #3 e #9). Feed, curtidas e comentários ainda a implementar conforme os testes da base | B |
 | Follow | Núcleo a implementar | C |
 | Seed de exemplo no nicho musical | Adaptar ao produto; fazer por último | C |
 | Reviews (música + nota) e árvores de recomendações | Diferencial proposto | B (back), A (tela) |
@@ -196,12 +196,21 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
 - Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.
 
-## Posts — issue #3 — 24/11/2026
+## Posts e reviews — issues #3 e #9 — 24/11/2026
 
-- **Rotas:** `POST /posts` (201), `GET /posts/{id}`, `PATCH /posts/{id}` e `DELETE /posts/{id}` (204). Todas exigem login. O formato de saída traz `id`, `texto`, `autor` (usuário completo) e `created_at`.
-- **Autoria vem da sessão.** O corpo aceita só `texto`; um `autor_id` enviado pelo cliente é ignorado. Editar ou excluir post de outra pessoa devolve `403` sem alterar o banco; post inexistente devolve `404`, verificado antes da permissão.
-- **Texto:** de 1 a 500 caracteres, com espaços das pontas removidos antes de validar, então texto vazio ou só com espaços devolve `422`. O limite de 500 foi escolhido para comportar uma review curta e pode ser revisto com o time.
-- **Review será um post com campos extras** (música, nota, `origem_id`), como já decidido. O model de post ficou simples de propósito para receber essas colunas nas issues #9 e #10 sem quebrar o contrato `POST /posts` com `texto`.
-- **Exclusão:** por enquanto apaga o post. A política para descendentes de uma review excluída (registro de origem apagada) será definida junto com a #10 antes de ligar o CRUD às árvores.
-- **Esquema do banco:** a tabela `posts` é nova. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
-- Claude Code implementou o CRUD de posts e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (45 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
+Inspirado no Letterboxd, o post da rede **é uma review de uma música**: a música e a nota são obrigatórias e o texto é opcional. Uma review pode ser só a nota.
+
+- **Rotas:** `POST /posts` (201), `GET /posts/{id}`, `PATCH /posts/{id}` e `DELETE /posts/{id}` (204). Todas exigem login.
+- **Corpo de `POST /posts`:** `{"musica": {"titulo", "artista", "versao"?}, "nota": 0 a 10, "texto"?}`. Esta é uma **evolução do contrato do núcleo**, que aceitava só `texto`; o `test_posts_crud` foi adaptado sem remover nenhuma verificação. Os testes ainda `@skip` de feed, curtidas, comentários e perfil usam o formato antigo e serão adaptados quando cada feature for implementada.
+- **Resposta:** `id`, `texto`, `nota`, `musica` (`id`, `titulo`, `artista`, `versao`), `autor` (usuário completo) e `created_at`.
+- **Nota:** inteira de 0 a 10, obrigatória e editável. Escala provisória, aprovada "por enquanto"; meia nota ou estrelas podem vir depois. Nota fora do intervalo ou decimal devolve `422`.
+- **Texto:** opcional, até 500 caracteres, com espaços das pontas removidos. O valor de 500 é escolha de quem implementou e ainda precisa ser confirmada com o time (a #3 pede um limite acordado). Quando houver review derivada (#10), o DECISIONS.md já exige texto próprio nela.
+- **Catálogo manual de músicas:** a pessoa informa título e artista (e, opcionalmente, a versão; o padrão é `original`) ao fazer a review. Se a gravação já existe, ela é reaproveitada. Não há integração com serviço externo.
+- **Identidade da música:** a chave é título, artista e versão **normalizados** (sem acento, sem diferença de maiúsculas e com espaços colapsados). Assim "Águas de Março" e "  aguas de marco " são a mesma gravação, mas original, remix e ao vivo são músicas diferentes, e o mesmo título com outro artista também. Músicas de serviços diferentes não são presumidas equivalentes.
+- **Uma review por pessoa e música.** Uma segunda review da mesma música pelo mesmo autor devolve `409`; apagar a review libera uma nova. A oferta de edição ou reescuta fica para a #18.
+- **A música não muda na edição.** `PATCH` altera só nota e texto; trocar a música de uma review é decisão pendente da #9.
+- **Autoria vem da sessão.** Um `autor_id` enviado pelo cliente é ignorado. Editar ou excluir review de outra pessoa devolve `403` sem alterar o banco; review inexistente devolve `404`, verificado antes da permissão.
+- **Preparação da árvore:** `origem_id` ainda não existe. Será uma coluna opcional do `Post` na #10, sem quebrar o contrato acima.
+- **Exclusão:** por enquanto apaga a review. A política para descendentes de uma review excluída será definida junto com a #10.
+- **Esquema do banco:** as tabelas `posts` e `musicas` são novas. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
+- Claude Code implementou o CRUD de reviews, o catálogo manual de músicas e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (53 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
