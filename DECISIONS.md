@@ -219,3 +219,15 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música**: a mús
 - **Exclusão:** por enquanto apaga a review. A política para descendentes de uma review excluída será definida junto com a #10.
 - **Esquema do banco:** as tabelas `posts` e `musicas` são novas. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
 - Claude Code implementou o CRUD de reviews, o catálogo manual de músicas e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (56 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
+
+## Perfil — conciliação com a identidade aprovada (25/11/2026)
+
+- As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.
+- `eu` e `stats` são usernames reservados, porque colidem com rotas fixas de `/usuarios`.
+- Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
+- Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Página inicial pública (25/11/2026)
+
+- `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
+- A apresentação usa a arte da identidade aprovada; o fundo de ondas neon foi descartado. Claude Code fez a adaptação.

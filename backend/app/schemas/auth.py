@@ -1,8 +1,10 @@
 from pydantic import BaseModel, Field, field_validator
 
+from app.schemas.user import Username
+
 
 class RegistroIn(BaseModel):
-    username: str = Field(min_length=3, max_length=30, pattern=r"^[a-z0-9_]+$")
+    username: Username
     name: str = Field(min_length=1, max_length=80)
     password: str = Field(min_length=8)
 
