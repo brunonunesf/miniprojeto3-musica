@@ -226,3 +226,30 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Reset com backup anterior, reconstrução/validação em temporário e substituição atômica; aplicação parada e confirmação explícita obrigatórias. Cópias locais não são apagadas automaticamente.
 - Implementado mecanismo independente dos modelos e ligação automática à fábrica proposta `app.services.demo_seed.criar_adaptador()`. O adaptador requer verificar/gravar/preparar_banco/validar. A interface concreta precisa ser alinhada aos modelos entregues por Daniel.
 - Os modelos necessários continuam ausentes na base consultada. Adaptador real, carga pela API e validação do reset com a rede real permanecem pendentes; testes de infraestrutura não comprovam essas entregas.
+
+## Perfil — conciliação com a identidade aprovada (25/11/2026)
+
+- As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.
+- `eu` e `stats` são usernames reservados, porque colidem com rotas fixas de `/usuarios`.
+- Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
+- Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Página inicial pública (25/11/2026)
+
+- `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
+- A apresentação usa a arte da identidade aprovada; o fundo de ondas neon foi descartado. Claude Code fez a adaptação.
+
+
+## Catálogo — ajuste da revisão do PR #32 — 25/11/2026
+
+- Bruno autorizou adicionar `capa_url` opcional: ausente ou `null` representa música sem capa; valor preenchido deve ser URL absoluta HTTP/HTTPS de até 2048 caracteres. O carregador devolve texto JSON compatível e não consulta/baixa a imagem.
+- As seis faixas fictícias permanecem sem imagens inventadas; `capa_url: null` explícito. A interface pode apresentar fallback, sob responsabilidade do front. Persistência/exposição pela API continuam com o backend.
+- Conflito em DECISIONS.md resolvido preservando o registro de dados e os registros recentes da main sobre perfil e página inicial. Sem merge do PR nem reescrita do histórico.
+
+
+## Revisão da integração — atualização da base do #59 — 25/11/2026
+
+- Incorporada a base atualizada do #32 com `capa_url` opcional e a main já conciliada. Resolvido conflito em DECISIONS.md preservando decisões de seed, catálogo, capas, perfil e página inicial. Sem incorporar a branch de backend do #60.
+- A revisão combinada encontrou falha de `None` versus `NOT NULL` na reimportação do catálogo do #60, capaz de impedir a segunda inicialização. Correção implementada no #60: normalizar ausência/null para texto vazio no importador; modelo/schema alinhados a 2048 caracteres.
+- Evidências e causa documentadas no #60 em `docs/revisao-integracao-capas.md`; testes de reinício, reimportação, URL longa e remoção de capa adicionados lá. Nenhum aviso, comentário ou menção ao time foi enviado nesta correção.
+- A atualização não conclui o adaptador do seed: origens/follows/likes e validação integrada continuam dependências da #13.

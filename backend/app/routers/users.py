@@ -9,7 +9,9 @@ from sqlalchemy.orm import Session
 
 from app.core.contadores import contador_iniciais
 from app.db import get_db
-from app.schemas.user import UserCreate, UserOut, UserPage
+from app.deps import get_current_user
+from app.models.user import User
+from app.schemas.user import UserCreate, UserOut, UserPage, UserUpdate
 from app.services import users as service
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
@@ -35,3 +37,21 @@ def stats_por_inicial():
 def criar_usuario(dados: UserCreate, db: Session = Depends(get_db)):
     # ponytail: criação sem senha — o guia de auth evolui isto para o registro real
     return service.criar(db, dados)
+
+
+@router.patch("/eu", response_model=UserOut)
+def editar_perfil(
+    dados: UserUpdate,
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return service.atualizar(db, user, dados)
+
+
+@router.get("/{username}", response_model=UserOut)
+def ver_perfil(
+    username: str,
+    _: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return service.buscar_por_username(db, username)

@@ -139,3 +139,14 @@ Depois: árvore via API; reputação segundo fórmula aprovada; fallback/persona
 - `make test`: 38 passed, 7 skipped; `make check` com banco separado e `make seed-validar` passaram.
 - Testes do reset usam SQLite real em diretórios descartáveis: backup/restauração lógica, falha de preparação/backup/replace, confirmações, caminhos, symlink, WAL, alteração durante preparação e foreign keys inválidas. Testes da fábrica e validação semântica usam adaptador de teste explicitamente identificado.
 - Nenhum reset foi executado no banco dos ensaios. Adaptador de produção e testes HTTP com reviews/follows/likes ainda não podem ser implementados sem os modelos e serviços do Daniel.
+
+
+## Revisão das capas e conciliação da base — 25/11/2026
+
+A base do #32 foi incorporada preservando os registros de demonstração e os registros recentes da main. O catálogo aceita `capa_url` opcional; os cenários de 20 músicas sem esse campo continuam válidos e recebem `None` no carregador.
+
+Uma revisão combinada com o #60 revelou erro de integração: `None` era atribuído à coluna `musicas.capa_url` não anulável na reimportação, impedindo uma segunda inicialização com o mesmo banco. A correção foi implementada no #60: importar cópia do registro com ausência/null convertido para texto vazio, preservando IDs, e alinhar modelo/schema a 2048 caracteres. Testes de regressão cobrem reinício, reimportação, URL longa e remoção de capa. Relato completo: [documentação da correção no PR #60](https://github.com/brunonunesf/miniprojeto3-musica/blob/feat/posts/docs/revisao-integracao-capas.md).
+
+Esta branch não incorpora antecipadamente modelos ou serviços do #60. A correção registrada lá deverá ser mantida quando o adaptador real for integrado. A #13 continua aberta. Não foram enviados avisos/comentários/menções ao time nesta correção; o relato está nos arquivos e descrições técnicas dos PRs.
+
+Validação após atualizar a base: **69 testes de dados passaram**, `make test` teve **48 passed e 7 skipped**, `make check` com banco separado e `make seed-validar` passaram. Esses resultados pertencem à branch de dados; os testes de backend da correção do #60 estão documentados separadamente lá.
