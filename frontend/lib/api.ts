@@ -95,7 +95,12 @@ export type Post = {
   musica: Musica;
   autor: User;
   created_at: string;
+  /** Ausentes enquanto o servidor não tem curtidas. */
+  curtidas?: number;
+  curtido_por_mim?: boolean;
 };
+
+export type EstadoCurtida = { curtidas: number; curtido_por_mim: boolean };
 
 export type Page<T> = {
   items: T[];

@@ -276,3 +276,10 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
+
+## Botão de curtir — issue #36 (25/11/2026)
+
+- Feed e detalhe mostram contagem e estado, com `POST` e `DELETE /posts/{id}/curtir` (branch `feat/back-curtidas`, ainda fora da `main`).
+- A tela usa a contagem devolvida pelo servidor; em falha nada muda. Curtir não é tratado como descoberta.
+- Sem os campos `curtidas` e `curtido_por_mim`, o botão não aparece. Reviews de exemplo não têm botão.
+- Claude Code implementou o botão e os testes. A revisão por outra pessoa continua pendente.

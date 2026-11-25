@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { useSessao } from "@/components/AuthProvider";
+import { BotaoCurtir } from "@/components/BotaoCurtir";
 import { CamposReview } from "@/components/CamposReview";
 import { Capa } from "@/components/Capa";
 import { MensagemErro } from "@/components/MensagemErro";
@@ -70,6 +71,7 @@ function Review({ id }: { id: string }) {
           <Link href={`/usuarios/${post.autor.username}`} className="font-semibold text-brand-700">{post.autor.name}</Link>
           {" "}em {new Date(post.created_at).toLocaleDateString("pt-BR")}
         </p>
+        <BotaoCurtir post={post} />
       </article>
 
       {minha && (editando ? (
