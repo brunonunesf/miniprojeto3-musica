@@ -199,3 +199,12 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 
 - Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
 - Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.
+
+## Issue #9 — recorte exclusivo de dados — 25/11/2026
+
+- Bruno confirmou limitar esta entrega à sua área: catálogo, gêneros, tags e validação de identidades/versões. Não implementar posts (#3), follow (#5), feed (#6), republicação (#18) ou API/interface dentro desta entrega.
+- Catálogo manual com as seis faixas fictícias anteriores, sem expansão. Original, remix, ao vivo e remaster são itens distintos; versões não originais exigem descrição. Chave curada única e estável; correções de metadados não mudam a chave, nem autorizam unir gravações por título/artista.
+- Entregues carregador e validador independentes da aplicação/banco, com limpeza de metadados em memória, diagnóstico por entrada/campo e rejeição do conjunto inteiro quando inválido. IDs internos serão atribuídos pelo backend; integrações externas exigem confirmação de equivalência.
+- Review única, edição e republicação ficam documentadas como requisitos futuros. Daniel integra persistência, vínculo e validações; Cecília integra seleção/apresentação. Troca da música de uma review continua pendente. A issue #9 não é concluída somente com estes dados.
+- O PR exclusivo de dados substitui o #28, preservando sua branch com API/seletor como referência. Os PRs #29–#31 permanecem fechados, sem incorporar suas implementações. O trabalho parte da main atual; a alteração anterior de responsabilidades já consta nessa base e foi preservada.
+- Validação: 37 testes de dados passaram sem carregar a infraestrutura de API/banco, incluindo bloqueio explícito de imports da aplicação e das bibliotecas de banco. O validador aprovou as seis entradas. Não foram alterados modelos persistidos, rotas, frontend ou o seed de usuários.
