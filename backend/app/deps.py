@@ -21,6 +21,8 @@ def get_current_user(
     if authorization and authorization.startswith("Bearer "):
         sessao = db.get(Session, authorization.removeprefix("Bearer "))
         if sessao:
-            return db.get(User, sessao.user_id)
+            user = db.get(User, sessao.user_id)
+            if user:
+                return user
 
     raise HTTPException(status_code=401, detail="não autenticado")

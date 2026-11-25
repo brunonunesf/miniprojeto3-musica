@@ -30,3 +30,8 @@ instrutor/
 TODO.md
 docs/design.md
 docs/review-painel-v2.md
+
+# resultados locais dos testes do navegador
+playwright-report/
+test-results/
+*.tsbuildinfo
