@@ -162,12 +162,12 @@ def test_follow_unfollow_com_contadores(client, logar):
 # ---------- CURTIDAS ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar curtir/descurtir idempotente (núcleo)")
-def test_curtidas_idempotentes(client, logar):
+def test_curtidas_idempotentes(client, logar, id_da_musica):
     ana = logar("ana")
     bia = logar("bia")
 
-    post_id = client.post("/posts", json={"texto": "curte aí"}, headers=bia).json()["id"]
+    review = {"musica_id": id_da_musica(bia), "nota": 8, "texto": "curte aí"}
+    post_id = client.post("/posts", json=review, headers=bia).json()["id"]
 
     client.post(f"/posts/{post_id}/curtir", headers=ana)
     client.post(f"/posts/{post_id}/curtir", headers=ana)  # 2ª vez não duplica

@@ -237,6 +237,18 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Fora desta entrega:** curtidas e comentários (#6, próxima parte) e `GET /usuarios/{username}/posts` (#4), que o `test_perfil_editavel` ainda exige.
 - Claude Code implementou follow, feed e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
+## Curtidas — issue #6 — 25/11/2026
+
+- **Rotas:** `POST /posts/{post_id}/curtir` e `DELETE` na mesma rota. Ambas exigem login, são **idempotentes** e devolvem `200` com `{"curtidas": n, "curtido_por_mim": bool}`, para a tela confirmar o estado real sem uma segunda consulta. Review inexistente devolve `404` e id fora do limite do banco devolve `422`.
+- **Uma curtida por pessoa e review:** a chave composta do banco impede duplicatas, inclusive em envios simultâneos. Curtir de novo ou descurtir o que não está curtido não é erro, e a contagem nunca fica negativa.
+- **Curtir a própria review é permitido.** Isso segue a regra de reputação já aprovada, que dá 1 ponto ao autor por curtida própria sem propagar para ancestrais. O ponto em si ainda não é calculado aqui.
+- **Onde aparecem:** toda review (`GET /posts/{id}`, edição, criação e itens do feed) traz `curtidas` e `curtido_por_mim`. O segundo é de quem olha: a mesma review mostra `true` para quem curtiu e `false` para os demais. No feed, as curtidas de uma página inteira vêm em 2 consultas, e não em uma por review.
+- **Curtir não cria review, escuta nem nó na árvore, e não altera a nota.** A reputação (#11) fica com o Bruno; a tabela `curtidas`, com uma linha por pessoa e review, é a base do evento de curtida único que a fórmula pede, e descurtir a remove.
+- **Apagar uma review apaga as curtidas dela.** Sem isso as curtidas ficariam órfãs e poderiam grudar numa review nova que reaproveite o mesmo id.
+- **Esquema do banco:** a tabela `curtidas` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- **Testes:** o `test_curtidas_idempotentes` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_curtidas.py` cobre o resto. `make test`: 106 passed, 3 skipped (perfil, comentários e seed).
+- Claude Code implementou as curtidas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 ## Perfil — conciliação com a identidade aprovada (25/11/2026)
 
 - As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.

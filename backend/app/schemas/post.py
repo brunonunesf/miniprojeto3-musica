@@ -39,6 +39,9 @@ class PostOut(BaseModel):
     musica: MusicaOut
     autor: UserOut
     created_at: datetime
+    # preenchidos por services.posts.anotar_curtidas; zero/falso se ninguém curtiu
+    curtidas: int = 0
+    curtido_por_mim: bool = False
 
     @computed_field
     @property

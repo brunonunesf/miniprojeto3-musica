@@ -1,7 +1,9 @@
 from fastapi import HTTPException
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.models.curtida import Curtida
 from app.models.musica import Musica
 from app.models.post import Post
 from app.models.user import User
@@ -32,6 +34,31 @@ def buscar(db: Session, post_id: int) -> Post:
     return post
 
 
+def anotar_curtidas(db: Session, user: User, reviews: list[Post]) -> None:
+    """Põe `curtidas` e `curtido_por_mim` em cada review, com 2 consultas para a lista inteira."""
+    if not reviews:
+        return
+    ids = [r.id for r in reviews]
+    contagens = dict(
+        db.execute(
+            select(Curtida.post_id, func.count()).where(Curtida.post_id.in_(ids)).group_by(Curtida.post_id)
+        ).all()
+    )
+    minhas = set(
+        db.scalars(select(Curtida.post_id).where(Curtida.usuario_id == user.id, Curtida.post_id.in_(ids)))
+    )
+    for review in reviews:
+        review.curtidas = contagens.get(review.id, 0)
+        review.curtido_por_mim = review.id in minhas
+
+
+def detalhar(db: Session, user: User, post_id: int) -> Post:
+    """A review com as curtidas vistas por quem está logado."""
+    post = buscar(db, post_id)
+    anotar_curtidas(db, user, [post])
+    return post
+
+
 def _buscar_do_autor(db: Session, post_id: int, user: User) -> Post:
     post = buscar(db, post_id)
     if post.autor_id != user.id:
@@ -45,10 +72,13 @@ def atualizar(db: Session, post_id: int, user: User, dados: PostUpdate) -> Post:
         setattr(post, campo, valor)
     db.commit()
     db.refresh(post)
+    anotar_curtidas(db, user, [post])
     return post
 
 
 def excluir(db: Session, post_id: int, user: User) -> None:
     post = _buscar_do_autor(db, post_id, user)
+    # sem isto, as curtidas ficariam órfãs e poderiam grudar numa review nova que reuse o id
+    db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.delete(post)
     db.commit()
