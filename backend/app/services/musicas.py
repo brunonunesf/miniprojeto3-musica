@@ -14,7 +14,10 @@ def importar_catalogo(db: Session) -> int:
     Devolve quantas músicas novas entraram. Um catálogo inválido levanta erro antes de gravar.
     """
     novas = 0
-    for registro in carregar_catalogo():
+    for registro_catalogo in carregar_catalogo():
+        # Dados admitem None/ausência; banco e API mantêm texto vazio sem capa.
+        # Normalizar tanto no INSERT quanto no UPDATE (inclusive remoção de capa).
+        registro = {**registro_catalogo, "capa_url": registro_catalogo.get("capa_url") or ""}
         musica = db.scalar(select(Musica).where(Musica.chave_catalogo == registro["chave_catalogo"]))
         if musica is None:
             db.add(Musica(**registro))

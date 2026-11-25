@@ -127,3 +127,36 @@ assert len(carregar_catalogo()) == 6
     resultado = subprocess.run([sys.executable, '-B', '-c', codigo], cwd=tmp_path, capture_output=True, text=True)
     assert resultado.returncode == 0, resultado.stderr
     assert list(tmp_path.iterdir()) == []
+
+
+def test_capa_opcional_sem_quebrar_catalogo_anterior(entrada):
+    entrada.pop('capa_url', None)
+    original = copy.deepcopy(entrada)
+    assert validar_catalogo([entrada])[0]['capa_url'] is None
+    assert entrada == original
+    assert validar_catalogo([{**entrada, 'capa_url': None}])[0]['capa_url'] is None
+
+
+@pytest.mark.parametrize('url', [
+    'https://images.example.com/capa.jpg',
+    'http://images.example.com/capa.png?versao=2',
+])
+def test_capa_url_json_e_identidade_preservadas(entrada, url):
+    entrada['capa_url'] = url
+    original = copy.deepcopy(entrada)
+    registro = validar_catalogo([entrada])[0]
+    assert registro['capa_url'] == url
+    assert registro['chave_catalogo'] == entrada['chave_catalogo']
+    assert entrada == original
+    assert json.loads(json.dumps(registro)) == registro
+    assert validar_catalogo([registro]) == [registro]
+
+
+@pytest.mark.parametrize('url', [
+    '', ' ', 'capa.jpg', '/capas/capa.png', 'ftp://example.com/capa.jpg',
+    'data:image/png;base64,abc', 'javascript:alert(1)',
+    'https://', 123, 'https://example.com/' + 'a' * 2048,
+])
+def test_rejeita_capa_invalida_com_diagnostico(entrada, url):
+    with pytest.raises(ErroCatalogo, match='entrada 1, campo capa_url'):
+        validar_catalogo([{**entrada, 'capa_url': url}])

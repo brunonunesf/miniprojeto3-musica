@@ -11,7 +11,8 @@
     "tags": [
       "guitarra",
       "calma"
-    ]
+    ],
+    "capa_url": null
   },
   {
     "chave_catalogo": "demo-horizonte-remix",
@@ -25,7 +26,8 @@
     "tags": [
       "danca",
       "sintetizador"
-    ]
+    ],
+    "capa_url": null
   },
   {
     "chave_catalogo": "demo-horizonte-vivo",
@@ -39,7 +41,8 @@
     "tags": [
       "acustico",
       "ao vivo"
-    ]
+    ],
+    "capa_url": null
   },
   {
     "chave_catalogo": "demo-horizonte-remaster",
@@ -53,7 +56,8 @@
     "tags": [
       "guitarra",
       "calma"
-    ]
+    ],
+    "capa_url": null
   },
   {
     "chave_catalogo": "demo-horizonte-outro-artista",
@@ -67,7 +71,8 @@
     "tags": [
       "sanfona",
       "danca"
-    ]
+    ],
+    "capa_url": null
   },
   {
     "chave_catalogo": "demo-mare-original",
@@ -81,6 +86,7 @@
     "tags": [
       "voz",
       "violao"
-    ]
+    ],
+    "capa_url": null
   }
 ]
