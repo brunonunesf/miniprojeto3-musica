@@ -208,3 +208,13 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Review única, edição e republicação ficam documentadas como requisitos futuros. Daniel integra persistência, vínculo e validações; Cecília integra seleção/apresentação. Troca da música de uma review continua pendente. A issue #9 não é concluída somente com estes dados.
 - O PR exclusivo de dados substitui o #28, preservando sua branch com API/seletor como referência. Os PRs #29–#31 permanecem fechados, sem incorporar suas implementações. O trabalho parte da main atual; a alteração anterior de responsabilidades já consta nessa base e foi preservada.
 - Validação: 37 testes de dados passaram sem carregar a infraestrutura de API/banco, incluindo bloqueio explícito de imports da aplicação e das bibliotecas de banco. O validador aprovou as seis entradas. Não foram alterados modelos persistidos, rotas, frontend ou o seed de usuários.
+
+
+## Issue #13 — seed e cenários aprovados — 25/11/2026
+
+- Prioridade: cenários reproduzíveis de árvores e Descobrir, com integração conforme contratos do backend. Documentação não encerra a issue.
+- Catálogo de demonstração: 20 gravações reais da playlist de Bruno, com Apesar de Você substituindo Sozinho. IDs Spotify são referências externas; sem download de áudio/OAuth. Catálogo fictício anterior preservado como fixture técnica.
+- 25 personagens fornecidos por Bruno; Bruno Nunes, Cecília Candeia e Daniel Dantas protagonizam a corrente. Reviews e ações são fictícias. Massa inicial: 50 reviews, 20 follows e 30 likes; semente fixa 13. Clareou possui corrente, ramo e raiz independente; Ryan Rodrigues inicia sem sinais.
+- Banco exclusivo de demonstração; preservar ações dos ensaios e registrar carga aplicada. Reexecução não restaura registros removidos. Reset separado e explícito; sem carga parcial: requisitos ausentes interrompem antes de gravar.
+- Implementados definição/validação independente e orquestração com contrato de adaptador. Persistência real, reset funcional e validação integrada continuam pendentes dos modelos do backend; não são considerados entregues.
+- Detalhes, nomes, faixas, contratos, roteiro e limites: [docs/demo-issue-13.md](docs/demo-issue-13.md). Bruno prepara dados; Daniel alinha persistência; algoritmos continuam nas #41/#43/#55.
