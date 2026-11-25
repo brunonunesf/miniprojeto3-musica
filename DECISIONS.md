@@ -215,3 +215,11 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Exclusão limpa o texto e mantém referência sem conteúdo para futuras árvores; nova review usa outro ID. Ainda não há árvore ou mecanismo de reputação.
 - Novas tabelas são criadas pelo mecanismo existente. A base inspecionada não tinha modelo/tabela de posts gerenciada pelo projeto; não se executa ALTER nem se apagam dados antigos.
 - Criados formulário, detalhe com edição/exclusão e listagem pública autenticada de posts por pessoa. Validação: 45 testes de backend passaram (6 pendentes do núcleo), incluindo concorrência em conexões independentes, e build passou. Revisão humana pendente.
+
+
+## Feed — parte 2 — 25/11/2026
+
+- Regra aprovada: edição real de texto de review musical traz o mesmo cartão ao topo com indicação “Editada”; sem novo aviso por edição e sem limite de frequência. Salvar texto igual após trim não altera data ou posição. Posts sem música continuam ordenados pela criação.
+- Implementados feed dos seguidos, seguir/deixar de seguir mínimo necessário e links para publicações por pessoa. Perfil completo e listas de seguidores ficam fora desta etapa; o PR #25 não foi alterado.
+- Paginação conserva itens em falha da próxima página, deduplica pela identidade do item e reinicia ao atualizar. Não há push em tempo real; limites de offset sob novas atividades estão documentados no contrato.
+- Validação: 10 testes direcionados passaram (4 do núcleo continuam pendentes nessa seleção), incluindo contrato original de feed/follow, ordenação por edição, texto igual, empates e paginação; build passou. Revisão humana pendente.

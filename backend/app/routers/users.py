@@ -46,3 +46,30 @@ from app.services import posts as posts_service
 def posts_do_usuario(username: str, offset: int = Query(0, ge=0),
                      limit: int = Query(20, ge=1, le=100), db: Session = Depends(get_db)):
     return posts_service.listar_autor(db, username, offset, limit)
+
+
+from fastapi import Response
+from app.models.user import User
+from app.services import follows as follow_service
+
+
+@router.get("/{username}/follow")
+def estado_follow(username: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    return follow_service.estado(db, username, user.id)
+
+
+@router.post("/{username}/follow", status_code=204)
+def seguir(username: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    follow_service.seguir(db, username, user.id, True)
+    return Response(status_code=204)
+
+
+@router.delete("/{username}/follow", status_code=204)
+def deixar_de_seguir(username: str, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    follow_service.seguir(db, username, user.id, False)
+    return Response(status_code=204)
+
+
+@router.get("/{username}", dependencies=[Depends(get_current_user)])
+def perfil_publico(username: str, db: Session = Depends(get_db)):
+    return follow_service.perfil(db, username)

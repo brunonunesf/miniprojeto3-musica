@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { User } from "@/lib/api";
 
 export function UserCard({ user }: { user: User }) {
@@ -12,7 +13,7 @@ export function UserCard({ user }: { user: User }) {
         )}
       </div>
       <div className="min-w-0">
-        <p className="truncate font-medium">{user.name}</p>
+        <Link href={`/pessoas/${user.username}`} className="truncate font-medium text-brand-700">{user.name}</Link>
         <p className="truncate text-sm text-zinc-500">
           @{user.username}
           {user.bio ? ` — ${user.bio}` : ""}

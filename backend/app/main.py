@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.core.contadores import contador_iniciais
 from app.db import Base, SessionLocal, engine
 from app.models.user import User
-from app.routers import auth, users, music, posts
+from app.routers import auth, users, music, posts, feed
 import app.models  # noqa: F401 — registra todos os modelos
 
 
@@ -39,3 +39,5 @@ app.include_router(users.router)
 app.include_router(music.router)
 
 app.include_router(posts.router)
+
+app.include_router(feed.router)

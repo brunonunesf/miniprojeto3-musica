@@ -97,3 +97,7 @@ export type Post = {
   id: number; texto: string; autor: User; musica: Music | null;
   created_at: string; edited_at: string | null;
 };
+
+export type FeedItem = Post & {
+  feed_id: string; tipo: "post" | "republicacao"; feed_at: string; comentario: string | null;
+};

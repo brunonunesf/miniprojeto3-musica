@@ -270,3 +270,11 @@ Convenções:
 - Review ativa repetida: `409`, `detail: {message, post_id}`. Índice parcial único autor/música no SQLite protege concorrência. Posts sem música não sofrem essa restrição.
 - `GET` 🔒 `/usuarios/{username}/posts?offset=0&limit=20`: página de publicações ativas, criação decrescente; limite 1–100.
 - Exclusão apaga texto e marca data de exclusão, preservando ID, autor e música para futuras árvores. Não restaura conteúdo nem reutiliza ID. Datas são UTC ISO 8601.
+
+## Feed e vínculos — parte 2
+
+- `GET` 🔒 `/feed?offset=0&limit=20` → página somente dos seguidos, sem incluir automaticamente posts próprios. Limite 1–100. Cada item mantém campos de post e acrescenta `feed_id`, `tipo`, `feed_at`, `comentario`.
+- Review musical usa última alteração real de texto na ordenação; post sem música mantém criação. Editar não cria item adicional. `created_at` é preservado, `edited_at` indica alteração. Metadados musicais e origem não reposicionam.
+- Empates usam ID estável. Offset pode repetir/pular itens se houver novas atividades entre páginas; atualizar reinicia a paginação. Interface deduplica por `feed_id` e preserva itens anteriores quando carregar mais falha. Sem atualização em tempo real.
+- `GET/POST/DELETE` 🔒 `/usuarios/{username}/follow`: estado `{seguindo: bool}` / seguir `204` / deixar de seguir `204`. Escritas idempotentes; seguir a si próprio: `422`; usuário ausente: `404`.
+- `GET` 🔒 `/usuarios/{username}`: dados públicos e contadores `seguidores`, `seguindo`. Não inclui edição de perfil nem listas de seguidores.

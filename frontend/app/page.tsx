@@ -21,7 +21,8 @@ export default function Home() {
           <p className="mt-3 mb-6 text-sm leading-relaxed text-zinc-600">Conheça quem faz parte da comunidade. Sua próxima descoberta pode começar com alguém.</p>
           <Link href="/usuarios" className="btn-primary w-full">Conhecer pessoas</Link>
         </div>
-        <p className="mt-5 text-sm leading-relaxed text-zinc-600">Seu feed de recomendações está em preparação.</p>
+        <Link href="/feed" className="mt-5 inline-block text-sm font-bold text-brand-700">Abrir feed</Link>
+        <p className="mt-5 text-sm leading-relaxed text-zinc-600">Acompanhe as opiniões e novidades de quem você segue.</p>
       </section>
     </div>
   );
