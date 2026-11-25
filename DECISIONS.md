@@ -238,3 +238,11 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música**: a mús
 - Música sem capa, ou com imagem indisponível, mostra um substituto. A exclusão pede confirmação.
 - O feed e a lista de reviews do perfil dependem de rotas que ainda não existem.
 - Claude Code implementou as telas e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Tela de feed — issue #36 (25/11/2026)
+
+- `/feed` consome `GET /feed?offset=&limit=` no formato de página (`items`, `total`) com reviews no formato de `PostOut`. A rota ainda não existe no backend.
+- Cartão compacto, como decidido para o feed: capa, música, nota e indicador de análise; o texto abre no detalhe.
+- Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
+- Curtidas e comentários, também da #36, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
