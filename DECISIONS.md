@@ -218,4 +218,4 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música**: a mús
 - **Preparação da árvore:** `origem_id` ainda não existe. Será uma coluna opcional do `Post` na #10, sem quebrar o contrato acima.
 - **Exclusão:** por enquanto apaga a review. A política para descendentes de uma review excluída será definida junto com a #10.
 - **Esquema do banco:** as tabelas `posts` e `musicas` são novas. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
-- Claude Code implementou o CRUD de reviews, o catálogo manual de músicas e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (53 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
+- Claude Code implementou o CRUD de reviews, o catálogo manual de músicas e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (56 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
