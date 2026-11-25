@@ -33,28 +33,32 @@ A proposta é que curtidas e novas recomendações gerem pontos, distribuídos t
 
 ## Funcionalidades e responsabilidades
 
-Os itens de núcleo vêm da base oficial. Os demais são ideias da conversa; prioridade, escopo e donos serão definidos pelos três.
+Os itens de núcleo vêm da base oficial. As prioridades e decisões de produto continuam sendo do trio; a divisão de áreas foi confirmada por Bruno em 24/11/2026.
 
-Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos três. Pessoas A, B e C ainda não foram associadas a nomes.
-
-| Pessoa | Área | Núcleo | Feature musical |
-|---|---|---|---|
-| A (Cecília) | Frontend | Auth, Perfil | Tela da árvore de recomendações |
-| B (a confirmar) | Backend | Posts, Feed, Curtidas, Comentários | Review com nota e `origem_id` |
-| C (a confirmar) | Dados | Follow, Seed fake | Reputação, estrutura em `core/` e deploy |
-
-| Funcionalidade | Situação | Dono |
+| Pessoa | Área | Responsabilidades |
 |---|---|---|
-| Autenticação | Backend na `main` (PRs #16 e #17). Front e reforços no PR #27 (`feat/issue-2-autenticacao`), aguardando revisão. O PR #24 (`feat/telas-auth`) também implementa as telas e precisa ser conciliado pelo time | A |
-| Perfil | Núcleo a implementar | A |
-| Posts, feed, curtidas e comentários | CRUD de posts como review de música (música e nota obrigatórias) na branch `feat/posts` (issues #3 e #9). Feed, curtidas e comentários ainda a implementar conforme os testes da base | B |
-| Follow | Núcleo a implementar | C |
-| Seed de exemplo no nicho musical | Adaptar ao produto; fazer por último | C |
-| Reviews (música + nota) e árvores de recomendações | Diferencial proposto | B (back), A (tela) |
-| Reputação distribuída | Proposta; versão mínima abaixo | C |
-| Bibliotecas de descobertas e recomendações | Ideia descrita por Daniel | A combinar |
-| Grupos de amigos e conversa sobre a semana musical | Sugestão a avaliar | A combinar |
-| Mensagens diretas | Sugestão a avaliar | A combinar |
+| Cecília (@cec1l14) | Frontend (`front`) | Telas, componentes, navegação e integração da interface com a API. |
+| Daniel (@dnieldantas) | Backend (`back`) | APIs, persistência, permissões e integrações externas. |
+| Bruno (@brunonunesf) | Dados e machine learning (`dados`) | Seed, catálogo, estruturas de dados, algoritmos de reputação e recomendador com sua validação. |
+
+Uma funcionalidade pode envolver várias áreas. As etiquetas indicam participação, não exclusividade: o simples uso do banco é backend e não exige `dados`. Os responsáveis já atribuídos no GitHub e as contribuições anteriores são preservados. A autenticação (#2), concluída com participação de Bruno, não será redistribuída retroativamente.
+
+| Funcionalidade | Participação por área |
+|---|---|
+| Autenticação (#2) | Cecília: front; Daniel: back nas manutenções futuras. Preservado o histórico de implementação de Bruno e do time. |
+| Perfil, posts, follow, feed, curtidas e comentários (#3–#8) | Cecília: front; Daniel: back. |
+| Músicas e reviews (#9) | Cecília: interface; Daniel: modelo persistido e API; Bruno: catálogo, gêneros, tags e consistência das identidades musicais. |
+| Árvores de recomendações (#10) | Cecília: visualização; Daniel: persistência e API; Bruno: estrutura e algoritmos de percurso e prevenção de ciclos. |
+| Reputação (#11) e recálculo (#20) | Bruno: cálculo e validação; Daniel: eventos, persistência e API; Cecília: exibição e feedback. |
+| Bibliotecas (#12) | Cecília: telas; Daniel: consultas e autorização. |
+| Seed e demonstração (#13) | Bruno: dados fictícios, cenários e validação do seed; roteiro e apresentação continuam coletivos. |
+| Grupos e mensagens (#14–#15) | Avaliação coletiva; Cecília avalia a experiência e Daniel a viabilidade do backend. Implementação depende da decisão de produto. |
+| Reescutas (#18) | Cecília: interface; Daniel: registros, permissões e limite de 24 horas. |
+| Correção de origem (#19) | Cecília: confirmação e feedback; Daniel: alteração persistida e integração; Bruno: validação da árvore e integração com o recálculo. |
+| Spotify e Deezer (#21–#22) | Daniel: viabilidade, autorização e API; Cecília: conexão e confirmação na interface. Integrações opcionais. |
+| Descobrir (#23) | Bruno: recomendador TF-IDF, similaridade e validação; Daniel: endpoint e integração; Cecília: tela e explicação das sugestões. |
+
+A divisão organiza o trabalho futuro e não altera o estado de conclusão das funcionalidades. Os registros de andamento e implementação nas demais seções são históricos e devem ser lidos com suas datas.
 
 ## Escopo e cortes (proposta)
 
