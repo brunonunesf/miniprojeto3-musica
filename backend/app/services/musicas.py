@@ -15,6 +15,8 @@ def importar_catalogo(db: Session) -> int:
     """
     novas = 0
     for registro in carregar_catalogo():
+        # a capa é opcional no catálogo e vem como None quando falta; a coluna guarda "" nesse caso
+        registro = {**registro, "capa_url": registro.get("capa_url") or ""}
         musica = db.scalar(select(Musica).where(Musica.chave_catalogo == registro["chave_catalogo"]))
         if musica is None:
             db.add(Musica(**registro))

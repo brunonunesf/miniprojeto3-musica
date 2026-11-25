@@ -76,3 +76,24 @@ def test_importar_o_catalogo_de_novo_preserva_os_ids(client, logar):
         assert service.importar_catalogo(db) == 0
 
     assert client.get("/musicas?limit=100", headers=ana).json()["items"] == antes
+
+
+def test_importar_trata_a_capa_opcional_do_catalogo(client, logar, monkeypatch):
+    ana = logar("ana")
+    base = {
+        "tipo_versao": "original",
+        "descricao_versao": "",
+        "generos": ["indie"],
+        "tags": ["calma"],
+    }
+    catalogo = [
+        {**base, "chave_catalogo": "sem-capa", "titulo": "Sem Capa", "artista": "A", "capa_url": None},
+        {**base, "chave_catalogo": "com-capa", "titulo": "Com Capa", "artista": "B", "capa_url": "https://exemplo.com/c.jpg"},
+    ]
+    monkeypatch.setattr(service, "carregar_catalogo", lambda: catalogo)
+
+    with SessionLocal() as db:
+        assert service.importar_catalogo(db) == 2  # catálogo com capa None não derruba a importação
+
+    achadas = {m["titulo"]: m["capa_url"] for m in client.get("/musicas?q=capa", headers=ana).json()["items"]}
+    assert achadas == {"Sem Capa": "", "Com Capa": "https://exemplo.com/c.jpg"}
