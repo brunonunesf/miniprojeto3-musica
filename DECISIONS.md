@@ -253,3 +253,36 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - A revisão combinada encontrou falha de `None` versus `NOT NULL` na reimportação do catálogo do #60, capaz de impedir a segunda inicialização. Correção implementada no #60: normalizar ausência/null para texto vazio no importador; modelo/schema alinhados a 2048 caracteres.
 - Evidências e causa documentadas no #60 em `docs/revisao-integracao-capas.md`; testes de reinício, reimportação, URL longa e remoção de capa adicionados lá. Nenhum aviso, comentário ou menção ao time foi enviado nesta correção.
 - A atualização não conclui o adaptador do seed: origens/follows/likes e validação integrada continuam dependências da #13.
+
+## Estrutura e percursos de árvores — issue #41 — 25/11/2026
+
+- Entrega exclusivamente de dados em `app/core/arvores.py`, sem banco/FastAPI.
+  Classe instanciável e singleton para futura integração da #10; não altera
+  endpoints, modelos, startup, seed ou interface. Troca de origem fica na #49.
+- Floresta indexada por ID, filhos por pai e raízes por música. Nó imutável:
+  IDs de review/música/autor, origem opcional e marca de apagada, sem conteúdo.
+  IDs int/string sem coerção; mesma música significa mesma identidade interna,
+  não igualdade de título. Várias raízes por música são válidas.
+- Reconstrução aceita registros fora de ordem, exige referências completas e
+  rejeita integralmente duplicata, pai ausente, outra música e ciclo, preservando
+  o estado anterior. Referência apagada existente é válida e conserva autoria.
+- Inserção incremental exige ID novo e pai ativo da mesma música. Exclusão
+  estrutural idempotente apenas marca apagada; descendentes, distância e raiz
+  permanecem. Unicidade de review ativa, texto, permissões e transações são do
+  backend. Curtidas, comentários e reescutas não alimentam a floresta.
+- BFS e DFS pré-ordem iterativos; ancestrais do pai à raiz; nó inicial excluído.
+  Referências apagadas aparecem como nós sem conteúdo e contam como nível.
+  Irmãos/raízes seguem inserção; backend deve fornecer carga ordenada e estável.
+- Percursos paginados: offset não negativo, limit padrão 50/máximo 200,
+  profundidade opcional sem corte padrão; zero retorna vazio. Profundidade
+  aplicada antes da paginação. Retorno imutável com itens, distância e tem_mais,
+  sem total. Mudanças entre consultas podem alterar páginas.
+- Custos reais: reconstrução O(n) esperado com detecção de ciclos linear,
+  memória O(n); inserção/consulta/pai/exclusão O(1) esperado/amortizado;
+  raiz O(h); listar raízes O(r). Percursos custam o trabalho examinado,
+  incluindo offset e um item extra. Descendentes também pagam pelas ligações
+  enfileiradas, com fronteira O(n) no pior caso mesmo com página pequena.
+  Contrato e exemplos completos em `backend/app/core/README.md`.
+- Testes puros em `backend/tests_dados/test_arvores.py`, incluindo corrente
+  profunda, ramificação, raízes independentes, apagadas, carga inválida atômica,
+  paginação e cenário da #13. Isso não comprova integração com API/banco.
