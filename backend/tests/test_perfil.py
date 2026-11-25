@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_editar_e_ver_perfil(client, logar):
     ana = logar("ana", "Ana")
 
@@ -58,3 +61,11 @@ def test_dados_invalidos_devolvem_422(client, logar):
     assert client.patch("/usuarios/eu", json={"bio": "x" * 281}, headers=ana).status_code == 422
     assert client.patch("/usuarios/eu", json={"avatar_url": "javascript:alert(1)"}, headers=ana).status_code == 422
     assert client.patch("/usuarios/eu", json={"name": ""}, headers=ana).status_code == 422
+
+
+@pytest.mark.parametrize("username", ["eu", "stats"])
+@pytest.mark.parametrize("rota", ["/auth/registro", "/usuarios"])
+def test_username_reservado_e_recusado(client, rota, username):
+    dados = {"username": username, "name": "Alguém", "password": "senha-forte-123"}
+
+    assert client.post(rota, json=dados).status_code == 422

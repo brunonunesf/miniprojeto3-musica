@@ -22,7 +22,8 @@ export function Avatar({ user, tamanho = "md" }: Props) {
 
   return (
     <div
-      className={`${classes} flex shrink-0 items-center justify-center rounded-full bg-destaque font-titulo font-bold text-fundo`}
+      aria-hidden="true"
+      className={`${classes} flex shrink-0 items-center justify-center rounded-full bg-zinc-200 font-semibold`}
     >
       {user.name[0]?.toUpperCase()}
     </div>

@@ -3,6 +3,7 @@ import secrets
 import bcrypt
 from fastapi import HTTPException
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session as DbSession
 
 from app.core.contadores import contador_iniciais
@@ -26,7 +27,13 @@ def registrar(db: DbSession, dados: RegistroIn) -> User:
         password_hash=gerar_hash(dados.password),
     )
     db.add(user)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        if db.scalar(select(User).where(User.username == dados.username)):
+            raise HTTPException(status_code=409, detail="username já existe") from None
+        raise
     db.refresh(user)
 
     contador_iniciais.incrementar(user.username)
@@ -35,9 +42,15 @@ def registrar(db: DbSession, dados: RegistroIn) -> User:
 
 def logar(db: DbSession, dados: LoginIn) -> str:
     user = db.scalar(select(User).where(User.username == dados.username))
-    if not user or not user.password_hash or not bcrypt.checkpw(
-        dados.password.encode(), user.password_hash.encode()
-    ):
+    senha_valida = False
+    if user and user.password_hash and len(dados.password.encode("utf-8")) <= 72:
+        try:
+            senha_valida = bcrypt.checkpw(
+                dados.password.encode("utf-8"), user.password_hash.encode()
+            )
+        except ValueError:
+            senha_valida = False
+    if not senha_valida:
         raise HTTPException(status_code=401, detail="usuário ou senha inválidos")
 
     token = secrets.token_urlsafe(32)

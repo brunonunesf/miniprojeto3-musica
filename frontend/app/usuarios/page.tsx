@@ -51,9 +51,9 @@ export default function UsuariosPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-titulo text-3xl font-bold">Usuários</h1>
+      <h1 className="text-2xl font-bold">Usuários</h1>
 
-      <form onSubmit={criar} className="flex flex-wrap items-end gap-2 rounded-xl border border-borda bg-superficie p-3">
+      <form onSubmit={criar} className="flex flex-wrap items-end gap-2 rounded-lg border bg-white p-3">
         <label className="flex flex-col text-sm">
           username
           <input
@@ -62,7 +62,7 @@ export default function UsuariosPage() {
             pattern="[a-z0-9_]{3,30}"
             title="3–30 caracteres: letras minúsculas, números e _"
             required
-            className="rounded-lg border border-borda bg-fundo px-2 py-1 text-texto focus:outline-none focus:ring-1 focus:ring-destaque focus:shadow-[0_0_10px_-2px_var(--color-destaque)]"
+            className="rounded border px-2 py-1"
           />
         </label>
         <label className="flex flex-col text-sm">
@@ -72,19 +72,19 @@ export default function UsuariosPage() {
             onChange={(e) => setName(e.target.value)}
             required
             maxLength={80}
-            className="rounded-lg border border-borda bg-fundo px-2 py-1 text-texto focus:outline-none focus:ring-1 focus:ring-destaque focus:shadow-[0_0_10px_-2px_var(--color-destaque)]"
+            className="rounded border px-2 py-1"
           />
         </label>
         <button
           type="submit"
           disabled={salvando}
-          className="rounded-lg bg-marca px-3 py-1.5 text-sm font-medium text-fundo shadow-[0_0_14px_-3px_var(--color-marca)] hover:bg-marca-forte disabled:opacity-50 disabled:shadow-none"
+          className="rounded bg-zinc-900 px-3 py-1.5 text-sm text-white disabled:opacity-50"
         >
           {salvando ? "criando..." : "criar usuário"}
         </button>
       </form>
 
-      {erro && <p className="rounded-lg border border-erro-borda bg-erro-fundo p-3 text-sm text-erro-texto">{erro}</p>}
+      {erro && <p className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-700">{erro}</p>}
 
       {pagina && (
         <>
@@ -95,7 +95,7 @@ export default function UsuariosPage() {
               </li>
             ))}
           </ul>
-          <p className="text-sm text-suave">
+          <p className="text-sm text-zinc-500">
             mostrando {pagina.items.length} de {pagina.total}
           </p>
         </>
