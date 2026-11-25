@@ -47,7 +47,7 @@ Divisão **sugerida**, baseada no guia 07 (time de 3), a ser confirmada pelos tr
 |---|---|---|
 | Autenticação | Backend na `main` (PRs #16 e #17). Front e reforços no PR #27 (`feat/issue-2-autenticacao`), aguardando revisão. O PR #24 (`feat/telas-auth`) também implementa as telas e precisa ser conciliado pelo time | A |
 | Perfil | Núcleo a implementar | A |
-| Posts, feed, curtidas e comentários | Núcleo a implementar conforme os testes da base | B |
+| Posts, feed, curtidas e comentários | CRUD de posts na branch `feat/posts` (issue #3). Feed, curtidas e comentários ainda a implementar conforme os testes da base | B |
 | Follow | Núcleo a implementar | C |
 | Seed de exemplo no nicho musical | Adaptar ao produto; fazer por último | C |
 | Reviews (música + nota) e árvores de recomendações | Diferencial proposto | B (back), A (tela) |
@@ -195,3 +195,13 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 
 - Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
 - Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.
+
+## Posts — issue #3 — 24/11/2026
+
+- **Rotas:** `POST /posts` (201), `GET /posts/{id}`, `PATCH /posts/{id}` e `DELETE /posts/{id}` (204). Todas exigem login. O formato de saída traz `id`, `texto`, `autor` (usuário completo) e `created_at`.
+- **Autoria vem da sessão.** O corpo aceita só `texto`; um `autor_id` enviado pelo cliente é ignorado. Editar ou excluir post de outra pessoa devolve `403` sem alterar o banco; post inexistente devolve `404`, verificado antes da permissão.
+- **Texto:** de 1 a 500 caracteres, com espaços das pontas removidos antes de validar, então texto vazio ou só com espaços devolve `422`. O limite de 500 foi escolhido para comportar uma review curta e pode ser revisto com o time.
+- **Review será um post com campos extras** (música, nota, `origem_id`), como já decidido. O model de post ficou simples de propósito para receber essas colunas nas issues #9 e #10 sem quebrar o contrato `POST /posts` com `texto`.
+- **Exclusão:** por enquanto apaga o post. A política para descendentes de uma review excluída (registro de origem apagada) será definida junto com a #10 antes de ligar o CRUD às árvores.
+- **Esquema do banco:** a tabela `posts` é nova. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
+- Claude Code implementou o CRUD de posts e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (45 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
