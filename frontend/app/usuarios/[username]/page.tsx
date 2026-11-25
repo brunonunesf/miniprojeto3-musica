@@ -5,7 +5,10 @@ import { useEffect, useState, type FormEvent } from "react";
 
 import { useSessao } from "@/components/AuthProvider";
 import { Avatar } from "@/components/Avatar";
-import { apiGet, apiPatch, type User } from "@/lib/api";
+import { BotaoSeguir } from "@/components/BotaoSeguir";
+import { ReviewsDoPerfil } from "@/components/ReviewsDoPerfil";
+import { apiPatch, type User } from "@/lib/api";
+import { buscarPerfil, PERFIL_SIMULADO, type Perfil } from "@/lib/perfil";
 
 function membroDesde(dataIso: string): string {
   return new Date(dataIso).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
@@ -14,12 +17,12 @@ function membroDesde(dataIso: string): string {
 export default function PerfilPage() {
   const { username } = useParams<{ username: string }>();
   // A key recria o componente a cada perfil: nenhum estado passa de um para outro.
-  return <Perfil key={username} username={username} />;
+  return <PerfilDe key={username} username={username} />;
 }
 
-function Perfil({ username }: { username: string }) {
+function PerfilDe({ username }: { username: string }) {
   const { usuario, atualizarUsuario } = useSessao();
-  const [perfil, setPerfil] = useState<User | null>(null);
+  const [perfil, setPerfil] = useState<Perfil | null>(null);
   const [erro, setErro] = useState("");
   const [tentativa, setTentativa] = useState(0);
   const [editando, setEditando] = useState(false);
@@ -28,7 +31,7 @@ function Perfil({ username }: { username: string }) {
     // Descarta a resposta se a pessoa já saiu deste perfil.
     let ativa = true;
     setErro("");
-    apiGet<User>(`/usuarios/${encodeURIComponent(username)}`).then(
+    buscarPerfil(username).then(
       (resposta) => {
         if (ativa) setPerfil(resposta);
       },
@@ -42,7 +45,8 @@ function Perfil({ username }: { username: string }) {
   }, [username, tentativa]);
 
   function aoSalvar(novo: User) {
-    setPerfil(novo);
+    // A resposta da edição não traz contadores: mantém os que já vieram.
+    setPerfil((atual) => ({ ...atual, ...novo }));
     atualizarUsuario(novo);
     setEditando(false);
   }
@@ -67,8 +71,17 @@ function Perfil({ username }: { username: string }) {
           <h1 className="break-words text-3xl font-bold tracking-tight">{perfil.name}</h1>
           <p className="break-words text-brand-700">@{perfil.username}</p>
           {perfil.bio && <p className="whitespace-pre-wrap break-words">{perfil.bio}</p>}
+          {perfil.seguidores !== undefined && (
+            <p className="flex flex-wrap gap-4 text-sm">
+              <span><strong>{perfil.seguidores}</strong> seguidores</span>
+              <span><strong>{perfil.seguindo}</strong> seguindo</span>
+            </p>
+          )}
           <p className="text-sm text-zinc-500">Na rede desde {membroDesde(perfil.created_at)}</p>
         </div>
+        {usuario?.id !== perfil.id && perfil.sigo !== undefined && (
+          <BotaoSeguir perfil={perfil} aoMudar={setPerfil} />
+        )}
         {usuario?.id === perfil.id && !editando && (
           <button className="btn-primary" onClick={() => setEditando(true)}>
             Editar perfil
@@ -76,9 +89,17 @@ function Perfil({ username }: { username: string }) {
         )}
       </section>
 
+      {PERFIL_SIMULADO && (
+        <p className="rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">
+          Dados de exemplo: contadores, botão de seguir e reviews abaixo não vêm do servidor.
+        </p>
+      )}
+
       {editando && (
         <FormularioPerfil perfil={perfil} aoSalvar={aoSalvar} aoCancelar={() => setEditando(false)} />
       )}
+
+      <ReviewsDoPerfil autor={perfil} />
     </div>
   );
 }

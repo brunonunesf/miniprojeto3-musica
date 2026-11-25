@@ -246,3 +246,10 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música**: a mús
 - Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
 - Curtidas e comentários, também da #36, não foram feitos.
 - Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Perfil: seguir e reviews — issue #34 (25/11/2026)
+
+- O perfil ganhou contadores, botão de seguir e a lista paginada de reviews. Feed e perfil compartilham a paginação (`usePaginacao` e `ListaDeReviews`).
+- Contrato **proposto**: `GET /usuarios/{username}` com `seguidores`, `seguindo` e `sigo`; `POST` e `DELETE /usuarios/{username}/follow`; `GET /usuarios/{username}/posts?offset=&limit=`. Falta combinar o campo `sigo` com Daniel.
+- Sem esses campos, o perfil não mostra botão nem contadores. Com `NEXT_PUBLIC_PERFIL_SIMULADO=true`, usa exemplos e avisa isso.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
