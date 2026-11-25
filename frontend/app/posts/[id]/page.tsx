@@ -9,6 +9,7 @@ import { CamposReview } from "@/components/CamposReview";
 import { Capa } from "@/components/Capa";
 import { MensagemErro } from "@/components/MensagemErro";
 import { apiDelete, apiGet, apiPatch, type Post } from "@/lib/api";
+import { nomeDaVersao } from "@/lib/musica";
 
 export default function ReviewPage() {
   const { id } = useParams<{ id: string }>();
@@ -59,7 +60,7 @@ function Review({ id }: { id: string }) {
           <div className="min-w-0 flex-1 space-y-1">
             <h1 className="break-words text-3xl font-bold tracking-tight">{post.musica.titulo}</h1>
             <p className="break-words text-lg text-zinc-700">{post.musica.artista}</p>
-            <p className="break-words text-sm text-zinc-500">Versão: {post.musica.versao}</p>
+            <p className="break-words text-sm text-zinc-500">{nomeDaVersao(post.musica)}</p>
           </div>
           <p className="text-3xl font-bold text-brand-700">{post.nota}<span className="text-base text-zinc-500">/10</span></p>
         </header>

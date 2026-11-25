@@ -63,6 +63,17 @@ def logar(client):
 
 
 @pytest.fixture()
+def id_da_musica(client):
+    """Fábrica: devolve o id (do banco) de uma música do catálogo pela chave_catalogo."""
+
+    def _id(headers: dict, chave: str = "demo-horizonte-original") -> int:
+        r = client.get("/musicas?limit=100", headers=headers)
+        return next(m["id"] for m in r.json()["items"] if m["chave_catalogo"] == chave)
+
+    return _id
+
+
+@pytest.fixture()
 def auth_client(client, logar):
     """Client já autenticado (header fixado). Vermelho até a auth do time existir."""
     client.headers.update(logar("tester_auth", "Tester"))

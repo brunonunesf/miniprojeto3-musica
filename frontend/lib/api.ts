@@ -77,9 +77,13 @@ export type User = {
 
 export type Musica = {
   id: number;
+  chave_catalogo: string;
   titulo: string;
   artista: string;
-  versao: string;
+  tipo_versao: "original" | "remix" | "ao_vivo" | "remaster";
+  descricao_versao: string;
+  generos: string[];
+  tags: string[];
   capa_url: string;
 };
 

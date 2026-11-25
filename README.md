@@ -111,3 +111,7 @@ Usem o template de feature ou abram uma issue em branco para decisões, dúvidas
 ## Origem da proposta
 
 Síntese das mensagens de texto sobre música da conversa do grupo em 18 e 19/11/2026, priorizando a proposta detalhada de Daniel em 19/11. Os áudios não foram transcritos e seu conteúdo não foi inferido. O histórico privado, os áudios e os demais anexos não fazem parte do repositório.
+
+### Catálogo musical — entrega de dados da #9
+
+O catálogo inicial contém seis faixas e artistas **fictícios**, com identidades distintas para original, remix, ao vivo e remaster. A entrega inclui dados, carregamento/validação independente e testes, sem banco, API ou interface. Veja o [contrato, a curadoria e os comandos de validação](backend/data/README.md). Persistência e vínculo com reviews serão integrados pelos responsáveis de backend; seleção e apresentação, pela responsável de frontend. A #9 permanece aberta.
