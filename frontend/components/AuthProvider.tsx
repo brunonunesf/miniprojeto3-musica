@@ -27,6 +27,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const publica = pathname === "/login" || pathname === "/registro";
+  // A home atende os dois casos: apresentação para visitantes, início para quem entrou.
+  const aberta = pathname === "/";
   const ampla = pathname === "/login" || pathname === "/";
 
   const limpar = useCallback((mensagem = "") => {
@@ -35,6 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setEstado("visitante");
     setAviso(mensagem);
   }, []);
+
+  const expirar = useCallback(() => {
+    limpar("Sua sessão não é mais válida. Entre novamente.");
+    router.replace("/login");
+  }, [limpar, router]);
 
   const verificar = useCallback(async () => {
     const atual = ++versao.current;
@@ -53,35 +60,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (erro) {
       if (atual !== versao.current) return;
       if (erro instanceof ApiError && erro.status === 401) {
-        limpar("Sua sessão não é mais válida. Entre novamente.");
+        expirar();
       } else {
         setEstado("erro");
       }
     }
-  }, [limpar]);
+  }, [expirar]);
 
   useEffect(() => {
-    const invalida = () => limpar("Sua sessão não é mais válida. Entre novamente.");
     const storage = (event: StorageEvent) => {
       if (event.key === "token" || event.key === null) {
         if (!localStorage.getItem("token")) limpar("Você saiu da conta em outra aba.");
         else void verificar();
       }
     };
-    window.addEventListener("sessao-invalida", invalida);
+    window.addEventListener("sessao-invalida", expirar);
     window.addEventListener("storage", storage);
     void verificar();
     return () => {
       versao.current += 1;
-      window.removeEventListener("sessao-invalida", invalida);
+      window.removeEventListener("sessao-invalida", expirar);
       window.removeEventListener("storage", storage);
     };
-  }, [limpar, verificar]);
+  }, [expirar, limpar, verificar]);
 
   useEffect(() => {
-    if (estado === "visitante" && !publica) router.replace("/login");
+    if (estado === "visitante" && !publica && !aberta) router.replace("/login");
     if (estado === "autenticado" && publica) router.replace("/");
-  }, [estado, publica, router]);
+  }, [estado, publica, aberta, router]);
 
   async function entrar(username: string, password: string) {
     const atual = ++versao.current;
@@ -102,7 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.replace("/login");
   }
 
-  const liberado = (publica && estado === "visitante") || (!publica && estado === "autenticado");
+  const liberado =
+    (estado === "visitante" && (publica || aberta)) || (estado === "autenticado" && !publica);
 
   return (
     <Contexto.Provider value={{ usuario, entrar, atualizarUsuario }}>

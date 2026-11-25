@@ -206,3 +206,8 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - `eu` e `stats` são usernames reservados, porque colidem com rotas fixas de `/usuarios`.
 - Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
 - Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Página inicial pública (25/11/2026)
+
+- `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
+- A apresentação usa a arte da identidade aprovada; o fundo de ondas neon foi descartado. Claude Code fez a adaptação.
