@@ -45,3 +45,12 @@ class PostOut(BaseModel):
     def tem_texto(self) -> bool:
         """Indicador do feed: a review tem texto para abrir e ler."""
         return bool(self.texto)
+
+
+class PostPage(BaseModel):
+    """Padrão de paginação do projeto, para listas de reviews."""
+
+    items: list[PostOut]
+    total: int
+    offset: int
+    limit: int

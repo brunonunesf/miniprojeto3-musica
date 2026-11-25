@@ -14,7 +14,7 @@ router = APIRouter(prefix="/musicas", tags=["musicas"])
 @router.get("", response_model=MusicaPage)
 def listar_musicas(
     q: str = Query(default="", max_length=200),
-    offset: int = Query(default=0, ge=0),
+    offset: int = Query(default=0, ge=0, le=ID_MAXIMO),
     limit: int = Query(default=20, ge=1, le=100),
     _: User = Depends(get_current_user),
     db: Session = Depends(get_db),

@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.core.contadores import contador_iniciais
 from app.db import Base, SessionLocal, engine
 from app.models.user import User
-from app.routers import auth, musicas, posts, users
+from app.routers import auth, feed, follows, musicas, posts, users
 from app.services import musicas as servico_musicas
 
 
@@ -36,5 +36,7 @@ app.add_middleware(
 # 1 linha por feature — registre o seu router aqui.
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(follows.router)
+app.include_router(feed.router)
 app.include_router(musicas.router)
 app.include_router(posts.router)

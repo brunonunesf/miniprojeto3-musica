@@ -223,6 +223,18 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Esquema do banco:** as tabelas `posts` e `musicas` são novas. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
 - Claude Code implementou o CRUD de reviews, a importação e as rotas do catálogo e seus testes (`test_posts_crud`, `test_posts.py` e `test_musicas.py`). Foi verificado com `make test` (75 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
 
+## Follow e feed — issues #4 e #6 — 25/11/2026
+
+- **Seguir:** `POST /usuarios/{username}/follow` e `DELETE` na mesma rota, ambos `204` e **idempotentes**: seguir de novo ou deixar de seguir quem não se segue não é erro nem altera contadores. A relação é única por par (chave composta no banco). Usuário inexistente devolve `404`; **seguir a si mesmo devolve `422`**. Seguir não cria nem pontua nada: não gera reputação, escuta nem nó.
+- **Perfil:** `GET /usuarios/{username}` passou a devolver também `seguidores`, `seguindo` e `eu_sigo` (se quem olha já segue a pessoa), que é o estado do botão de seguir. Os contadores são calculados por contagem na hora, e nunca ficam negativos.
+- **Feed:** `GET /feed?offset=0&limit=10` devolve as reviews **somente de quem a pessoa segue**, sem incluir as próprias, da mais nova para a mais antiga, com `items`, `total`, `offset` e `limit`. O `total` conta o conjunto inteiro filtrado. `limit` vai de 1 a 100 (padrão 10) e `offset` não pode ser negativo nem maior que o inteiro do banco (`422`).
+- **Empates:** reviews criadas no mesmo instante são ordenadas pelo `id` (maior primeiro), para a ordem ser estável.
+- **Formato dos itens:** os mesmos de `GET /posts/{id}`, com `musica`, `nota`, `tem_texto`, `autor` e `texto`. A interface decide o que mostrar: o cartão compacto usa capa, nome, nota e o indicador `tem_texto`, e abre a review para ler o texto. Autor e música são carregados em lote, sem uma consulta extra por review.
+- **Limite da paginação por offset:** o banco precisa contar e pular as linhas anteriores, então páginas muito fundas custam mais (O(offset)). Além disso, se alguém publicar uma review entre duas páginas, um item pode aparecer repetido ou ser pulado. É aceitável para este tamanho de rede; uma paginação por cursor (a partir da data e do `id` do último item) resolveria os dois problemas, se for preciso.
+- **Testes:** o `test_feed_cronologico_dos_seguidos` foi adaptado ao formato de review (cada autor avalia uma versão uma vez) sem remover nenhuma verificação, e `test_follow_unfollow_com_contadores` foi ativado. `make test`: 93 passed, 4 skipped (perfil, curtidas, comentários e seed).
+- **Fora desta entrega:** curtidas e comentários (#6, próxima parte) e `GET /usuarios/{username}/posts` (#4), que o `test_perfil_editavel` ainda exige.
+- Claude Code implementou follow, feed e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 ## Perfil — conciliação com a identidade aprovada (25/11/2026)
 
 - As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.

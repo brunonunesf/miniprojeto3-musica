@@ -87,15 +87,17 @@ def test_posts_crud(client, logar, id_da_musica):
 # ---------- FEED ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar GET /feed cronológico paginado (núcleo)")
-def test_feed_cronologico_dos_seguidos(client, logar):
+def test_feed_cronologico_dos_seguidos(client, logar, id_da_musica):
     ana = logar("ana")
     bia = logar("bia")
     caio = logar("caio")
 
-    client.post("/posts", json={"texto": "post da bia 1"}, headers=bia)
-    client.post("/posts", json={"texto": "post da bia 2"}, headers=bia)
-    client.post("/posts", json={"texto": "post do caio"}, headers=caio)
+    # cada post é uma review; uma pessoa só avalia cada versão uma vez
+    m1 = id_da_musica(bia, "demo-horizonte-original")
+    m2 = id_da_musica(bia, "demo-mare-original")
+    client.post("/posts", json={"musica_id": m1, "nota": 8, "texto": "post da bia 1"}, headers=bia)
+    client.post("/posts", json={"musica_id": m2, "nota": 7, "texto": "post da bia 2"}, headers=bia)
+    client.post("/posts", json={"musica_id": m1, "nota": 6, "texto": "post do caio"}, headers=caio)
 
     # ana segue só a bia → feed dela tem só posts da bia, mais novo primeiro
     client.post("/usuarios/bia/follow", headers=ana)
@@ -140,7 +142,6 @@ def test_perfil_editavel(client, logar):
 # ---------- FOLLOW ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar follow/unfollow com contadores (núcleo)")
 def test_follow_unfollow_com_contadores(client, logar):
     ana = logar("ana")
     logar("bia")
