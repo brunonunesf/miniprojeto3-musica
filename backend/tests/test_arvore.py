@@ -286,6 +286,58 @@ def test_dados_gravados_fora_da_api_nao_quebram_apagar_nem_ler(client, logar, id
     assert client.get("/posts/999/arvore", headers=ana).status_code == 404
 
 
+def corromper_a_origem(post_id):
+    """Simula uma edição manual do banco: a origem da review passa a apontar para um id que não existe."""
+    with engine.begin() as conexao:
+        conexao.execute(text("UPDATE posts SET origem_id = 99999 WHERE id = :id"), {"id": post_id})
+
+
+def test_dado_inconsistente_nao_impede_o_backend_de_subir(client, logar, id_da_musica):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    ana = logar("ana")
+    a = criar(client, ana, id_da_musica)
+    corromper_a_origem(a["id"])
+
+    with TestClient(app) as reiniciado:  # a subida refaz a árvore, que não fecha: só avisa no log
+        r = reiniciado.get("/feed", headers=ana)
+        assert r.status_code == 200
+        assert reiniciado.get(f"/posts/{a['id']}", headers=ana).status_code == 200  # o resto da rede funciona
+
+
+def test_arvore_de_dado_inconsistente_devolve_503_e_nao_500(client, logar, id_da_musica):
+    ana = logar("ana")
+    a = criar(client, ana, id_da_musica)
+    corromper_a_origem(a["id"])
+    floresta.reconstruir([])  # a floresta não conhece a review, e o banco está inconsistente
+
+    assert client.get(f"/posts/{a['id']}/arvore", headers=ana).status_code == 503
+    assert client.get(f"/posts/{a['id']}", headers=ana).status_code == 200  # o detalhe da review segue funcionando
+    assert client.get("/posts/999/arvore", headers=ana).status_code == 404  # inexistente continua 404
+
+
+def test_leituras_e_reconstrucoes_ao_mesmo_tempo(client, logar, id_da_musica):
+    """O backend atende requisições em várias threads: ler a árvore enquanto ela é refeita não pode falhar."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    ana, julia, pedro, a, j, p = corrente(client, logar, id_da_musica)
+
+    def refazer(_):
+        with SessionLocal() as db:
+            servico_arvores.reconstruir(db)
+        return 200
+
+    def ler(_):
+        return client.get(f"/posts/{p['id']}/arvore", headers=ana).status_code
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        resultados = list(pool.map(lambda i: refazer(i) if i % 2 else ler(i), range(40)))
+
+    assert set(resultados) == {200}
+
+
 def test_banco_antigo_sem_a_coluna_ganha_a_coluna_e_continua_funcionando(client, logar, id_da_musica):
     ana = logar("ana")
     with engine.begin() as conexao:  # volta ao formato de antes da árvore
