@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 
 import { MensagemErro } from "@/components/MensagemErro";
 import { ReviewCard } from "@/components/ReviewCard";
+import type { Post } from "@/lib/api";
 import type { usePaginacao } from "@/lib/usePaginacao";
 
-type Props = ReturnType<typeof usePaginacao> & {
+type Props = Omit<ReturnType<typeof usePaginacao<Post>>, "acrescentar"> & {
   exemplo: boolean;
   /** O que mostrar quando não há nenhuma review. */
   vazio: ReactNode;
