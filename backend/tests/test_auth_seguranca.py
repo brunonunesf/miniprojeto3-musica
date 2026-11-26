@@ -2,9 +2,9 @@
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import select, text
+from sqlalchemy import insert, select, text
 
-from app.db import SessionLocal
+from app.db import SessionLocal, engine
 from app.models.session import Session
 from app.models.user import User
 from app.schemas.auth import RegistroIn
@@ -76,15 +76,17 @@ def test_bypass_somente_debug(client, monkeypatch, debug):
 
 def test_sessao_sem_usuario(client, monkeypatch):
     monkeypatch.delenv("DEBUG", raising=False)
-    with SessionLocal() as db:
-        # Uma sessão órfã só existe com a chave estrangeira desligada nesta conexão; religa em seguida.
-        db.execute(text("PRAGMA foreign_keys=OFF"))
+    # Uma sessão órfã só existe com a chave estrangeira desligada na conexão. Usa UMA conexão explícita
+    # do início ao fim: uma `Session` devolve a conexão ao pool no `commit()`, e o `ON` seguinte podia
+    # cair em outra, deixando uma conexão com a chave desligada no pool (contaminava os outros testes).
+    with engine.connect() as conexao:
+        conexao.execute(text("PRAGMA foreign_keys=OFF"))
         try:
-            db.add(Session(token="orfao", user_id=99999))
-            db.commit()
+            conexao.execute(insert(Session.__table__).values(token="orfao", user_id=99999))
+            conexao.commit()
         finally:
-            db.execute(text("PRAGMA foreign_keys=ON"))
-        assert db.execute(text("PRAGMA foreign_keys")).scalar() == 1  # não vaza para outros testes
+            conexao.execute(text("PRAGMA foreign_keys=ON"))
+        assert conexao.execute(text("PRAGMA foreign_keys")).scalar() == 1  # religada na mesma conexão
     assert client.get("/auth/eu", headers={"Authorization": "Bearer orfao"}).status_code == 401
 
 

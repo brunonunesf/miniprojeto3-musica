@@ -286,6 +286,58 @@ def test_dados_gravados_fora_da_api_nao_quebram_apagar_nem_ler(client, logar, id
     assert client.get("/posts/999/arvore", headers=ana).status_code == 404
 
 
+def corromper_a_origem(post_id):
+    """Simula uma edição manual do banco: a origem da review passa a apontar para um id que não existe."""
+    with engine.begin() as conexao:
+        conexao.execute(text("UPDATE posts SET origem_id = 99999 WHERE id = :id"), {"id": post_id})
+
+
+def test_dado_inconsistente_nao_impede_o_backend_de_subir(client, logar, id_da_musica):
+    from fastapi.testclient import TestClient
+
+    from app.main import app
+
+    ana = logar("ana")
+    a = criar(client, ana, id_da_musica)
+    corromper_a_origem(a["id"])
+
+    with TestClient(app) as reiniciado:  # a subida refaz a árvore, que não fecha: só avisa no log
+        r = reiniciado.get("/feed", headers=ana)
+        assert r.status_code == 200
+        assert reiniciado.get(f"/posts/{a['id']}", headers=ana).status_code == 200  # o resto da rede funciona
+
+
+def test_arvore_de_dado_inconsistente_devolve_503_e_nao_500(client, logar, id_da_musica):
+    ana = logar("ana")
+    a = criar(client, ana, id_da_musica)
+    corromper_a_origem(a["id"])
+    floresta.reconstruir([])  # a floresta não conhece a review, e o banco está inconsistente
+
+    assert client.get(f"/posts/{a['id']}/arvore", headers=ana).status_code == 503
+    assert client.get(f"/posts/{a['id']}", headers=ana).status_code == 200  # o detalhe da review segue funcionando
+    assert client.get("/posts/999/arvore", headers=ana).status_code == 404  # inexistente continua 404
+
+
+def test_leituras_e_reconstrucoes_ao_mesmo_tempo(client, logar, id_da_musica):
+    """O backend atende requisições em várias threads: ler a árvore enquanto ela é refeita não pode falhar."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    ana, julia, pedro, a, j, p = corrente(client, logar, id_da_musica)
+
+    def refazer(_):
+        with SessionLocal() as db:
+            servico_arvores.reconstruir(db)
+        return 200
+
+    def ler(_):
+        return client.get(f"/posts/{p['id']}/arvore", headers=ana).status_code
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        resultados = list(pool.map(lambda i: refazer(i) if i % 2 else ler(i), range(40)))
+
+    assert set(resultados) == {200}
+
+
 def test_banco_antigo_sem_a_coluna_ganha_a_coluna_e_continua_funcionando(client, logar, id_da_musica):
     ana = logar("ana")
     with engine.begin() as conexao:  # volta ao formato de antes da árvore
@@ -298,6 +350,47 @@ def test_banco_antigo_sem_a_coluna_ganha_a_coluna_e_continua_funcionando(client,
     a = criar(client, ana, id_da_musica)
     assert a["origem_id"] is None
     assert forma(arvore(client, ana, a["id"])["raiz"]) == (a["id"], [])
+
+
+def test_banco_antigo_sem_autoincrement_nao_da_500_nem_impede_reiniciar(client, logar, id_da_musica, caplog):
+    """O roteiro da Cecília (#78): `posts` antiga, sem AUTOINCREMENT, reaproveita o id da última review."""
+    import logging
+
+    from fastapi.testclient import TestClient
+
+    from app.db import Base
+    from app.main import app
+    from app.models.post import Post
+    from app.services import musicas as servico_musicas
+
+    # Recria o banco com a tabela posts do jeito antigo (sem AUTOINCREMENT).
+    Base.metadata.drop_all(engine)
+    opcoes = Post.__table__.dialect_options["sqlite"]
+    opcoes["autoincrement"] = False
+    try:
+        Base.metadata.create_all(engine)
+    finally:
+        opcoes["autoincrement"] = True
+    with SessionLocal() as db:
+        servico_musicas.importar_catalogo(db)
+        servico_arvores.reconstruir(db)
+
+    ana = logar("ana")
+    primeira = criar(client, ana, id_da_musica)
+    assert client.delete(f"/posts/{primeira['id']}", headers=ana).status_code == 204
+
+    # Sem AUTOINCREMENT o id volta a ser o mesmo, e colide com o lugar da review apagada na árvore.
+    segunda = avaliar(client, ana, id_da_musica, texto="de novo")
+    assert segunda.status_code == 201  # a review é gravada: nada de erro 500
+    assert segunda.json()["id"] == primeira["id"]
+    assert client.get(f"/posts/{segunda.json()['id']}", headers=ana).status_code == 200
+
+    client.delete(f"/posts/{segunda.json()['id']}", headers=ana)  # apagar de novo também não dá 500
+
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        with TestClient(app) as reiniciado:  # e o servidor reinicia, avisando como corrigir
+            assert reiniciado.get("/feed", headers=ana).status_code == 200
+    assert "Recrie o banco" in caplog.text
 
 
 def test_ordem_dos_ramos_apagados_permanece_apos_reconstrucao(client, logar, id_da_musica):
