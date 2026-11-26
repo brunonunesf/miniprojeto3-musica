@@ -115,3 +115,7 @@ Síntese das mensagens de texto sobre música da conversa do grupo em 18 e 19/11
 ### Catálogo musical — entrega de dados da #9
 
 O catálogo inicial contém seis faixas e artistas **fictícios**, com identidades distintas para original, remix, ao vivo e remaster. A entrega inclui dados, carregamento/validação independente e testes, sem banco, API ou interface. Veja o [contrato, a curadoria e os comandos de validação](backend/data/README.md). Persistência e vínculo com reviews serão integrados pelos responsáveis de backend; seleção e apresentação, pela responsável de frontend. A #9 permanece aberta.
+
+## Feed e descoberta — planejamento visual aprovado em 25/11
+
+O feed continua cronológico, com reviews dos seguidos. Pesquisa e músicas mais avaliadas na comunidade formam uma área própria; Descobrir mantém sugestões personalizadas. Veja o [plano, contratos e responsabilidades](docs/feed-e-descoberta.md) e o [rascunho visual aprovado](docs/planejamento/feed-descoberta-rascunho.png). São entregas planejadas, ainda dependentes das implementações e integrações nas issues.

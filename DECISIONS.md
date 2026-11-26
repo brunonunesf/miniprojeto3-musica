@@ -227,3 +227,9 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Bruno autorizou adicionar `capa_url` opcional: ausente ou `null` representa música sem capa; valor preenchido deve ser URL absoluta HTTP/HTTPS de até 2048 caracteres. O carregador devolve texto JSON compatível e não consulta/baixa a imagem.
 - As seis faixas fictícias permanecem sem imagens inventadas; `capa_url: null` explícito. A interface pode apresentar fallback, sob responsabilidade do front. Persistência/exposição pela API continuam com o backend.
 - Conflito em DECISIONS.md resolvido preservando o registro de dados e os registros recentes da main sobre perfil e página inicial. Sem merge do PR nem reescrita do histórico.
+
+## Feed e descoberta — decisão de 25/11/2026
+
+Bruno confirmou feed cronológico dos seguidos, pesquisa e ranking de músicas por quantidade de reviews, e republicação como criação de review derivada. Aprovou o rascunho gerado por IA como referência visual e autorizou sua publicação e organização no GitHub. Descobrir personalizado permanece separado.
+
+Padrões adotados neste plano: ranking de reviews públicas ativas em todo o período, desempate por ID, layout de três colunas a partir de 1024 px e navegação compacta abaixo disso. Não são afirmações extraídas dos áudios, que não foram transcritos. Detalhes, contratos, critérios e uso de IA: [feed e descoberta](docs/feed-e-descoberta.md). Backend de populares: #65; frontend: #66; demais tarefas preservam issues e responsáveis existentes. Imagem e documentação não significam funcionalidades prontas.
