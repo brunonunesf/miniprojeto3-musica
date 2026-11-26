@@ -39,6 +39,7 @@ def main():
             if not args.confirmar_reset or not args.aplicacao_parada:
                 raise ErroReset('Exige --confirmar-reset e --aplicacao-parada')
             adaptador = carregar_adaptador()
+            adaptador.verificar_requisitos(preparar_cenario())
             engine.dispose()
             backup = resetar_demo(
                 alvo, alvo, lambda caminho: preparar_validar_banco(caminho, adaptador),
@@ -48,6 +49,7 @@ def main():
         else:
             # Evitar até mesmo abrir/criar arquivo quando faltar adaptador.
             adaptador = carregar_adaptador()
+            adaptador.verificar_requisitos(preparar_cenario())
             if not alvo.exists():
                 resetar_demo(
                     alvo, alvo, lambda caminho: preparar_validar_banco(caminho, adaptador),

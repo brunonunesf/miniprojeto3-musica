@@ -6,12 +6,12 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from catalogo_musical import CATALOGO_PADRAO, ErroCatalogo, carregar_catalogo  # noqa: E402
+from catalogo_musical import ErroCatalogo, carregar_catalogo  # noqa: E402
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Valida o catálogo musical da issue #9, sem gravar dados.")
-    parser.add_argument("arquivo", nargs="?", type=Path, default=CATALOGO_PADRAO)
+    parser.add_argument("arquivo", nargs="?", type=Path, default=None)
     args = parser.parse_args()
     try:
         registros = carregar_catalogo(args.arquivo)
