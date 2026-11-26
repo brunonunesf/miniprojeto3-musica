@@ -67,7 +67,7 @@ function PerfilDe({ username }: { username: string }) {
     <div className="space-y-6">
       <section className="flex flex-wrap items-center gap-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <Avatar user={perfil} tamanho="xl" />
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 basis-60 space-y-2">
           <h1 className="break-words text-3xl font-bold tracking-tight">{perfil.name}</h1>
           <p className="break-words text-brand-700">@{perfil.username}</p>
           {perfil.bio && <p className="whitespace-pre-wrap break-words">{perfil.bio}</p>}
@@ -76,6 +76,14 @@ function PerfilDe({ username }: { username: string }) {
               <span><strong>{perfil.seguidores}</strong> {perfil.seguidores === 1 ? "seguidor" : "seguidores"}</span>
               <span><strong>{perfil.seguindo}</strong> seguindo</span>
             </p>
+          )}
+          {perfil.reputacao !== undefined && (
+            <div className="text-sm">
+              <p><strong>{perfil.reputacao}</strong> de reputação</p>
+              <p className="text-zinc-500">
+                Pontos por curtidas e reviews derivadas nas correntes que passam pelas reviews desta pessoa. Quanto mais longe, menor a parcela.
+              </p>
+            </div>
           )}
           <p className="text-sm text-zinc-500">Na rede desde {membroDesde(perfil.created_at)}</p>
         </div>

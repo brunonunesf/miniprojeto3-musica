@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { useCallback, useState, type FormEvent } from "react";
 
+import { useSessao } from "@/components/AuthProvider";
 import { Avatar } from "@/components/Avatar";
 import { MensagemErro } from "@/components/MensagemErro";
-import { apiGet, apiPost, type Comentario, type Page } from "@/lib/api";
+import { ApiError, apiDelete, apiGet, apiPost, type Comentario, type Page } from "@/lib/api";
 import { tempoRelativo } from "@/lib/tempo";
 import { usePaginacao } from "@/lib/usePaginacao";
 
@@ -18,7 +19,8 @@ export function Comentarios({ postId }: { postId: number }) {
     (offset: number) => apiGet<Page<Comentario>>(`${rota}?offset=${offset}&limit=${TAMANHO_PAGINA}`),
     [rota],
   );
-  const { lista, carregando, erro, carregar, acrescentar } = usePaginacao(buscar);
+  const { lista, carregando, erro, carregar, acrescentar, remover } = usePaginacao(buscar);
+  const { usuario } = useSessao();
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [falha, setFalha] = useState("");
@@ -61,12 +63,15 @@ export function Comentarios({ postId }: { postId: number }) {
                   <span className="text-zinc-500"> · {tempoRelativo(comentario.created_at)}</span>
                 </p>
                 <p className="whitespace-pre-wrap">{comentario.texto}</p>
+                {usuario?.id === comentario.autor.id && (
+                  <ApagarComentario rota={`${rota}/${comentario.id}`} aoApagar={() => remover(comentario.id)} />
+                )}
               </div>
             </li>
           ))}
         </ul>
       )}
-      {lista && lista.items.length === 0 && !carregando && !erro && (
+      {lista && lista.items.length === 0 && !lista.temMais && !carregando && !erro && (
         <p className="text-zinc-600">Ninguém comentou ainda.</p>
       )}
       {carregando && <p role="status" className="text-sm text-zinc-600">Carregando comentários…</p>}
@@ -90,5 +95,56 @@ export function Comentarios({ postId }: { postId: number }) {
         <button type="submit" disabled={enviando} className="btn-primary">{enviando ? "Enviando…" : "Comentar"}</button>
       </form>
     </section>
+  );
+}
+
+function ApagarComentario({ rota, aoApagar }: { rota: string; aoApagar: () => void }) {
+  const [confirmando, setConfirmando] = useState(false);
+  const [apagando, setApagando] = useState(false);
+  const [falha, setFalha] = useState("");
+
+  async function apagar() {
+    setApagando(true);
+    setFalha("");
+    try {
+      await apiDelete(rota);
+      aoApagar();
+    } catch (erro) {
+      const status = erro instanceof ApiError ? erro.status : 0;
+      const mensagem = erro instanceof Error ? erro.message : "Não foi possível apagar.";
+      // Um servidor sem a rota também responde 404 ou 405: nesses casos o comentário continua lá.
+      if (status === 404 && mensagem === "comentário não encontrado") return aoApagar();
+      setFalha(
+        status === 405 || mensagem === "Not Found" ? "Este servidor ainda não permite apagar comentários." : mensagem,
+      );
+      setApagando(false);
+    }
+  }
+
+  return (
+    <div className="mt-1 space-y-2 text-sm">
+      {falha && <MensagemErro>{falha}</MensagemErro>}
+      {confirmando ? (
+        <div role="group" aria-label="Confirmar exclusão do comentário" className="flex flex-wrap items-center gap-4">
+          <span>Apagar este comentário? Não dá para desfazer.</span>
+          <button type="button" className="font-semibold text-red-800" disabled={apagando} onClick={() => void apagar()}>
+            {apagando ? "Apagando…" : "Confirmar"}
+          </button>
+          <button
+            type="button"
+            className="font-semibold text-brand-700"
+            disabled={apagando}
+            onClick={() => {
+              setConfirmando(false);
+              setFalha("");
+            }}
+          >
+            Cancelar
+          </button>
+        </div>
+      ) : (
+        <button type="button" className="font-semibold text-red-800" onClick={() => setConfirmando(true)}>Apagar</button>
+      )}
+    </div>
   );
 }

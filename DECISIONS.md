@@ -615,3 +615,10 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - Quando o servidor recusa uma segunda review da mesma gravação, o formulário oferece abrir a review que já existe. Nada é duplicado e a origem dela não muda.
 - O 409 não informa o id: a tela o procura nas reviews da própria pessoa e, se não achar, leva ao perfil.
 - Claude Code fez o ajuste e os testes. Por decisão do time, não houve revisão por outra pessoa.
+
+## Reputação no perfil e apagar comentário — telas de #42 e do PR #87 (26/11/2026)
+
+- O perfil mostra o número de reputação que o servidor envia, inclusive zero, com uma frase de explicação. Sem o campo, nada aparece. A tela não recalcula pontos.
+- "Apagar" aparece só nos próprios comentários e pede confirmação. Comentário já apagado em outro lugar sai da lista; em servidor sem a rota, ele permanece e a tela avisa.
+- Dependem do backend dos PRs #86 e #87. A correção de origem (#42) continua pendente.
+- Claude Code fez as telas e os testes. Por decisão do time, não houve revisão por outra pessoa.
