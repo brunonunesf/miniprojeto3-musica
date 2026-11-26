@@ -351,3 +351,11 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
+
+## Tela de feed — issue #36 (25/11/2026)
+
+- `/feed` consome `GET /feed?offset=&limit=` no formato de página (`items`, `total`) com reviews no formato de `PostOut`. A rota ainda não existe no backend.
+- Cartão compacto, como decidido para o feed: capa, música, nota e indicador de análise; o texto abre no detalhe.
+- Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
+- Curtidas e comentários, também da #36, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
