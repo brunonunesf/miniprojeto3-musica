@@ -249,6 +249,18 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Testes:** o `test_curtidas_idempotentes` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_curtidas.py` cobre o resto. `make test`: 106 passed, 3 skipped (perfil, comentários e seed).
 - Claude Code implementou as curtidas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
+## Comentários — issue #6 — 26/11/2026
+
+- **Rotas:** `POST /posts/{post_id}/comentarios` (`201`, devolve o comentário) e `GET /posts/{post_id}/comentarios`. Ambas exigem login. Review inexistente devolve `404` e id acima do inteiro do banco devolve `422`.
+- **Comentário plano:** só texto de 1 a 1000 caracteres, com espaços das pontas removidos; vazio, só espaços ou acima do limite devolve `422` e nada é gravado. Não há respostas, e comentar **não gera reputação, nem review derivada, nem nó na árvore**, e não altera a nota. A autoria vem da sessão: um `autor_id` enviado pelo cliente é ignorado. O limite de 1000 é escolha de implementação, aberta a revisão.
+- **Lista:** do mais antigo para o mais novo, com desempate pelo `id`, paginada (`offset` e `limit` de 1 a 100, padrão 50, `items`, `total`, `offset`, `limit`). O `total` conta todos os comentários da review.
+- **Contagem nas reviews:** toda review (detalhe, criação, edição e itens do feed) traz `comentarios`, o número de comentários, para o cartão do feed. Curtidas e comentários de uma página inteira saem em 3 consultas, e não em uma por review.
+- **Apagar a review apaga os comentários dela**, para não grudarem numa review nova que reaproveite o id.
+- **Fora desta entrega:** editar e apagar comentário, que a #6 e a #38 não pedem. Podem virar uma issue própria se o time quiser.
+- **Testes:** o `test_comentarios_planos_cronologicos` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_comentarios.py` cobre o resto. `make test`: 280 passed, 2 skipped (perfil e seed).
+- **Esquema do banco:** a tabela `comentarios` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- Claude Code implementou os comentários e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 
 ## Issue #13 — seed e cenários aprovados — 25/11/2026
 

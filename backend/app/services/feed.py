@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, selectinload
 from app.models.follow import Follow
 from app.models.post import Post
 from app.models.user import User
-from app.services.posts import anotar_curtidas
+from app.services.posts import anotar_interacoes
 
 
 def listar(db: Session, user: User, offset: int, limit: int) -> tuple[list[Post], int]:
@@ -25,5 +25,5 @@ def listar(db: Session, user: User, offset: int, limit: int) -> tuple[list[Post]
             .options(selectinload(Post.autor), selectinload(Post.musica))
         )
     )
-    anotar_curtidas(db, user, posts)
+    anotar_interacoes(db, user, posts)
     return posts, total

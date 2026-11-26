@@ -181,12 +181,12 @@ def test_curtidas_idempotentes(client, logar, id_da_musica):
 # ---------- COMENTÁRIOS ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar comentários planos em ordem cronológica (núcleo)")
-def test_comentarios_planos_cronologicos(client, logar):
+def test_comentarios_planos_cronologicos(client, logar, id_da_musica):
     ana = logar("ana")
     bia = logar("bia")
 
-    post_id = client.post("/posts", json={"texto": "comentem"}, headers=ana).json()["id"]
+    review = {"musica_id": id_da_musica(ana), "nota": 8, "texto": "comentem"}
+    post_id = client.post("/posts", json=review, headers=ana).json()["id"]
 
     client.post(f"/posts/{post_id}/comentarios", json={"texto": "primeiro!"}, headers=bia)
     client.post(f"/posts/{post_id}/comentarios", json={"texto": "segundo"}, headers=ana)
