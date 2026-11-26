@@ -526,3 +526,8 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A ação só é habilitada quando a review traz `origem_id` (branch `feat/back-arvore`): um servidor sem esse campo ignoraria a origem.
 - A correção de origem e a reputação continuam sem tela.
 - Claude Code implementou as telas e os testes.
+
+## Barra de navegação única — 26/11/2026
+
+- A barra passou para `components/Navbar.tsx`, com a mesma largura e altura em todas as páginas e o item da seção atual destacado. Visitantes veem a marca e o acesso a entrar ou criar conta.
+- Claude Code fez a mudança e o teste. Por decisão do time, não houve revisão por outra pessoa.
