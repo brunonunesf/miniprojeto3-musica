@@ -4,9 +4,9 @@ import { useState } from "react";
 
 import type { Musica } from "@/lib/api";
 
-export function Capa({ musica }: { musica: Musica }) {
+export function Capa({ musica, className = "size-28" }: { musica: Musica; className?: string }) {
   const [falhou, setFalhou] = useState(false);
-  const classes = "size-28 shrink-0 rounded-xl";
+  const classes = `${className} shrink-0 rounded-xl`;
 
   if (musica.capa_url && !falhou) {
     return (

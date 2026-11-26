@@ -24,7 +24,7 @@ export default function Home() {
           <Link href="/usuarios" className="btn-primary w-full">Conhecer pessoas</Link>
         </div>
         <Link href="/posts/novo" className="mt-4 inline-block font-semibold text-brand-700">Escrever uma review</Link>
-        <p className="mt-5 text-sm leading-relaxed text-zinc-600">Seu feed de recomendações está em preparação.</p>
+        <p className="mt-5 text-sm leading-relaxed text-zinc-600">Veja no <Link href="/feed" className="font-semibold text-brand-700">feed</Link> as reviews de quem você segue.</p>
       </section>
     </div>
   );
