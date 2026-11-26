@@ -123,3 +123,29 @@ def test_falha_replace_mantem_banco_e_backup(tmp_path, monkeypatch):
         reset(alvo)
     assert ler(alvo) == [('original',)]
     assert ler(next(tmp_path.glob('issue13-backup-*.db'))) == [('original',)]
+
+
+def test_conexoes_do_backup_e_integridade_sao_fechadas(tmp_path, monkeypatch):
+    import reset_demo
+    fonte = tmp_path / 'fonte.db'
+    destino = tmp_path / 'backup.db'
+    construir(fonte)
+    conectar = sqlite3.connect
+    abertas = []
+
+    class ConexaoRastreavel(sqlite3.Connection):
+        fechada = False
+        def close(self):
+            super().close()
+            self.fechada = True
+
+    def rastrear(*args, **kwargs):
+        conexao = conectar(*args, factory=ConexaoRastreavel, **kwargs)
+        abertas.append(conexao)
+        return conexao
+
+    monkeypatch.setattr(reset_demo.sqlite3, 'connect', rastrear)
+    reset_demo.backup_sqlite(fonte, destino)
+    assert len(abertas) == 3  # fonte, destino e conferência de integridade
+    assert all(c.fechada for c in abertas)
+    assert ler(destino) == [('inicial',)]

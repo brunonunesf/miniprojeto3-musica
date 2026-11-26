@@ -125,3 +125,7 @@ O seed antigo de três usuários continua disponível em `make seed-minimo`;
 a orientação anterior de `make seed` para essas contas foi substituída.
 Consulte [cenários, versões musicais e pendências](docs/demo-issue-13.md).
 A #13 permanece aberta; persistência completa e validação do reset com a rede real ainda estão pendentes. O mecanismo de reset com backup está implementado; exige `--reset-demo --confirmar-reset --aplicacao-parada` e o adaptador real do backend.
+
+## Feed e descoberta — planejamento visual aprovado em 25/11
+
+O feed continua cronológico, com reviews dos seguidos. Pesquisa e músicas mais avaliadas na comunidade formam uma área própria; Descobrir mantém sugestões personalizadas. Veja o [plano, contratos e responsabilidades](docs/feed-e-descoberta.md) e o [rascunho visual aprovado](docs/planejamento/feed-descoberta-rascunho.png). São entregas planejadas, ainda dependentes das implementações e integrações nas issues.

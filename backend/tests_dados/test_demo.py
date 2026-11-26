@@ -144,3 +144,32 @@ def test_banco_temporario_exige_validacao_semantica(tmp_path):
             raise ValueError('validação real rejeitou a carga')
     with pytest.raises(ValueError, match='validação real'):
         preparar_validar_banco(tmp_path / 'novo.db', Completo())
+
+
+@pytest.mark.parametrize('nota', [None, -1, 11, 8.5, True, '8'])
+def test_cenario_rejeita_nota_invalida(nota):
+    cenario = preparar_cenario()
+    cenario['posts'][0]['nota'] = nota
+    with pytest.raises(ValueError, match='Nota'):
+        validar_cenario(cenario)
+
+
+def test_cenario_exige_nota_e_identidades_unicas():
+    cenario = preparar_cenario()
+    del cenario['posts'][0]['nota']
+    with pytest.raises(ValueError, match='Nota'):
+        validar_cenario(cenario)
+    for campo in ('usuarios', 'musicas', 'posts'):
+        cenario = preparar_cenario()
+        cenario[campo].append(copy.deepcopy(cenario[campo][0]))
+        with pytest.raises(ValueError, match='Contagens'):
+            validar_cenario(cenario)
+
+
+def test_reviews_do_cenario_atendem_schema_real_do_backend():
+    from app.schemas.post import PostCreate
+
+    for post in preparar_cenario()['posts']:
+        # IDs internos só serão resolvidos pelo adaptador; nota/texto já são verificáveis.
+        review = PostCreate(musica_id=1, nota=post['nota'], texto=post['texto'])
+        assert review.nota == post['nota']

@@ -1,5 +1,6 @@
 """Reconstrução SQLite com validação prévia e backup; sem conhecer modelos da API."""
 import os
+from contextlib import closing
 import sqlite3
 import tempfile
 from datetime import datetime, timezone
@@ -29,7 +30,7 @@ def verificar_inativo(alvo):
 
 
 def integridade(alvo):
-    with sqlite3.connect(alvo.as_uri() + '?mode=ro', uri=True) as db:
+    with closing(sqlite3.connect(alvo.as_uri() + '?mode=ro', uri=True)) as db:
         if db.execute('PRAGMA integrity_check').fetchall() != [('ok',)]:
             raise ErroReset('Banco SQLite inconsistente')
         if db.execute('PRAGMA foreign_key_check').fetchall():
@@ -44,8 +45,8 @@ def assinatura(alvo):
 
 
 def backup_sqlite(origem, destino):
-    with sqlite3.connect(origem.as_uri() + '?mode=ro', uri=True) as fonte:
-        with sqlite3.connect(destino) as copia:
+    with closing(sqlite3.connect(origem.as_uri() + '?mode=ro', uri=True)) as fonte:
+        with closing(sqlite3.connect(destino)) as copia:
             fonte.backup(copia)
     integridade(destino)
 

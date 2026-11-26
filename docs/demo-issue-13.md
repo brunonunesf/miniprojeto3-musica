@@ -150,3 +150,17 @@ Uma revisão combinada com o #60 revelou erro de integração: `None` era atribu
 Esta branch não incorpora antecipadamente modelos ou serviços do #60. A correção registrada lá deverá ser mantida quando o adaptador real for integrado. A #13 continua aberta. Não foram enviados avisos/comentários/menções ao time nesta correção; o relato está nos arquivos e descrições técnicas dos PRs.
 
 Validação após atualizar a base: **69 testes de dados passaram**, `make test` teve **48 passed e 7 skipped**, `make check` com banco separado e `make seed-validar` passaram. Esses resultados pertencem à branch de dados; os testes de backend da correção do #60 estão documentados separadamente lá.
+
+## Revisão integral antes do merge — 25/11/2026
+
+Os PRs #32 e #60 foram integrados à main antes desta revisão final. A branch do #59 foi atualizada com essa base, preservando a documentação de feed/descoberta e as decisões existentes. A revisão inclui a estrutura de árvores da #41, que já havia sido incorporada pelo PR #64 nesta branch.
+
+Foram corrigidos dois pontos adicionais e reforçada uma validação:
+
+- `with sqlite3.connect(...)` controla commit/rollback, mas não garante `close()`. As conexões de origem, destino e conferência de integridade do backup agora usam fechamento explícito com `contextlib.closing`, antes de qualquer substituição. Um teste rastreia e confirma o fechamento das três conexões.
+- O backend do #60 exige nota inteira de 0 a 10. As 50 reviews preparadas agora incluem nota determinística nessa escala; validação rejeita nota ausente, booleana, decimal, textual ou fora do intervalo. Um teste confronta nota/texto com o schema real `PostCreate`, sem fingir persistência ou origem já implementadas.
+- Validação rejeita registros duplicados nas listas de usuários, músicas e reviews, mesmo quando a quantidade de identificadores únicos parecia correta.
+
+O adaptador completo continua pendente: a main agora tem músicas/posts, mas ainda não oferece a fábrica proposta para seed nem todos os requisitos de origens/follows/likes desta carga. O comando continua interrompendo antes de gravar quando a fábrica está ausente. Aprovar e integrar este PR é aceitar a entrega parcial documentada, sem fechar a #13 ou declarar a demonstração completa.
+
+Resultado final sobre a combinação pronta para main: **235 passed e 6 skipped** no `make test` (incluindo dados/árvores); **158 testes de dados** na execução isolada. `make check`, `make seed-validar` e `git diff --check` passaram. TypeScript passou em cópia limpa do frontend: a primeira execução local encontrou somente tipos gerados em `.next` de outras branches; a conferência limpa não reutilizou esse cache e não exigiu alteração no código do front. Não foram executados testes de navegador nesta revisão de dados/backend.

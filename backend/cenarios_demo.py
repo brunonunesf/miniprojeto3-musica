@@ -33,7 +33,7 @@ def preparar_cenario():
     def post(autor, musica, origem=None):
         indice = len(posts)
         posts.append(dict(chave=f"review-{indice+1:03}", autor=autor, musica=musica,
-                          origem=origem, texto="Opinião fictícia de demonstração: gostei desta indicação.",
+                          origem=origem, nota=indice % 11, texto="Opinião fictícia de demonstração: gostei desta indicação.",
                           created_at=(inicio + timedelta(minutes=indice)).isoformat()))
 
     for i, origem in enumerate([None, 'review-001', 'review-002', 'review-001', None]):
@@ -63,12 +63,16 @@ def validar_cenario(c):
     usuarios = {u['username'] for u in c['usuarios']}
     musicas = {m['chave_catalogo'] for m in c['musicas']}
     posts = {p['chave']: p for p in c['posts']}
-    if len(usuarios) != 25 or len(musicas) != 20 or len(posts) != 50:
+    if (len(c['usuarios']) != len(usuarios) or len(c['musicas']) != len(musicas)
+            or len(c['posts']) != len(posts)
+            or len(usuarios) != 25 or len(musicas) != 20 or len(posts) != 50):
         raise ValueError('Contagens ou identidades inválidas')
     pares = [(p['autor'], p['musica']) for p in c['posts']]
     if len(set(pares)) != 50:
         raise ValueError('Review duplicada por pessoa/gravação')
     for p in posts.values():
+        if type(p.get('nota')) is not int or not 0 <= p['nota'] <= 10:
+            raise ValueError('Nota deve ser inteira de 0 a 10')
         if p['autor'] not in usuarios or p['musica'] not in musicas:
             raise ValueError('Referência inválida')
         visitados = {p['chave']}
