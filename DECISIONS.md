@@ -609,3 +609,12 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 
 - Atendidas as três sugestões publicadas por Bruno: corrigida frase histórica de catálogo real; teste agora identifica cada cartão de perfil/feed por link da review e exige quantidade, artista e versão; criada rotina única para executar os dois catálogos em bancos separados, interrompendo em erro.
 - Seleção do cenário resolve caminho relativo/absoluto como o carregador, evitando depender da grafia literal da variável. Dados e contratos preservados. Nova revisão estática do diff e validações registradas nas evidências da #39; Bruno autorizou publicação e merge após as correções e a nova revisão.
+
+## Apagar comentário — 26/11/2026
+
+- **Rota:** `DELETE /posts/{post_id}/comentarios/{comentario_id}` (`204`), exige login. Antes não havia como apagar um comentário, e a tela não tinha o botão.
+- **Quem pode:** **só quem escreveu o comentário** (`403` para outra pessoa, inclusive o autor da review). Decisão simples e igual à das reviews ("só o autor altera"); se o grupo quiser que o autor da review modere os comentários dela, é uma mudança pequena.
+- **Erros:** `404` se o comentário não existe ou pertence a outra review; apagar duas vezes dá `404` na segunda; id acima de 2^63-1 dá `422`.
+- **Efeito:** o contador `comentarios` das reviews diminui. Comentários não pontuam reputação, então nada mais muda.
+- **Falta (Cecília):** o botão "apagar" ao lado dos comentários próprios na tela da review.
+- **Testes:** `test_comentarios_apagar.py` (6 casos). Claude Code implementou; o código ainda precisa ser revisado por outra pessoa do time.
