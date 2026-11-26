@@ -16,7 +16,7 @@ const PESSOAS = [
 export const EXEMPLOS_DO_FEED: Post[] = Array.from({ length: 12 }, (_, i) => {
   const [titulo, artista] = MUSICAS[i % MUSICAS.length];
   const [username, name] = PESSOAS[i % PESSOAS.length];
-  const created_at = new Date(Date.UTC(2026, 10, 24, 23 - i)).toISOString();
+  const created_at = new Date(Date.now() - (i * 25 + 12) * 60_000).toISOString();
   const texto = i % 3 === 0 ? "" : "Texto de exemplo.";
   return {
     id: i + 1,
@@ -36,5 +36,8 @@ export const EXEMPLOS_DO_FEED: Post[] = Array.from({ length: 12 }, (_, i) => {
     },
     autor: { id: (i % PESSOAS.length) + 1, username, name, bio: "", avatar_url: "", created_at },
     created_at,
+    curtidas: 12 - (i % 7),
+    curtido_por_mim: false,
+    origem: i === 0 ? { id: 2, autor: { name: "Júlia" } } : null,
   };
 });

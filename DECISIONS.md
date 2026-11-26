@@ -373,3 +373,23 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A tela usa a contagem devolvida pelo servidor; em falha nada muda. Curtir não é tratado como descoberta.
 - Sem os campos `curtidas` e `curtido_por_mim`, o botão não aparece. Reviews de exemplo não têm botão.
 - Claude Code implementou o botão e os testes. A revisão por outra pessoa continua pendente.
+
+
+## Tela da árvore de recomendações — issue #42 (25/11/2026)
+
+- `/posts/[id]/arvore` mostra a corrente como lista hierárquica, com a review atual destacada e o caminho "Descoberta via …".
+- Contrato **proposto** para o backend: `GET /posts/{id}/arvore` devolve `{musica, raiz}`, e cada nó tem `id`, `apagada`, `autor`, `nota` e `filhos`. Falta combinar com Daniel e Bruno.
+- Review apagada mantém os ramos e não mostra autoria nem conteúdo. O backend também não deve enviá-los.
+- Com `NEXT_PUBLIC_ARVORE_SIMULADA=true`, a tela usa uma corrente fictícia e avisa isso.
+- Publicar review derivada, corrigir origem e exibir reputação, também da #42, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Novo layout do feed — issues #36 e #66 (26/11/2026)
+
+- `/feed` segue a referência aprovada em `docs/feed-e-descoberta.md`: perfil à esquerda, reviews no centro e pesquisa, mais avaliadas e Descobrir à direita a partir de 1024 px; abaixo disso, atalhos compactos.
+- Cabeçalho com Feed, Descobrir e Pessoas, avatar e "Sair". Entraram `/musicas`, `/musicas/[id]` e `/descobrir`.
+- Compartilhar usa o recurso do aparelho ou copia o link.
+- Aparecem desativados, como "em breve": comentários, review derivada e biblioteca. O selo de origem só aparece se o servidor enviar `origem`.
+- `GET /musicas/populares` e `GET /musicas/{id}/reviews` (#65) ainda não existem; a tela explica a indisponibilidade. Com `NEXT_PUBLIC_FEED_SIMULADO=true`, feed e vitrine usam exemplos identificados.
+- A branch reúne o trabalho dos PRs #58, #61, #62 e #63.
+- Claude Code implementou as telas e os testes. O time decidiu em 26/11 não fazer revisão cruzada dos PRs.

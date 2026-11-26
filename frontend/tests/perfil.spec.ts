@@ -26,7 +26,7 @@ test("ver e editar o próprio perfil atualiza o cabeçalho", async ({ page }) =>
 
 test("resposta atrasada de um perfil não sobrescreve o perfil atual", async ({ page }) => {
   const sufixo = Date.now();
-  const lento = `lento_${sufixo}`;
+  const lento = `a0_lento_${sufixo}`;
   const rapido = `rapido_${sufixo}`;
   await cadastrar(page, lento, "Perfil Lento");
   await page.getByRole("button", { name: "Sair", exact: true }).click();

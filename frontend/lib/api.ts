@@ -98,6 +98,8 @@ export type Post = {
   /** Ausentes enquanto o servidor não tem curtidas. */
   curtidas?: number;
   curtido_por_mim?: boolean;
+  /** Review que originou esta; o servidor ainda não envia. */
+  origem?: { id: number; autor: { name: string } } | null;
 };
 
 export type EstadoCurtida = { curtidas: number; curtido_por_mim: boolean };

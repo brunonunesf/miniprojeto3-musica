@@ -27,7 +27,7 @@ export function ListaDeReviews({ lista, carregando, erro, carregar, exemplo, vaz
       )}
 
       {lista?.temMais && !erro && (
-        <button className="btn-primary w-full" disabled={carregando} onClick={() => void carregar(lista.proximo)}>
+        <button className="btn-secundario w-full" disabled={carregando} onClick={() => void carregar(lista.proximo)}>
           Carregar mais
         </button>
       )}
