@@ -261,6 +261,16 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Esquema do banco:** a tabela `comentarios` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
 - Claude Code implementou os comentários e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
+## Reviews no perfil — issue #4 — 26/11/2026
+
+- **Rota:** `GET /usuarios/{username}/posts?offset=0&limit=10` devolve as reviews de uma pessoa, da mais nova para a mais antiga, com desempate pelo `id`, e `items`, `total`, `offset` e `limit`. Exige login. Pessoa sem reviews devolve lista vazia; usuário inexistente devolve `404`.
+- **Visibilidade:** qualquer pessoa logada vê as reviews de outra no perfil, sem precisar segui-la. Isso difere do feed, que mostra só quem se segue. As reviews são públicas dentro da rede; as bibliotecas privadas seguem outra regra (#12) e não passam por aqui.
+- **Formato:** os itens são os mesmos do feed e de `GET /posts/{id}`, com música, nota, `tem_texto`, `curtidas`, `curtido_por_mim` e `comentarios`, vistos por quem olha.
+- **Paginação:** `limit` de 1 a 100 (padrão 10) e `offset` limitado ao inteiro do banco (`422` fora disso), como no feed, com a mesma ressalva sobre o custo e a repetição de itens da paginação por offset.
+- **Sem duplicação:** o feed e o perfil passam a usar a mesma consulta (`listar_reviews`), que também servirá às reviews de uma música (#65).
+- **Testes:** o `test_perfil_editavel` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_reviews_do_usuario.py` cobre o resto.
+- Claude Code implementou a rota e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 
 ## Issue #13 — seed e cenários aprovados — 25/11/2026
 

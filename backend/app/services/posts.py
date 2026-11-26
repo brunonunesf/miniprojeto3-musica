@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.comentario import Comentario
 from app.models.curtida import Curtida
@@ -9,6 +9,7 @@ from app.models.musica import Musica
 from app.models.post import Post
 from app.models.user import User
 from app.schemas.post import PostCreate, PostUpdate
+from app.services import users
 
 
 def criar(db: Session, autor: User, dados: PostCreate) -> Post:
@@ -57,6 +58,35 @@ def anotar_interacoes(db: Session, user: User, reviews: list[Post]) -> None:
         review.curtidas = curtidas.get(review.id, 0)
         review.curtido_por_mim = review.id in minhas
         review.comentarios = comentarios.get(review.id, 0)
+
+
+def listar_reviews(db: Session, user: User, filtro, offset: int, limit: int) -> tuple[list[Post], int]:
+    """Uma página de reviews que atendem ao `filtro`, da mais nova para a mais antiga.
+
+    Serve ao feed, ao perfil e às reviews de uma música. O `total` conta o conjunto filtrado
+    inteiro, antes da paginação.
+    """
+    total = db.scalar(select(func.count()).select_from(Post).where(filtro)) or 0
+    reviews = list(
+        db.scalars(
+            select(Post)
+            .where(filtro)
+            # o id desempata reviews criadas no mesmo instante, para a ordem ser estável
+            .order_by(Post.created_at.desc(), Post.id.desc())
+            .offset(offset)
+            .limit(limit)
+            # carrega autor e música em lote: evita uma consulta extra por review
+            .options(selectinload(Post.autor), selectinload(Post.musica))
+        )
+    )
+    anotar_interacoes(db, user, reviews)
+    return reviews, total
+
+
+def listar_do_usuario(db: Session, user: User, username: str, offset: int, limit: int) -> tuple[list[Post], int]:
+    """As reviews de uma pessoa (404 se ela não existe), vistas por quem está logado."""
+    autor = users.buscar_por_username(db, username)
+    return listar_reviews(db, user, Post.autor_id == autor.id, offset, limit)
 
 
 def detalhar(db: Session, user: User, post_id: int) -> Post:

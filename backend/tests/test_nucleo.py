@@ -116,8 +116,7 @@ def test_feed_cronologico_dos_seguidos(client, logar, id_da_musica):
 # ---------- PERFIL ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar perfil: PATCH /usuarios/eu + GET /usuarios/{username} (núcleo)")
-def test_perfil_editavel(client, logar):
+def test_perfil_editavel(client, logar, id_da_musica):
     ana = logar("ana", "Ana")
 
     r = client.patch(
@@ -133,7 +132,8 @@ def test_perfil_editavel(client, logar):
     assert r.json()["avatar_url"] == "https://exemplo.com/a.png"
 
     # listagem dos próprios posts, paginada como tudo
-    client.post("/posts", json={"texto": "post no perfil"}, headers=ana)
+    review = {"musica_id": id_da_musica(ana), "nota": 8, "texto": "post no perfil"}
+    client.post("/posts", json=review, headers=ana)
     r = client.get("/usuarios/ana/posts", headers=ana)
     assert r.status_code == 200
     assert r.json()["total"] == 1
