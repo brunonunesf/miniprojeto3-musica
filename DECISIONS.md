@@ -526,3 +526,9 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A ação só é habilitada quando a review traz `origem_id` (branch `feat/back-arvore`): um servidor sem esse campo ignoraria a origem.
 - A correção de origem e a reputação continuam sem tela.
 - Claude Code implementou as telas e os testes.
+
+## Página da música e legenda da vitrine — issue #66 (26/11/2026)
+
+- A falha ao carregar uma música oferece "Tentar novamente".
+- A legenda "Quantidade de reviews nesta rede, em todo o período" fica no componente da vitrine, usado no feed e em `/musicas`.
+- Claude Code fez os ajustes. Por decisão do time, não houve revisão por outra pessoa.
