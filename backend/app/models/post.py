@@ -21,6 +21,10 @@ class Post(Base):
     nota: Mapped[int]
     autor_id: Mapped[int] = mapped_column(ForeignKey("users.id"), index=True)
     musica_id: Mapped[int] = mapped_column(ForeignKey("musicas.id"), index=True)
+    # A review de onde esta partiu (None = raiz). Sem ForeignKey de propósito: quando a origem é
+    # apagada, ela passa para `reviews_apagadas` com o mesmo id (nunca reaproveitado, pelo
+    # AUTOINCREMENT) e as derivadas continuam apontando para ela.
+    origem_id: Mapped[int | None] = mapped_column(index=True, default=None)
     created_at: Mapped[datetime] = mapped_column(
         default=lambda: datetime.now(timezone.utc), index=True
     )

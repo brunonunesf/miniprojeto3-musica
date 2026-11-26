@@ -5,20 +5,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
 from app.core.contadores import contador_iniciais
-from app.db import Base, SessionLocal, engine
+from app.db import Base, SessionLocal, atualizar_esquema_antigo, engine
 from app.models.user import User
-from app.routers import auth, comentarios, curtidas, feed, follows, musicas, posts, users
+from app.routers import arvores, auth, comentarios, curtidas, feed, follows, musicas, posts, users
+from app.services import arvores as servico_arvores
 from app.services import musicas as servico_musicas
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     Base.metadata.create_all(engine)
+    atualizar_esquema_antigo()  # banco criado antes de uma entrega ganha as colunas novas
     # Reconstrói as estruturas do core/ a partir do banco (memória zera a cada
     # restart — inclusive no --reload; ver core/README.md).
     with SessionLocal() as db:
         servico_musicas.importar_catalogo(db)  # catálogo curado; repetir é seguro
         usernames = list(db.scalars(select(User.username)))
+        servico_arvores.reconstruir(db)  # floresta de reviews (core/arvores.py)
     contador_iniciais.reconstruir(usernames)
     yield
 
@@ -42,3 +45,4 @@ app.include_router(musicas.router)
 app.include_router(posts.router)
 app.include_router(curtidas.router)
 app.include_router(comentarios.router)
+app.include_router(arvores.router)

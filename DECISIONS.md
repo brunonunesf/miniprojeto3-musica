@@ -473,6 +473,23 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A branch reúne o trabalho dos PRs #58, #61, #62 e #63.
 - Claude Code implementou as telas e os testes. O time decidiu em 26/11 não fazer revisão cruzada dos PRs.
 
+## Reviews derivadas e árvore de recomendações — issue #10 — 26/11/2026
+
+Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (#19) e reputação (#11) não estão nesta entrega.**
+
+- **Criar uma derivada:** `POST /posts` aceita `origem_id` (opcional). A review passa a ser **derivada** da outra, que precisa existir, **estar ativa** e ser **da mesma música** (`422` se não). A derivada **exige texto próprio** (`422` se vier vazio ou só com espaços) e continua valendo **uma review ativa por pessoa e música** (`409`): quem já avaliou a música não deriva dela, e ninguém deriva da própria review. Uma raiz continua podendo ser só a nota. Não há ciclo possível na criação, porque a origem sempre já existe.
+- **A origem não muda na edição:** `PATCH` ignora `origem_id`, e uma derivada não pode ficar sem texto ao ser editada. Trocar a origem é a #19 (não feita).
+- **Resposta:** toda review traz `origem_id` (se for derivada) e `origem` (`id` e `autor`), este só se a review de origem ainda existe. Vale para detalhe, criação, edição, feed, perfil e reviews por música.
+- **Ler a árvore:** `GET /posts/{id}/arvore` devolve `{musica, raiz, truncada}`; cada nó tem `id`, `apagada`, `autor` (`username` e `name`), `nota` e `filhos`, em ordem de publicação. Funciona a partir de **qualquer** review da árvore e dá a mesma árvore. Segue o contrato proposto na tela da árvore (#42). Exige login; review desconhecida devolve `404`.
+- **Limite de leitura:** no máximo 200 reviews além da raiz; passou disso, `truncada` vem verdadeiro.
+- **Excluir:** o conteúdo some (nota, texto, curtidas e comentários), mas o **lugar na árvore fica**, numa tabela `reviews_apagadas` com o mesmo `id` (que nunca é reaproveitado, pelo `AUTOINCREMENT`). As derivadas **continuam ligadas** a esse lugar, e a pessoa mantém o crédito de origem. Na árvore, o nó vem com `apagada: true`, sem `autor` nem `nota`, e os descendentes mantêm os dados deles. A review apagada responde `404` em tudo o mais (detalhe, curtir, comentar). Uma **nova review da mesma pessoa e música é uma raiz nova**, sem ligação com a antiga. A referência `origem_id` não tem chave estrangeira de propósito, para continuar válida depois da exclusão.
+- **Estrutura de dados:** a árvore usa a `FlorestaReviews` de `core/arvores.py` (Bruno, #41), por uma instância única em `core/floresta.py`. Ela é **reconstruída no startup** a partir do banco (reviews e reviews apagadas) e só é atualizada **depois da gravação confirmada**; se sair de sincronia, o serviço a reconstrói. Complexidades reais: inserir e marcar como apagada são O(1); subir até a raiz é O(profundidade); descer pela árvore é O(reviews devolvidas), limitado a 200. Percorrer uma corrente inteira **não** é O(1).
+- **Banco antigo:** a coluna nova `posts.origem_id` é acrescentada automaticamente na subida a quem já tem `app.db` (`ALTER TABLE`, repetir é seguro), então ninguém precisa apagar o banco. A tabela `reviews_apagadas` é criada pelo `create_all`.
+- **Dados gravados por fora da API:** um seed, por exemplo, escreve direto no banco com o backend ligado, e a floresta em memória fica para trás. Apagar uma review ou ler a árvore dessas reviews **refaz a floresta a partir do banco** em vez de falhar, e uma review que não existe continua devolvendo `404`. A reconstrução custa O(reviews) e só acontece nessa situação. Foi encontrado ao juntar este PR com o adaptador do seed (#75), cujo teste de integração apagava uma review carregada por fora.
+- **Testes:** `test_arvore.py` cobre corrente de três níveis, dois ramos, raiz isolada e raízes distintas da mesma música, regras da derivada, exclusão (meio, raiz e folha), nova raiz depois de apagar, leitura limitada, reinício (a árvore reconstruída é igual), permissões e a atualização de banco antigo.
+- **Fora desta entrega:** correção de origem (#19), reputação (#11) e recálculo (#20), e a tela de escrever review derivada, da Cecília (#33 e #42).
+- Claude Code implementou a derivada, a árvore e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 ## Motor puro de reputação — #43 (26/11/2026)
 
 - Separar `calcular_creditos` do acumulador `Reputacao`, reutilizando somente
@@ -519,6 +536,16 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
   preexistente do TestClient/HTTPX. git diff --check aprovado; nenhuma mudança
   de código necessária na resolução. Merge na main não realizado nesta etapa.
 
+
+## Revisão do PR #78 para integração da #13 — 26/11/2026
+
+- Base já conciliada pelo autor com a main; preservada sem rebase.
+- Reconstrução ordena referências ativas e apagadas conjuntamente por ID estável,
+  preservando a ordem dos ramos após exclusão e reinício. Teste de regressão incluído.
+- Limite de 200 descendentes restringe saída; BFS ainda pode enfileirar muitos
+  filhos, com O(n) de trabalho/memória no pior caso, conforme #41.
+- Exclusão ainda remove curtidas operacionais; persistência dos eventos históricos
+  de reputação permanece pendente na #10. Referência apagada não substitui esse registro.
 ## Comentários e review derivada no front — issues #36, #33 e #42 (26/11/2026)
 
 - O detalhe da review mostra os comentários em ordem cronológica, com paginação; em falha, o texto digitado é mantido. O cartão do feed mostra a contagem.
