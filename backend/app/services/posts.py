@@ -12,7 +12,7 @@ from app.models.post import Post
 from app.models.review_apagada import ReviewApagada
 from app.models.user import User
 from app.schemas.post import PostCreate, PostUpdate
-from app.services import arvores, users
+from app.services import arvores, reputacao, users
 
 
 def criar(db: Session, autor: User, dados: PostCreate) -> Post:
@@ -33,6 +33,9 @@ def criar(db: Session, autor: User, dados: PostCreate) -> Post:
     )
     db.add(post)
     try:
+        if dados.origem_id is not None:
+            db.flush()  # dá o id da review, que o evento de reputação precisa
+            db.add(reputacao.evento_derivada(post.id))  # publicar uma derivada gera pontos, no mesmo commit
         db.commit()
     except IntegrityError:
         # a restrição única (autor, música) do banco decide, inclusive em envios simultâneos
@@ -40,12 +43,14 @@ def criar(db: Session, autor: User, dados: PostCreate) -> Post:
         raise HTTPException(status_code=409, detail="você já fez uma review desta música")
     db.refresh(post)
 
-    # A floresta em memória só muda depois da gravação confirmada.
+    # A floresta e os totais em memória só mudam depois da gravação confirmada.
     with arvores.TRAVA:
         try:
             floresta.inserir(RegistroReview(post.id, post.musica_id, post.autor_id, post.origem_id))
         except ErroArvore:
             arvores.tentar_reconstruir(db)  # saiu de sincronia com o banco: refaz a partir dele
+        if post.origem_id is not None:
+            reputacao.aplicar_derivada(db, post.id)
     anotar_interacoes(db, autor, [post])
     return post
 

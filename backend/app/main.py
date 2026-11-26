@@ -10,6 +10,7 @@ from app.models.user import User
 from app.routers import arvores, auth, comentarios, curtidas, feed, follows, musicas, posts, users
 from app.services import arvores as servico_arvores
 from app.services import musicas as servico_musicas
+from app.services import reputacao as servico_reputacao
 
 
 @asynccontextmanager
@@ -22,6 +23,8 @@ async def lifespan(app: FastAPI):
         servico_musicas.importar_catalogo(db)  # catálogo curado; repetir é seguro
         usernames = list(db.scalars(select(User.username)))
         servico_arvores.tentar_reconstruir(db)  # floresta de reviews; dado inconsistente não impede a subida
+        servico_reputacao.sincronizar_eventos(db)  # curtidas e derivadas que já existem (seed, banco antigo)
+        servico_reputacao.tentar_reconstruir(db)  # totais de reputação, a partir dos eventos e da árvore
     contador_iniciais.reconstruir(usernames)
     yield
 

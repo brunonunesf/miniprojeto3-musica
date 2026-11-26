@@ -14,7 +14,7 @@ from app.models.user import User
 from app.schemas.ids import ID_MAXIMO
 from app.schemas.post import PostPage
 from app.schemas.user import PerfilOut, UserCreate, UserOut, UserPage, UserUpdate
-from app.services import follows, posts
+from app.services import follows, posts, reputacao
 from app.services import users as service
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
@@ -58,7 +58,11 @@ def ver_perfil(
     db: Session = Depends(get_db),
 ):
     perfil = service.buscar_por_username(db, username)
-    return PerfilOut(**UserOut.model_validate(perfil).model_dump(), **follows.estatisticas(db, user, perfil))
+    return PerfilOut(
+        **UserOut.model_validate(perfil).model_dump(),
+        **follows.estatisticas(db, user, perfil),
+        reputacao=reputacao.total(perfil.id),
+    )
 
 
 @router.get("/{username}/posts", response_model=PostPage)
