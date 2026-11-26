@@ -200,14 +200,28 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
 - Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.
 
-## Issue #9 — recorte exclusivo de dados — 25/11/2026
+## Posts e reviews — issues #3 e #9 — 25/11/2026
 
-- Bruno confirmou limitar esta entrega à sua área: catálogo, gêneros, tags e validação de identidades/versões. Não implementar posts (#3), follow (#5), feed (#6), republicação (#18) ou API/interface dentro desta entrega.
-- Catálogo manual com as seis faixas fictícias anteriores, sem expansão. Original, remix, ao vivo e remaster são itens distintos; versões não originais exigem descrição. Chave curada única e estável; correções de metadados não mudam a chave, nem autorizam unir gravações por título/artista.
-- Entregues carregador e validador independentes da aplicação/banco, com limpeza de metadados em memória, diagnóstico por entrada/campo e rejeição do conjunto inteiro quando inválido. IDs internos serão atribuídos pelo backend; integrações externas exigem confirmação de equivalência.
-- Review única, edição e republicação ficam documentadas como requisitos futuros. Daniel integra persistência, vínculo e validações; Cecília integra seleção/apresentação. Troca da música de uma review continua pendente. A issue #9 não é concluída somente com estes dados.
-- O PR exclusivo de dados substitui o #28, preservando sua branch com API/seletor como referência. Os PRs #29–#31 permanecem fechados, sem incorporar suas implementações. O trabalho parte da main atual; a alteração anterior de responsabilidades já consta nessa base e foi preservada.
-- Validação: 37 testes de dados passaram sem carregar a infraestrutura de API/banco, incluindo bloqueio explícito de imports da aplicação e das bibliotecas de banco. O validador aprovou as seis entradas. Não foram alterados modelos persistidos, rotas, frontend ou o seed de usuários.
+Inspirado no Letterboxd, o post da rede **é uma review de uma música do catálogo**: a música e a nota são obrigatórias e o texto é opcional. Uma review pode ser só a nota. A pessoa **escolhe** a música em um catálogo curado; não digita uma música nova.
+
+- **Rotas de posts:** `POST /posts` (201), `GET /posts/{id}`, `PATCH /posts/{id}` e `DELETE /posts/{id}` (204). Todas exigem login.
+- **Corpo de `POST /posts`:** `{"musica_id": int, "nota": 0 a 10, "texto"?}`. Esta é uma **evolução do contrato do núcleo**, que aceitava só `texto`; o `test_posts_crud` foi adaptado sem remover nenhuma verificação. Os testes ainda `@skip` de feed, curtidas, comentários e perfil usam o formato antigo e serão adaptados quando cada feature for implementada. Um `musica_id` fora do catálogo devolve `422`.
+- **Resposta:** `id`, `texto`, `tem_texto`, `nota`, `musica` (todos os dados do catálogo), `autor` (usuário completo) e `created_at`.
+- **Rotas do catálogo:** `GET /musicas?q=&offset=&limit=` (busca por termos de título e artista, sem diferença de caixa, paginada, limite de 1 a 100) e `GET /musicas/{id}`. Exigem login. Não há cadastro de música pela API.
+- **Catálogo:** o backend importa `backend/data/musicas.json` (entrega de dados do Bruno, #32) a cada subida, de forma idempotente: a chave curada `chave_catalogo` identifica a gravação e o `id` do banco é atribuído uma vez e preservado. Um catálogo inválido impede a subida, em vez de gravar parte dele. A busca ignora caixa e acentos ("mare" encontra "Maré"); ela filtra em Python, porque o SQLite não faz essa comparação Unicode, e custa O(n) por consulta, o que é aceitável para um catálogo curado pequeno.
+- **Identidade da música:** a chave curada é a identidade; título e artista iguais não unem gravações. Original, remix, ao vivo e remaster são músicas distintas e recebem reviews distintas.
+- **Nota:** inteira de 0 a 10, obrigatória e editável. Escala provisória, aprovada "por enquanto"; meia nota ou estrelas podem vir depois. Nota fora do intervalo ou decimal devolve `422`.
+- **Texto:** opcional, até 5000 caracteres, com espaços das pontas removidos. O limite é generoso, na linha do Letterboxd, porque o feed mostra só o indicador e o texto completo aparece apenas no detalhe; ele existe para proteger a API e o banco. O valor foi proposto por Daniel e a #3 pede que o time o confirme. Quando houver review derivada (#10), o DECISIONS.md já exige texto próprio nela.
+- **Forma da review no feed (decisão de produto):** cartão compacto com a **capa**, o **nome da música** e a **nota**, mais um **indicador de que existe texto** (`tem_texto`); clicar na review abre o detalhe com o texto completo.
+- **Capa (atualizado após revisão):** catálogo aceita `capa_url` ausente/null; importador normaliza para texto vazio no banco/API. Quando preenchida, o limite é 2048 caracteres. A normalização corrige a falha na segunda subida descrita em `docs/revisao-integracao-capas.md`.
+- **Uma review por pessoa e versão.** Uma segunda review da mesma versão pelo mesmo autor devolve `409`, inclusive em envios simultâneos, porque a decisão é da restrição única do banco e não de uma consulta prévia; apagar a review libera uma nova. A oferta de edição ou reescuta fica para a #18.
+- **A música não muda na edição.** `PATCH` altera só nota e texto, e um `musica_id` enviado ali é ignorado; trocar a música de uma review é decisão pendente da #9.
+- **Ids absurdos:** um id maior que o inteiro do banco (`musica_id` no corpo, ou `post_id` e `musica_id` na rota) devolve `422`, e não um erro `500`. Foi apontado na revisão da Cecília.
+- **Autoria vem da sessão.** Um `autor_id` enviado pelo cliente é ignorado. Editar ou excluir review de outra pessoa devolve `403` sem alterar o banco; review inexistente devolve `404`, verificado antes da permissão.
+- **Preparação da árvore:** `origem_id` ainda não existe. Será uma coluna opcional do `Post` na #10, sem quebrar o contrato acima.
+- **Exclusão:** por enquanto apaga a review. A política para descendentes de uma review excluída será definida junto com a #10.
+- **Esquema do banco:** `create_all` cria tabelas ausentes, mas não altera colunas existentes. Não apagar `app.db` para esta correção: a normalização não muda nulabilidade e o SQLite não impõe o comprimento de VARCHAR. Use banco separado para testar; outros tipos de alteração de esquema exigem migração específica.
+- Claude Code implementou o CRUD de reviews, a importação e as rotas do catálogo e seus testes (`test_posts_crud`, `test_posts.py` e `test_musicas.py`). Foi verificado com `make test` (75 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
 
 ## Perfil — conciliação com a identidade aprovada (25/11/2026)
 
@@ -221,12 +235,28 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
 - A apresentação usa a arte da identidade aprovada; o fundo de ondas neon foi descartado. Claude Code fez a adaptação.
 
+## Issue #9 — recorte exclusivo de dados — 25/11/2026
+
+- Bruno confirmou limitar esta entrega à sua área: catálogo, gêneros, tags e validação de identidades/versões. Não implementar posts (#3), follow (#5), feed (#6), republicação (#18) ou API/interface dentro desta entrega.
+- Catálogo manual com as seis faixas fictícias anteriores, sem expansão. Original, remix, ao vivo e remaster são itens distintos; versões não originais exigem descrição. Chave curada única e estável; correções de metadados não mudam a chave, nem autorizam unir gravações por título/artista.
+- Entregues carregador e validador independentes da aplicação/banco, com limpeza de metadados em memória, diagnóstico por entrada/campo e rejeição do conjunto inteiro quando inválido. IDs internos serão atribuídos pelo backend; integrações externas exigem confirmação de equivalência.
+- Review única, edição e republicação ficam documentadas como requisitos futuros. Daniel integra persistência, vínculo e validações; Cecília integra seleção/apresentação. Troca da música de uma review continua pendente. A issue #9 não é concluída somente com estes dados.
+- O PR exclusivo de dados substitui o #28, preservando sua branch com API/seletor como referência. Os PRs #29–#31 permanecem fechados, sem incorporar suas implementações. O trabalho parte da main atual; a alteração anterior de responsabilidades já consta nessa base e foi preservada.
+- Validação: 37 testes de dados passaram sem carregar a infraestrutura de API/banco, incluindo bloqueio explícito de imports da aplicação e das bibliotecas de banco. O validador aprovou as seis entradas. Não foram alterados modelos persistidos, rotas, frontend ou o seed de usuários.
 
 ## Catálogo — ajuste da revisão do PR #32 — 25/11/2026
 
 - Bruno autorizou adicionar `capa_url` opcional: ausente ou `null` representa música sem capa; valor preenchido deve ser URL absoluta HTTP/HTTPS de até 2048 caracteres. O carregador devolve texto JSON compatível e não consulta/baixa a imagem.
 - As seis faixas fictícias permanecem sem imagens inventadas; `capa_url: null` explícito. A interface pode apresentar fallback, sob responsabilidade do front. Persistência/exposição pela API continuam com o backend.
 - Conflito em DECISIONS.md resolvido preservando o registro de dados e os registros recentes da main sobre perfil e página inicial. Sem merge do PR nem reescrita do histórico.
+
+
+## Integração de capas — erro encontrado e corrigido — 25/11/2026
+
+- Revisão adicional de Codex, autorizada por Bruno, encontrou incompatibilidade entre `None` do catálogo e coluna `NOT NULL` do backend. Reproduzida falha na reimportação e segunda inicialização com o mesmo banco.
+- Corrigida no importador: copiar registro e converter capa ausente/null para texto vazio antes de INSERT e UPDATE, preservando o contrato externo e os IDs. Limite do modelo e schema alinhado ao catálogo: 2048 caracteres.
+- Testes de regressão cobrem reimportação, reinício real via lifespan, URLs longas, remoção de capa e credenciais preservadas. Detalhes e evidências em [docs/revisao-integracao-capas.md](docs/revisao-integracao-capas.md).
+- Conciliação da base do #32 preserva decisões de posts, dados, perfil, página inicial e capas, sem duplicar a seção de dados. Sem avisos/comentários/menções ao time; revisão humana e merge continuam pendentes.
 
 ## Feed e descoberta — decisão de 25/11/2026
 
