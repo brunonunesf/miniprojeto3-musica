@@ -10,13 +10,16 @@ from app.services import posts
 
 def curtir(db: Session, user: User, post_id: int) -> CurtidaOut:
     """Idempotente: curtir de novo não duplica nem dá erro. Curtir a própria review é permitido."""
-    post = posts.buscar(db, post_id)
-    db.add(Curtida(usuario_id=user.id, post_id=post.id))
+    posts.buscar(db, post_id)  # 404 se a review não existe
+    db.add(Curtida(usuario_id=user.id, post_id=post_id))
     try:
         db.commit()
     except IntegrityError:
-        db.rollback()  # já estava curtida (a chave composta recusou a duplicata)
-    return estado(db, user, post.id)
+        db.rollback()
+        # Ou já estava curtida (a chave composta recusou a duplicata) ou a review foi apagada
+        # entre a consulta e a gravação (a chave estrangeira recusou): neste caso, 404.
+        posts.buscar(db, post_id)
+    return estado(db, user, post_id)
 
 
 def descurtir(db: Session, user: User, post_id: int) -> CurtidaOut:

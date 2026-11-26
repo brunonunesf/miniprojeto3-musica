@@ -115,3 +115,38 @@ def test_parametros_invalidos_devolvem_422(client, logar):
 
 def test_feed_exige_login(client):
     assert client.get("/feed").status_code == 401
+
+
+def test_feed_nao_faz_uma_consulta_por_review(client, logar, id_da_musica):
+    """O número de consultas não pode crescer com o tamanho da página (nada de N+1)."""
+    from sqlalchemy import event
+
+    from app.db import engine
+
+    ana = logar("ana")
+    bia = logar("bia")
+    client.post("/usuarios/bia/follow", headers=ana)
+
+    def consultas_do_feed() -> int:
+        executadas = []
+
+        def contar(conexao, cursor, statement, parametros, contexto, varias):
+            executadas.append(statement)
+
+        event.listen(engine, "before_cursor_execute", contar)
+        try:
+            assert client.get("/feed", headers=ana).status_code == 200
+        finally:
+            event.remove(engine, "before_cursor_execute", contar)
+        return len(executadas)
+
+    for chave in ["demo-horizonte-original", "demo-horizonte-remix"]:
+        avaliar(client, bia, id_da_musica, chave)
+    com_2_reviews = consultas_do_feed()
+
+    for chave in ["demo-horizonte-vivo", "demo-horizonte-remaster", "demo-horizonte-outro-artista", "demo-mare-original"]:
+        avaliar(client, bia, id_da_musica, chave)
+    com_6_reviews = consultas_do_feed()
+
+    assert com_2_reviews == com_6_reviews
+

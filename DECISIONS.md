@@ -284,6 +284,15 @@ Segue o contrato de `docs/feed-e-descoberta.md`.
 - **Testes:** `test_populares.py` cobre empates, exclusão, edição, curtidas e comentários, versões distintas, zero reviews, paginação, autorização, parâmetros inválidos e a ordem das rotas. `make test` passou.
 - Claude Code implementou as rotas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
+## Integridade ao apagar uma review — revisão do PR #74 — 26/11/2026
+
+- **Problema apontado por Bruno:** curtir e comentar conferiam se a review existia e só depois gravavam. Se outra requisição a apagasse no intervalo, a interação era gravada mesmo assim, porque o SQLite não confere chave estrangeira por padrão, e uma review nova que reaproveitasse o id apagado herdava a curtida ou o comentário antigo. Foi reproduzido com duas sessões.
+- **Correção em três partes:** (1) as conexões SQLite passam a ligar `PRAGMA foreign_keys=ON`, então gravar curtida ou comentário numa review que já não existe é recusado pelo banco; (2) a tabela `posts` usa `AUTOINCREMENT`, então o id de uma review apagada **nunca é reaproveitado**, o que cobre também o caso em que a review é apagada e recriada antes da gravação; (3) quando o banco recusa a gravação, o serviço confere de novo e devolve `404` se a review sumiu, e mantém o comportamento idempotente quando a curtida já existia.
+- **Testes de regressão:** `test_corrida_exclusao.py` simula a intercalação (apagar, e apagar e recriar, no meio da operação) para curtidas e comentários, e confere que o id não é reaproveitado. Sem a correção, os 5 testes falham. `test_feed_nao_faz_uma_consulta_por_review` garante que o número de consultas do feed não cresce com o tamanho da página.
+- **Esquema do banco:** `posts` mudou (`AUTOINCREMENT`). Quem tem um `backend/app.db` antigo continua funcionando, mas sem a proteção contra o reaproveitamento de id; para ter, é preciso recriá-lo com `rm backend/app.db && make seed`.
+- **Limite:** a chave estrangeira vale para o SQLite. Em outro banco, a garantia seria a das restrições dele.
+- Claude Code corrigiu e escreveu os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 
 ## Issue #13 — seed e cenários aprovados — 25/11/2026
 

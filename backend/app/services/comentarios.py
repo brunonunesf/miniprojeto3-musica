@@ -1,4 +1,5 @@
 from sqlalchemy import func, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from app.models.comentario import Comentario
@@ -8,10 +9,16 @@ from app.services import posts
 
 
 def comentar(db: Session, autor: User, post_id: int, dados: ComentarioCreate) -> Comentario:
-    post = posts.buscar(db, post_id)  # 404 se a review não existe
-    comentario = Comentario(post_id=post.id, autor_id=autor.id, texto=dados.texto)
+    posts.buscar(db, post_id)  # 404 se a review não existe
+    comentario = Comentario(post_id=post_id, autor_id=autor.id, texto=dados.texto)
     db.add(comentario)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        # a review foi apagada entre a consulta e a gravação (a chave estrangeira recusou): 404
+        posts.buscar(db, post_id)
+        raise
     db.refresh(comentario)
     return comentario
 
