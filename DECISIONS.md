@@ -536,6 +536,7 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
   preexistente do TestClient/HTTPX. git diff --check aprovado; nenhuma mudança
   de código necessária na resolução. Merge na main não realizado nesta etapa.
 
+<<<<<<< HEAD
 
 ## Revisão do PR #78 para integração da #13 — 26/11/2026
 
@@ -546,3 +547,17 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
   filhos, com O(n) de trabalho/memória no pior caso, conforme #41.
 - Exclusão ainda remove curtidas operacionais; persistência dos eventos históricos
   de reputação permanece pendente na #10. Referência apagada não substitui esse registro.
+=======
+## Comentários e review derivada no front — issues #36, #33 e #42 (26/11/2026)
+
+- O detalhe da review mostra os comentários em ordem cronológica, com paginação; em falha, o texto digitado é mantido. O cartão do feed mostra a contagem.
+- "Escrever review a partir desta" abre o formulário com música e origem preenchidas e exige análise própria. Review repetida mostra o erro e o acesso às próprias reviews, sem trocar a origem.
+- A ação só é habilitada quando a review traz `origem_id` (branch `feat/back-arvore`): um servidor sem esse campo ignoraria a origem.
+- A correção de origem e a reputação continuam sem tela.
+- Claude Code implementou as telas e os testes.
+
+## Barra de navegação única — 26/11/2026
+
+- A barra passou para `components/Navbar.tsx`, com a mesma largura e altura em todas as páginas e o item da seção atual destacado. Visitantes veem a marca e o acesso a entrar ou criar conta.
+- Claude Code fez a mudança e o teste. Por decisão do time, não houve revisão por outra pessoa.
+>>>>>>> origin/main

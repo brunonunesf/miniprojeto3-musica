@@ -98,9 +98,14 @@ export type Post = {
   /** Ausentes enquanto o servidor não tem curtidas. */
   curtidas?: number;
   curtido_por_mim?: boolean;
-  /** Review que originou esta; o servidor ainda não envia. */
+  comentarios?: number;
+  /** Ausente em servidores sem review derivada; nulo numa review independente. */
+  origem_id?: number | null;
+  /** Nulo também quando a review de origem foi apagada. */
   origem?: { id: number; autor: { name: string } } | null;
 };
+
+export type Comentario = { id: number; post_id: number; texto: string; autor: User; created_at: string };
 
 export type EstadoCurtida = { curtidas: number; curtido_por_mim: boolean };
 

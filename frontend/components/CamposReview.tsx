@@ -3,12 +3,13 @@ type Props = {
   texto: string;
   aoMudarNota: (nota: string) => void;
   aoMudarTexto: (texto: string) => void;
+  textoObrigatorio?: boolean;
 };
 
 const NOTAS = Array.from({ length: 11 }, (_, nota) => String(nota));
 
 /** Nota e texto: os campos que valem tanto para criar quanto para editar uma review. */
-export function CamposReview({ nota, texto, aoMudarNota, aoMudarTexto }: Props) {
+export function CamposReview({ nota, texto, aoMudarNota, aoMudarTexto, textoObrigatorio = false }: Props) {
   return (
     <>
       <div>
@@ -19,7 +20,7 @@ export function CamposReview({ nota, texto, aoMudarNota, aoMudarTexto }: Props) 
         </select>
       </div>
       <div>
-        <label htmlFor="texto" className="field-label">Sua análise (opcional)</label>
+        <label htmlFor="texto" className="field-label">Sua análise {textoObrigatorio ? "(obrigatória)" : "(opcional)"}</label>
         <textarea id="texto" rows={6} maxLength={5000} value={texto} onChange={(e) => aoMudarTexto(e.target.value)} className="field-input resize-y" />
       </div>
     </>

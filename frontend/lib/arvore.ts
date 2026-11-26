@@ -10,7 +10,7 @@ export type NoArvore = {
   filhos: NoArvore[];
 };
 
-export type Arvore = { musica: Musica; raiz: NoArvore };
+export type Arvore = { musica: Musica; raiz: NoArvore; truncada?: boolean };
 
 // Ligado só em desenvolvimento, enquanto o backend não devolve árvores.
 export const ARVORE_SIMULADA = process.env.NEXT_PUBLIC_ARVORE_SIMULADA === "true";
