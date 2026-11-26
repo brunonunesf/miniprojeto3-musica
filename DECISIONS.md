@@ -610,6 +610,12 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - Atendidas as três sugestões publicadas por Bruno: corrigida frase histórica de catálogo real; teste agora identifica cada cartão de perfil/feed por link da review e exige quantidade, artista e versão; criada rotina única para executar os dois catálogos em bancos separados, interrompendo em erro.
 - Seleção do cenário resolve caminho relativo/absoluto como o carregador, evitando depender da grafia literal da variável. Dados e contratos preservados. Nova revisão estática do diff e validações registradas nas evidências da #39; Bruno autorizou publicação e merge após as correções e a nova revisão.
 
+## Review repetida leva à existente — issue #33 (26/11/2026)
+
+- Quando o servidor recusa uma segunda review da mesma gravação, o formulário oferece abrir a review que já existe. Nada é duplicado e a origem dela não muda.
+- O 409 não informa o id: a tela o procura nas reviews da própria pessoa e, se não achar, leva ao perfil.
+- Claude Code fez o ajuste e os testes. Por decisão do time, não houve revisão por outra pessoa.
+
 ## Reputação no perfil e apagar comentário — telas de #42 e do PR #87 (26/11/2026)
 
 - O perfil mostra o número de reputação que o servidor envia, inclusive zero, com uma frase de explicação. Sem o campo, nada aparece. A tela não recalcula pontos.

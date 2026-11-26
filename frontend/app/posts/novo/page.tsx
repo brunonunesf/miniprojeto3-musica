@@ -7,6 +7,7 @@ import { Suspense, useEffect, useState, type FormEvent } from "react";
 import { useSessao } from "@/components/AuthProvider";
 import { CamposReview } from "@/components/CamposReview";
 import { MensagemErro } from "@/components/MensagemErro";
+import { ReviewExistente } from "@/components/ReviewExistente";
 import { SeletorDeMusica } from "@/components/SeletorDeMusica";
 import { ApiError, apiGet, apiPost, type Musica, type Post } from "@/lib/api";
 import { nomeDaVersao } from "@/lib/musica";
@@ -68,7 +69,8 @@ function Formulario({ origem }: { origem: Post | null }) {
   const [texto, setTexto] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
-  const [repetida, setRepetida] = useState(false);
+  // Música que já tinha review desta pessoa, quando o servidor recusa a repetição.
+  const [repetida, setRepetida] = useState<number | null>(null);
 
   async function publicar(evento: FormEvent) {
     evento.preventDefault();
@@ -82,14 +84,14 @@ function Formulario({ origem }: { origem: Post | null }) {
     }
     setSalvando(true);
     setErro("");
-    setRepetida(false);
+    setRepetida(null);
     try {
       const dados = { musica_id: musica.id, nota: Number(nota), texto };
       const post = await apiPost<Post>("/posts", origem ? { ...dados, origem_id: origem.id } : dados);
       router.push(`/posts/${post.id}`);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível publicar.");
-      setRepetida(falha instanceof ApiError && falha.status === 409);
+      setRepetida(falha instanceof ApiError && falha.status === 409 ? musica.id : null);
       setSalvando(false);
     }
   }
@@ -111,15 +113,14 @@ function Formulario({ origem }: { origem: Post | null }) {
             aoEscolher={(nova) => {
               setMusica(nova);
               setErro("");
+              setRepetida(null);
             }}
           />
         )}
         <CamposReview nota={nota} texto={texto} aoMudarNota={setNota} aoMudarTexto={setTexto} textoObrigatorio={origem !== null} />
         {erro && <MensagemErro>{erro}</MensagemErro>}
-        {repetida && usuario && (
-          <Link href={`/usuarios/${usuario.username}`} className="inline-block font-semibold text-brand-700">
-            Ver minhas reviews
-          </Link>
+        {repetida !== null && usuario && (
+          <ReviewExistente key={repetida} username={usuario.username} musicaId={repetida} />
         )}
         <button type="submit" disabled={salvando} className="btn-primary w-full">
           {salvando ? "Publicando…" : "Publicar review"}

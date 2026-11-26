@@ -89,6 +89,37 @@ test("servidor sem review derivada não oferece nem publica a ligação", async 
   await expect(page.getByRole("button", { name: "Publicar review" })).toHaveCount(0);
 });
 
+test("derivada repetida leva à review existente, sem trocar a origem", async ({ page }) => {
+  const publicar = async () => {
+    await page.getByLabel("Nota (0 a 10)").selectOption("8");
+    await page.getByLabel(/Sua análise/).fill("Minha opinião.");
+    await page.getByRole("button", { name: "Publicar review" }).click();
+  };
+  await entrar(page);
+  await page.goto("/posts/novo");
+  await page.getByRole("radio", { name: /Trio Ventania/ }).check();
+  await publicar();
+  await expect(page).toHaveURL(/\/posts\/\d+$/);
+  const origem = page.url();
+
+  await page.getByRole("button", { name: "Sair", exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await entrar(page);
+  await page.goto("/posts/novo");
+  await page.getByRole("radio", { name: /Trio Ventania/ }).check();
+  await publicar();
+  await expect(page).toHaveURL(/\/posts\/\d+$/);
+  const independente = page.url();
+
+  await page.goto(origem);
+  await page.getByRole("link", { name: "Escrever review a partir desta" }).click();
+  await publicar();
+  await expect(page.getByText("você já fez uma review desta música")).toBeVisible();
+  await page.getByRole("link", { name: "Abrir a sua review desta música" }).click();
+  await expect(page).toHaveURL(independente);
+  await expect(page.getByText("A partir da review de", { exact: false })).toHaveCount(0);
+});
+
 test("apagar só o próprio comentário, com confirmação e sem sumir em falha", async ({ page }) => {
   await entrar(page);
   const eu = await page.evaluate(async () =>
