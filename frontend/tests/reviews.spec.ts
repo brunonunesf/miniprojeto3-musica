@@ -13,7 +13,7 @@ async function cadastrar(page: Page, username: string) {
 
 // Faixas do catálogo importado pelo backend (backend/data/musicas.json).
 async function preencher(page: Page) {
-  await page.getByRole("link", { name: "Nova review", exact: true }).click();
+  await page.goto("/posts/novo");
   await expect(page).toHaveURL(/\/posts\/novo$/);
   await page.getByLabel("Buscar música por título ou artista").fill("mare");
   await expect(page.getByRole("radio")).toHaveCount(1);
@@ -73,7 +73,7 @@ test("review repetida preserva o formulário e outra pessoa não edita", async (
 
 test("sem música, com música inválida ou sem rede, o formulário é preservado", async ({ page }) => {
   await cadastrar(page, `falha_${Date.now()}`);
-  await page.getByRole("link", { name: "Nova review", exact: true }).click();
+  await page.goto("/posts/novo");
   await page.getByLabel("Nota (0 a 10)").selectOption("5");
   await page.getByRole("button", { name: "Publicar review" }).click();
   await expect(page.getByText("Escolha uma música do catálogo.")).toBeVisible();
@@ -96,7 +96,7 @@ test("sem música, com música inválida ou sem rede, o formulário é preservad
 
 test("busca sem resultado e catálogo indisponível", async ({ page }) => {
   await cadastrar(page, `busca_${Date.now()}`);
-  await page.getByRole("link", { name: "Nova review", exact: true }).click();
+  await page.goto("/posts/novo");
   const busca = page.getByLabel("Buscar música por título ou artista");
   await busca.fill("nada parecido");
   await expect(page.getByText("Nenhuma música encontrada no catálogo.")).toBeVisible();

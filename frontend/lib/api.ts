@@ -95,7 +95,14 @@ export type Post = {
   musica: Musica;
   autor: User;
   created_at: string;
+  /** Ausentes enquanto o servidor não tem curtidas. */
+  curtidas?: number;
+  curtido_por_mim?: boolean;
+  /** Review que originou esta; o servidor ainda não envia. */
+  origem?: { id: number; autor: { name: string } } | null;
 };
+
+export type EstadoCurtida = { curtidas: number; curtido_por_mim: boolean };
 
 export type Page<T> = {
   items: T[];

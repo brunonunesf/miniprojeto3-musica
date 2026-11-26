@@ -318,6 +318,13 @@ Segue o contrato de `docs/feed-e-descoberta.md`.
 - Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
 - Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
 
+## Perfil: seguir e reviews — issue #34 (25/11/2026)
+
+- O perfil ganhou contadores, botão de seguir e a lista paginada de reviews. Feed e perfil compartilham a paginação (`usePaginacao` e `ListaDeReviews`).
+- Contrato **proposto**: `GET /usuarios/{username}` com `seguidores`, `seguindo` e `eu_sigo`; `POST` e `DELETE /usuarios/{username}/follow`; `GET /usuarios/{username}/posts?offset=&limit=`. Os campos e as rotas de follow seguem a branch `feat/back-curtidas` de Daniel, ainda fora da `main`; a rota de reviews por usuário ainda não existe.
+- Sem esses campos, o perfil não mostra botão nem contadores. Com `NEXT_PUBLIC_PERFIL_SIMULADO=true`, usa exemplos e avisa isso.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
 ## Página inicial pública (25/11/2026)
 
 - `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
@@ -421,3 +428,38 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
+
+## Tela de feed — issue #36 (25/11/2026)
+
+- `/feed` consome `GET /feed?offset=&limit=` no formato de página (`items`, `total`) com reviews no formato de `PostOut`. A rota ainda não existe no backend.
+- Cartão compacto, como decidido para o feed: capa, música, nota e indicador de análise; o texto abre no detalhe.
+- Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
+- Curtidas e comentários, também da #36, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Botão de curtir — issue #36 (25/11/2026)
+
+- Feed e detalhe mostram contagem e estado, com `POST` e `DELETE /posts/{id}/curtir` (branch `feat/back-curtidas`, ainda fora da `main`).
+- A tela usa a contagem devolvida pelo servidor; em falha nada muda. Curtir não é tratado como descoberta.
+- Sem os campos `curtidas` e `curtido_por_mim`, o botão não aparece. Reviews de exemplo não têm botão.
+- Claude Code implementou o botão e os testes. A revisão por outra pessoa continua pendente.
+
+
+## Tela da árvore de recomendações — issue #42 (25/11/2026)
+
+- `/posts/[id]/arvore` mostra a corrente como lista hierárquica, com a review atual destacada e o caminho "Descoberta via …".
+- Contrato **proposto** para o backend: `GET /posts/{id}/arvore` devolve `{musica, raiz}`, e cada nó tem `id`, `apagada`, `autor`, `nota` e `filhos`. Falta combinar com Daniel e Bruno.
+- Review apagada mantém os ramos e não mostra autoria nem conteúdo. O backend também não deve enviá-los.
+- Com `NEXT_PUBLIC_ARVORE_SIMULADA=true`, a tela usa uma corrente fictícia e avisa isso.
+- Publicar review derivada, corrigir origem e exibir reputação, também da #42, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Novo layout do feed — issues #36 e #66 (26/11/2026)
+
+- `/feed` segue a referência aprovada em `docs/feed-e-descoberta.md`: perfil à esquerda, reviews no centro e pesquisa, mais avaliadas e Descobrir à direita a partir de 1024 px; abaixo disso, atalhos compactos.
+- Cabeçalho com Feed, Descobrir e Pessoas, avatar e "Sair". Entraram `/musicas`, `/musicas/[id]` e `/descobrir`.
+- Compartilhar usa o recurso do aparelho ou copia o link.
+- Aparecem desativados, como "em breve": comentários, review derivada e biblioteca. O selo de origem só aparece se o servidor enviar `origem`.
+- `GET /musicas/populares` e `GET /musicas/{id}/reviews` (#65) ainda não existem; a tela explica a indisponibilidade. Com `NEXT_PUBLIC_FEED_SIMULADO=true`, feed e vitrine usam exemplos identificados.
+- A branch reúne o trabalho dos PRs #58, #61, #62 e #63.
+- Claude Code implementou as telas e os testes. O time decidiu em 26/11 não fazer revisão cruzada dos PRs.

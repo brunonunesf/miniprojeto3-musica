@@ -1,13 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { MensagemErro } from "@/components/MensagemErro";
-import { apiGet, type Musica, type Page } from "@/lib/api";
+import type { Musica } from "@/lib/api";
 import { nomeDaVersao } from "@/lib/musica";
-
-const LIMITE = 20;
-const ESPERA_DA_BUSCA_MS = 250;
+import { useBuscaDeMusicas } from "@/lib/useBuscaDeMusicas";
 
 type Props = {
   escolhida: Musica | null;
@@ -16,31 +14,7 @@ type Props = {
 
 export function SeletorDeMusica({ escolhida, aoEscolher }: Props) {
   const [busca, setBusca] = useState("");
-  const [pagina, setPagina] = useState<Page<Musica> | null>(null);
-  const [erro, setErro] = useState("");
-  const [tentativa, setTentativa] = useState(0);
-
-  useEffect(() => {
-    // Descarta a resposta de uma busca que já foi substituída.
-    let ativa = true;
-    const espera = setTimeout(() => {
-      setErro("");
-      apiGet<Page<Musica>>(`/musicas?q=${encodeURIComponent(busca)}&limit=${LIMITE}`).then(
-        (resposta) => {
-          if (ativa) setPagina(resposta);
-        },
-        (falha: Error) => {
-          if (!ativa) return;
-          setPagina(null);
-          setErro(falha.message);
-        },
-      );
-    }, ESPERA_DA_BUSCA_MS);
-    return () => {
-      ativa = false;
-      clearTimeout(espera);
-    };
-  }, [busca, tentativa]);
+  const { pagina, erro, repetir } = useBuscaDeMusicas(busca);
 
   return (
     <fieldset className="space-y-3">
@@ -63,7 +37,7 @@ export function SeletorDeMusica({ escolhida, aoEscolher }: Props) {
       {erro && (
         <div className="space-y-2">
           <MensagemErro>{erro}</MensagemErro>
-          <button type="button" className="text-sm font-semibold text-brand-700" onClick={() => setTentativa((n) => n + 1)}>
+          <button type="button" className="text-sm font-semibold text-brand-700" onClick={repetir}>
             Buscar de novo
           </button>
         </div>
