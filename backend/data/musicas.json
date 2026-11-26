@@ -1,0 +1,92 @@
+[
+  {
+    "chave_catalogo": "demo-horizonte-original",
+    "titulo": "Horizonte",
+    "artista": "Aurora do Vale",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação de estúdio",
+    "generos": [
+      "indie"
+    ],
+    "tags": [
+      "guitarra",
+      "calma"
+    ],
+    "capa_url": null
+  },
+  {
+    "chave_catalogo": "demo-horizonte-remix",
+    "titulo": "Horizonte",
+    "artista": "Aurora do Vale",
+    "tipo_versao": "remix",
+    "descricao_versao": "Remix de Maré",
+    "generos": [
+      "eletronica"
+    ],
+    "tags": [
+      "danca",
+      "sintetizador"
+    ],
+    "capa_url": null
+  },
+  {
+    "chave_catalogo": "demo-horizonte-vivo",
+    "titulo": "Horizonte",
+    "artista": "Aurora do Vale",
+    "tipo_versao": "ao_vivo",
+    "descricao_versao": "Ao vivo na praça",
+    "generos": [
+      "indie"
+    ],
+    "tags": [
+      "acustico",
+      "ao vivo"
+    ],
+    "capa_url": null
+  },
+  {
+    "chave_catalogo": "demo-horizonte-remaster",
+    "titulo": "Horizonte",
+    "artista": "Aurora do Vale",
+    "tipo_versao": "remaster",
+    "descricao_versao": "Remaster 2026",
+    "generos": [
+      "indie"
+    ],
+    "tags": [
+      "guitarra",
+      "calma"
+    ],
+    "capa_url": null
+  },
+  {
+    "chave_catalogo": "demo-horizonte-outro-artista",
+    "titulo": "Horizonte",
+    "artista": "Trio Ventania",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação de estúdio",
+    "generos": [
+      "forro"
+    ],
+    "tags": [
+      "sanfona",
+      "danca"
+    ],
+    "capa_url": null
+  },
+  {
+    "chave_catalogo": "demo-mare-original",
+    "titulo": "Maré",
+    "artista": "Lua de Barro",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação de estúdio",
+    "generos": [
+      "mpb"
+    ],
+    "tags": [
+      "voz",
+      "violao"
+    ],
+    "capa_url": null
+  }
+]
