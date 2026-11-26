@@ -1,0 +1,627 @@
+{
+  "data": "2026-11-26T14:52:06.706118-03:00",
+  "ambiente": "SQLite isolado em worktree de validação; sem mocks",
+  "versao": "issue13-v2",
+  "quantidades": {
+    "usuarios": 25,
+    "musicas": 20,
+    "reviews": 50,
+    "follows": 20,
+    "curtidas": 30
+  },
+  "origens_persistidas": 3,
+  "ids_roteiro": {
+    "review-001": 1,
+    "review-002": 48,
+    "review-003": 50,
+    "review-004": 49,
+    "review-005": 2
+  },
+  "arvore": {
+    "musica": {
+      "id": 8,
+      "chave_catalogo": "spotify-0onaza6lvufgqvmt8qsfd5",
+      "titulo": "Clareou",
+      "artista": "Xande de Pilares",
+      "tipo_versao": "original",
+      "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+      "generos": [
+        "samba",
+        "pagode"
+      ],
+      "tags": [
+        "brasileira",
+        "samba",
+        "pagode"
+      ],
+      "capa_url": ""
+    },
+    "raiz": {
+      "id": 1,
+      "apagada": false,
+      "autor": {
+        "username": "bruno_nunes",
+        "name": "Bruno Nunes"
+      },
+      "nota": 0,
+      "filhos": [
+        {
+          "id": 48,
+          "apagada": false,
+          "autor": {
+            "username": "cecilia_candeia",
+            "name": "Cecília Candeia"
+          },
+          "nota": 1,
+          "filhos": [
+            {
+              "id": 50,
+              "apagada": false,
+              "autor": {
+                "username": "daniel_dantas",
+                "name": "Daniel Dantas"
+              },
+              "nota": 2,
+              "filhos": []
+            }
+          ]
+        },
+        {
+          "id": 49,
+          "apagada": false,
+          "autor": {
+            "username": "fernando_neto",
+            "name": "Fernando Neto"
+          },
+          "nota": 3,
+          "filhos": []
+        }
+      ]
+    },
+    "truncada": false
+  },
+  "raiz_independente": {
+    "musica": {
+      "id": 8,
+      "chave_catalogo": "spotify-0onaza6lvufgqvmt8qsfd5",
+      "titulo": "Clareou",
+      "artista": "Xande de Pilares",
+      "tipo_versao": "original",
+      "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+      "generos": [
+        "samba",
+        "pagode"
+      ],
+      "tags": [
+        "brasileira",
+        "samba",
+        "pagode"
+      ],
+      "capa_url": ""
+    },
+    "raiz": {
+      "id": 2,
+      "apagada": false,
+      "autor": {
+        "username": "gustavo_tenorio",
+        "name": "Gustavo Tenório"
+      },
+      "nota": 4,
+      "filhos": []
+    },
+    "truncada": false
+  },
+  "ranking": {
+    "items": [
+      {
+        "id": 8,
+        "chave_catalogo": "spotify-0onaza6lvufgqvmt8qsfd5",
+        "titulo": "Clareou",
+        "artista": "Xande de Pilares",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "samba",
+          "pagode"
+        ],
+        "tags": [
+          "brasileira",
+          "samba",
+          "pagode"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 5
+      },
+      {
+        "id": 1,
+        "chave_catalogo": "spotify-4ra6zuylxk69bf3dpvpggo",
+        "titulo": "Meteoro - Ao Vivo",
+        "artista": "Luan Santana",
+        "tipo_versao": "ao_vivo",
+        "descricao_versao": "Meteoro - Ao Vivo",
+        "generos": [
+          "sertanejo"
+        ],
+        "tags": [
+          "brasileira",
+          "sertanejo"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 4
+      },
+      {
+        "id": 2,
+        "chave_catalogo": "spotify-6ccku0lwjzohlaxbwp2ptk",
+        "titulo": "Os Anjos Cantam",
+        "artista": "Jorge & Mateus",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "sertanejo"
+        ],
+        "tags": [
+          "brasileira",
+          "sertanejo"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 4
+      },
+      {
+        "id": 3,
+        "chave_catalogo": "spotify-38mpandijgayvdcc6npx95",
+        "titulo": "Infiel - Ao Vivo",
+        "artista": "Marília Mendonça",
+        "tipo_versao": "ao_vivo",
+        "descricao_versao": "Infiel - Ao Vivo",
+        "generos": [
+          "sertanejo"
+        ],
+        "tags": [
+          "brasileira",
+          "sertanejo"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 3
+      },
+      {
+        "id": 4,
+        "chave_catalogo": "spotify-3jfrtzp1xapqeixeuxtavs",
+        "titulo": "Cheia de Marra",
+        "artista": "Mc Livinho",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "funk"
+        ],
+        "tags": [
+          "brasileira",
+          "funk"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 3
+      },
+      {
+        "id": 5,
+        "chave_catalogo": "spotify-3mkda6vwf0ifrl86yztljw",
+        "titulo": "Kenny G",
+        "artista": "Matuê",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "trap"
+        ],
+        "tags": [
+          "brasileira",
+          "trap"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 3
+      },
+      {
+        "id": 6,
+        "chave_catalogo": "spotify-1qyibnys01tjmkmoetljxn",
+        "titulo": "A Morte do Autotune",
+        "artista": "Matuê",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "trap"
+        ],
+        "tags": [
+          "brasileira",
+          "trap"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 3
+      },
+      {
+        "id": 7,
+        "chave_catalogo": "spotify-3ytxzejfevydffmuhhvti8",
+        "titulo": "Negro Drama",
+        "artista": "Racionais MC's",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "rap"
+        ],
+        "tags": [
+          "brasileira",
+          "rap"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 3
+      },
+      {
+        "id": 9,
+        "chave_catalogo": "spotify-35wfw6eyw39ypop2lrh11c",
+        "titulo": "Burguesinha",
+        "artista": "Seu Jorge",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "samba",
+          "samba-rock"
+        ],
+        "tags": [
+          "brasileira",
+          "samba",
+          "samba-rock"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 3
+      },
+      {
+        "id": 10,
+        "chave_catalogo": "spotify-3qa7vf91ehkfoyeda5wcjb",
+        "titulo": "Mina do Condomínio",
+        "artista": "Seu Jorge",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "samba-rock"
+        ],
+        "tags": [
+          "brasileira",
+          "samba-rock"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 3
+      },
+      {
+        "id": 11,
+        "chave_catalogo": "spotify-2gafzg9z7ugs1imm4idrnr",
+        "titulo": "Apesar De Você",
+        "artista": "Chico Buarque, MPB4, Quarteto Em Cy",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "mpb"
+        ],
+        "tags": [
+          "brasileira",
+          "mpb"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      },
+      {
+        "id": 12,
+        "chave_catalogo": "spotify-1msxblw7fkabfey4lgpg0e",
+        "titulo": "Velha Infância - 2004 Digital Remaster",
+        "artista": "Tribalistas",
+        "tipo_versao": "remaster",
+        "descricao_versao": "Velha Infância - 2004 Digital Remaster",
+        "generos": [
+          "mpb",
+          "pop"
+        ],
+        "tags": [
+          "brasileira",
+          "mpb",
+          "pop"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      },
+      {
+        "id": 13,
+        "chave_catalogo": "spotify-6cbzb9mvac5s8htwklloi0",
+        "titulo": "Cheguei",
+        "artista": "LUDMILLA",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "pop",
+          "funk"
+        ],
+        "tags": [
+          "brasileira",
+          "pop",
+          "funk"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      },
+      {
+        "id": 14,
+        "chave_catalogo": "spotify-28auftkmnjaqnqklhr0wev",
+        "titulo": "Show das Poderosas",
+        "artista": "Anitta",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "funk",
+          "pop"
+        ],
+        "tags": [
+          "brasileira",
+          "funk",
+          "pop"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      },
+      {
+        "id": 15,
+        "chave_catalogo": "spotify-50mawjudheoftcuiprmgxr",
+        "titulo": "Deixa Acontecer",
+        "artista": "Grupo Revelação",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "pagode"
+        ],
+        "tags": [
+          "brasileira",
+          "pagode"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      },
+      {
+        "id": 16,
+        "chave_catalogo": "spotify-6djkwvaqxuvmaazo4u4cio",
+        "titulo": "Tá Vendo Aquela Lua",
+        "artista": "Exaltasamba",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "pagode"
+        ],
+        "tags": [
+          "brasileira",
+          "pagode"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      },
+      {
+        "id": 17,
+        "chave_catalogo": "spotify-661ns9g25zhdih4qvshbo7",
+        "titulo": "Anunciação",
+        "artista": "Alceu Valença",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "mpb",
+          "forro"
+        ],
+        "tags": [
+          "brasileira",
+          "mpb",
+          "forro"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      },
+      {
+        "id": 18,
+        "chave_catalogo": "spotify-0jabbolc53vve33ouz7d4a",
+        "titulo": "Asa Branca",
+        "artista": "Luiz Gonzaga",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "baiao",
+          "forro"
+        ],
+        "tags": [
+          "brasileira",
+          "baiao",
+          "forro"
+        ],
+        "capa_url": "",
+        "quantidade_reviews": 2
+      }
+    ],
+    "total": 18,
+    "offset": 0,
+    "limit": 100
+  },
+  "reputacao_inicial": {
+    "metodo": "core #43 a partir do banco versus oráculo independente por chaves",
+    "validado": true,
+    "totais_por_username": {
+      "bruno_nunes": 18,
+      "cecilia_candeia": 8,
+      "sofia_lima": 16,
+      "fernando_neto": 12,
+      "maria_laura": 12,
+      "pedro_henrique": 8,
+      "larissa_goes": 4,
+      "pedro_correia": 8,
+      "lucas_todaro": 4,
+      "davi_goes": 8,
+      "daniel_dantas": 8,
+      "rodrigo_angelo": 16,
+      "eduardo_travassos": 12,
+      "gustavo_tenorio": 4
+    },
+    "exposta_no_perfil_api": false
+  },
+  "conta_nova": {
+    "username": "ryan_rodrigues",
+    "reviews": 0,
+    "sugestoes_personalizadas_nao_validadas": true
+  },
+  "interface": {
+    "navegador": "Google Chrome headless",
+    "mocks": false,
+    "erros_de_pagina": [],
+    "respostas_api": [
+      {
+        "url": "http://localhost:8000/auth/login",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/auth/eu",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/auth/eu",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/posts/50/arvore",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/posts/50/arvore",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/auth/eu",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/posts/2/arvore",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/posts/2/arvore",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/auth/eu",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/musicas/populares?offset=0&limit=20",
+        "status": 200
+      },
+      {
+        "url": "http://localhost:8000/musicas/populares?offset=0&limit=20",
+        "status": 200
+      }
+    ],
+    "capturas": [
+      "arvore-desktop.png",
+      "arvore-mobile.png",
+      "raiz-independente.png",
+      "ranking.png",
+      "conta-nova.png"
+    ]
+  },
+  "ensaio": {
+    "edicao_preservar": {
+      "review_id": 48,
+      "texto": "Ensaio preservado depois de repetir o seed."
+    },
+    "review_excluida": 49,
+    "curtida_removida": {
+      "post_id": 3,
+      "username": "bruno_nunes"
+    },
+    "follow_removido": {
+      "seguidor": "bruno_nunes",
+      "seguido": "cecilia_candeia"
+    },
+    "arvore_apos_exclusao": {
+      "musica": {
+        "id": 8,
+        "chave_catalogo": "spotify-0onaza6lvufgqvmt8qsfd5",
+        "titulo": "Clareou",
+        "artista": "Xande de Pilares",
+        "tipo_versao": "original",
+        "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+        "generos": [
+          "samba",
+          "pagode"
+        ],
+        "tags": [
+          "brasileira",
+          "samba",
+          "pagode"
+        ],
+        "capa_url": ""
+      },
+      "raiz": {
+        "id": 1,
+        "apagada": false,
+        "autor": {
+          "username": "bruno_nunes",
+          "name": "Bruno Nunes"
+        },
+        "nota": 0,
+        "filhos": [
+          {
+            "id": 48,
+            "apagada": false,
+            "autor": {
+              "username": "cecilia_candeia",
+              "name": "Cecília Candeia"
+            },
+            "nota": 8,
+            "filhos": [
+              {
+                "id": 50,
+                "apagada": false,
+                "autor": {
+                  "username": "daniel_dantas",
+                  "name": "Daniel Dantas"
+                },
+                "nota": 2,
+                "filhos": []
+              }
+            ]
+          },
+          {
+            "id": 49,
+            "apagada": true,
+            "autor": null,
+            "nota": null,
+            "filhos": []
+          }
+        ]
+      },
+      "truncada": false
+    },
+    "referencia_apagada_sem_conteudo": true
+  },
+  "preservacao_reset_recuperacao": {
+    "aplicacao_parada": true,
+    "estado_ensaio": {
+      "users": 25,
+      "musicas": 20,
+      "posts": 49,
+      "follows": 19,
+      "curtidas": 28,
+      "reviews_apagadas": 1
+    },
+    "assinatura_logica_ensaio_sha256": "15e7c84473d2ff01569d978e561ee09ed964067ef1a2259737e2ad639a0e187d",
+    "reexecucao_preservou": true,
+    "reset_recompos_massa": {
+      "users": 25,
+      "musicas": 20,
+      "posts": 50,
+      "follows": 20,
+      "curtidas": 30,
+      "reviews_apagadas": 0
+    },
+    "backup": "issue13-backup-20261126T175501467671Z-xm4r13s5.db",
+    "backup_preservou_ensaio": true,
+    "restauracao_real_validada": true,
+    "reexecucao_apos_restauracao_preservou": true,
+    "estado_final_banco_isolado": "cenário inicial recomposto e validado"
+  }
+}

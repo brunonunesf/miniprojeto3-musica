@@ -1,6 +1,8 @@
 # Demonstração — issue #13
 
-Decisões aprovadas por Bruno em 25/11/2026. Planejamento e massa de dados não significam integração concluída. A #13 permanece aberta.
+**Estado atual — 26/11/2026:** a entrega de dados foi validada com carga completa e origens oficiais, teste do núcleo ativo, reset e recuperação real de backup. Veja o [relatório de aceite e as evidências](evidencias/issue13/README.md).
+
+As seções de implementação anteriores são histórico datado; avisos antigos de carga bloqueada foram superados pela integração dos PRs #78/#82. Isso não declara Descobrir ou reputação pelo perfil/API entregues.
 
 ## Fonte musical
 
@@ -272,3 +274,12 @@ esta continuação e sua revisão técnica; revisão humana/merge seguem separad
   Startup/check da API aprovado; reset explícito cria backup e recompõe a massa.
 - Único aviso da suíte: depreciação preexistente TestClient/HTTPX.
 - Sem teste novo de navegador; evidências de árvore desta etapa são via API.
+
+
+## Aceite final da entrega de dados — 26/11/2026
+
+Bruno aprovou encerrar a #13 pela conclusão dos dados, documentando módulos de produto ainda indisponíveis nas issues próprias. Após revisão técnica do #78 e do #82 sobre a main atual, foram comprovados 25/20/50/20/30, três origens, árvores reais, pontos iniciais pelo core, conta nova/com sinais, ranking, preservação, reset e restauração efetiva do backup.
+
+A suíte completa passou com **378 testes e zero skips**. O teste do seed não foi enfraquecido para obter esse resultado. Check de ambiente, cenário, validador, instalação limpa e TypeScript passaram. Interface real capturada em desktop/mobile, sem mocks, e respostas de API registradas. [Relatório de critérios](evidencias/issue13/README.md) e [dados verificados](evidencias/issue13/validacao.json).
+
+Não há declaração de recomendação personalizada, reputação pelo perfil/API ou preservação histórica de eventos como funcionalidades concluídas. Esses pontos, assim como reescutas/correção e extensões, continuam nas issues próprias. A conclusão cobre a área de dados aprovada nesta sessão; não a conclusão de todo o produto.

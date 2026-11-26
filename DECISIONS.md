@@ -584,3 +584,12 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - A falha ao carregar uma música oferece "Tentar novamente".
 - A legenda "Quantidade de reviews nesta rede, em todo o período" fica no componente da vitrine, usado no feed e em `/musicas`.
 - Claude Code fez os ajustes. Por decisão do time, não houve revisão por outra pessoa.
+
+
+## Aceite e encerramento da entrega de dados #13 — 26/11/2026
+
+- Bruno escolheu concluir a entrega de dados sem aguardar Descobrir e demais integrações de produto. A decisão não altera a pendência dessas funcionalidades nas respectivas issues nem declara reputação pelo perfil/API implementada.
+- #78 conciliado com main e integrado após 375 testes aprovados/1 skip. #82 atualizado sobre essa main, sem novos defeitos bloqueantes encontrados; suíte final com 378 testes aprovados e zero skips, incluindo seed completo e cálculo independente de reputação.
+- Instalação nova: catálogo/seed/CLI, startup/check, reexecução, reset com backup e restauração efetiva aprovados. Capturas da interface real mostram corrente/ramo, raiz independente, ranking e conta nova, sem mocks. Evidências em docs/evidencias/issue13/README.md e validacao.json.
+- No ensaio, edição/exclusão/descurtida/unfollow foram preservados na reexecução. Reset recompôs a massa inicial e o backup recuperou o estado anterior; nenhum banco pessoal foi alterado. Não houve aviso, comentário ou menção ao time nesta etapa.
+- Reputação histórica após exclusão, correção/recálculo, reescutas/bibliotecas e Descobrir permanecem nas issues próprias. Reescuta não foi apresentada como validada sem serviço integrado. Instruções institucionais foram conferidas no material versionado, sem afirmar envio ou acesso ao Classroom.

@@ -120,11 +120,14 @@ O catálogo inicial contém seis faixas e artistas **fictícios**, com identidad
 
 `make seed-validar` confere a massa de demonstração sem banco. `make seed` agora
 exige `DATABASE_URL=sqlite:///./demo/issue13.db` (resolvido dentro de `backend/`)
-e interrompe sem carga enquanto faltar o adaptador de persistência do backend.
+e usa a carga completa com origens oficiais. Configure também
+`CATALOGO_MUSICAL_PATH=data/musicas_demo.json` no seed e no backend.
 O seed antigo de três usuários continua disponível em `make seed-minimo`;
 a orientação anterior de `make seed` para essas contas foi substituída.
 Consulte [cenários, versões musicais e pendências](docs/demo-issue-13.md).
-A #13 permanece aberta; persistência completa e validação do reset com a rede real ainda estão pendentes. O mecanismo de reset com backup está implementado; exige `--reset-demo --confirmar-reset --aplicacao-parada` e o adaptador real do backend.
+A entrega de dados da #13 tem carga completa, preservação e reset com backup validados.
+O reset exige aplicação parada e `--reset-demo --confirmar-reset --aplicacao-parada`.
+Veja o [relatório de aceite e evidências](docs/evidencias/issue13/README.md).
 
 ## Feed e descoberta — planejamento visual aprovado em 25/11
 
@@ -132,6 +135,6 @@ O feed continua cronológico, com reviews dos seguidos. Pesquisa e músicas mais
 
 Na demo musical, use `CATALOGO_MUSICAL_PATH=data/musicas_demo.json` tanto no seed
 quanto no backend. O adaptador incorpora as origens oficiais do #78 e permite a carga completa
-com corrente, ramo e raiz independente. A entrega depende da integração desse PR.
-A validação do seed não significa conclusão da #13; veja o estado atual em
-[documentação da demonstração](docs/demo-issue-13.md#adaptador-sobre-o-74-corrigido--26112026).
+com corrente, ramo e raiz independente. O encerramento da entrega de dados não
+declara Descobrir ou reputação pelo perfil/API concluídos; veja os limites e o
+roteiro na [documentação da demonstração](docs/demo-issue-13.md).
