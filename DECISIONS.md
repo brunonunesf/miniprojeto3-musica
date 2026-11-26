@@ -564,3 +564,9 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - A falha ao carregar uma música oferece "Tentar novamente".
 - A legenda "Quantidade de reviews nesta rede, em todo o período" fica no componente da vitrine, usado no feed e em `/musicas`.
 - Claude Code fez os ajustes. Por decisão do time, não houve revisão por outra pessoa.
+
+## Review repetida leva à existente — issue #33 (26/11/2026)
+
+- Quando o servidor recusa uma segunda review da mesma gravação, o formulário oferece abrir a review que já existe. Nada é duplicado e a origem dela não muda.
+- O 409 não informa o id: a tela o procura nas reviews da própria pessoa e, se não achar, leva ao perfil.
+- Claude Code fez o ajuste e os testes. Por decisão do time, não houve revisão por outra pessoa.

@@ -54,6 +54,8 @@ test("árvore isolada e servidor sem a rota", async ({ page }) => {
   await expect(page.getByText("Ninguém recomendou a partir desta review ainda.")).toBeVisible();
   await expect(page.getByText("Descoberta via", { exact: false })).toHaveCount(0);
   await page.unroute(ehArvore);
+  // O servidor real já tem a rota: o 404 é simulado.
+  await page.route(ehArvore, (route) => route.fulfill({ status: 404, json: { detail: "Not Found" } }));
   await page.reload();
   await expect(page.getByText("Árvore não encontrada.", { exact: false })).toBeVisible();
   await expect(page.getByRole("button", { name: "Tentar novamente" })).toBeVisible();
