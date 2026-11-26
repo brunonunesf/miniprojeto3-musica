@@ -21,3 +21,10 @@ bench:
 	@cd backend && ls scripts/bench_*.py >/dev/null 2>&1 \
 		&& for f in scripts/bench_*.py; do uv run python $$f; done \
 		|| echo "nenhum scripts/bench_*.py ainda — opcional, para medir uma estrutura de dados"
+
+.PHONY: seed-minimo seed-validar
+seed-minimo:
+	cd backend && uv run python scripts/seed_minimo.py
+
+seed-validar:
+	cd backend && uv run python scripts/seed.py --validar-demo
