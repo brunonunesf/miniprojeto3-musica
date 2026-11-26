@@ -133,3 +133,85 @@ Os testes ficam fora de `tests/` para não carregar o conftest de API/banco.
 `make test` inclui `tests/` e `tests_dados/` pela configuração do pytest.
 O conftest de `tests/` não se aplica aos testes em `tests_dados/`; a execução
 isolada acima continua disponível para validar o core sem iniciar a suíte de API.
+
+## Reputação — #43
+
+`reputacao.py` fornece cálculo puro, `Reputacao` e o singleton
+`reputacao_reviews`. Não importa banco/FastAPI nem altera a floresta.
+
+```python
+from app.core.reputacao import EventoCurtida, EventoDerivada, Reputacao
+
+# Usando a floresta do exemplo acima: ana -> julia (apagada) -> pedro.
+r = Reputacao()
+evento = EventoCurtida('pedro', 99)
+assert r.aplicar(arvores, evento)
+assert r.contribuicoes(evento) == {3: 4, 2: 2, 1: 1}
+assert not r.aplicar(arvores, evento)
+assert r.remover(evento)
+r.reconstruir(arvores, [EventoDerivada('pedro')])
+assert r.totais() == {2: 4, 1: 2}
+```
+
+### Contrato
+
+- Registros imutáveis: `EventoCurtida(review_id, usuario_id)` e
+  `EventoDerivada(review_id)`. IDs seguem a #41: `int`/`str`, sem coerção,
+  rejeitando booleanos. Chaves: `('curtida', usuario_id, review_id)` e
+  `('derivada', review_id)`; tipos distintos nunca colidem.
+- `calcular_creditos(arvores, evento)` retorna um dicionário novo autor/pontos.
+  Curtida externa concede 4/2/1 ao autor/pai/avô; derivada concede 4/2/1 ao
+  pai/avô/bisavô. Auto-curtida concede 1 somente ao autor. Autor repetido recebe
+  somente a maior parcela por evento, sem redistribuição. Não percorre além das
+  três posições; referências apagadas mantêm posição e crédito.
+- Derivação de raiz e eventos malformados geram `ErroReputacao(ValueError)`;
+  review ausente propaga `NoInexistente` da árvore. A entrada é uma floresta
+  previamente validada pela #41. O core aceita eventos históricos de apagados;
+  autorização para novas interações é responsabilidade do backend.
+- `aplicar(arvores, evento)` retorna `True` se inseriu e `False` se já ativo.
+  Repetição não recalcula créditos, mesmo se a árvore mudou. `remover(evento)`
+  retorna se removeu e usa os créditos originalmente concedidos, sem consultar
+  a árvore. Curtir/descurtir/recurtir deixa uma única contribuição ativa.
+- `total(autor_id)` retorna zero para autor sem créditos. `totais()` e
+  `contribuicoes(evento)` retornam cópias; esta última retorna `None` se ausente.
+  Totais iguais a zero não ocupam o índice.
+- `reconstruir(arvores, eventos_ativos)` calcula numa instância temporária e
+  substitui todo o estado somente após sucesso. Aceita qualquer ordem,
+  deduplica eventos, limpa com entrada vazia e preserva estado anterior diante
+  de erro de validação ou falha do iterável. Usa a árvore atual, sem histórico
+  de origens; repetir a mesma carga não infla os totais.
+
+### Integração e limites
+
+A #10 adapta os registros persistidos aos eventos, reconstrói no startup e
+sincroniza após escrita confirmada, com recuperação entre banco e memória.
+O PR #74 já usa a chave composta de curtida, mas sua exclusão física de reviews
+remove curtidas: ainda precisa ser adaptada para conservar eventos pontuáveis e
+referências (ID, autor, música e origem) após apagar conteúdo. Não reconstruir
+somente a partir das curtidas sobreviventes enquanto essa adaptação não existir.
+
+Excluir review não chama `remover`: preserva eventos de curtida e publicação
+históricos. Descurtida válida remove sua contribuição. A remoção genérica não
+é autorização de produto para retirar crédito de derivação. Reescuta,
+comentário, follow e review raiz não produzem eventos de reputação.
+
+A #51 selecionará os eventos afetados por mudança de origem e implementará sua
+atualização retroativa. Pode reutilizar cálculo puro e contribuições; a
+reconstrução completa é referência para validar os totais. A #43 não oferece
+substituição atômica de subconjuntos. Chamadores devem garantir árvore estável
+durante operações; não há locks, transações ou sincronização entre processos.
+
+### Custos e validação
+
+Com E registros de entrada, A eventos ativos e U autores pontuados: cálculo,
+aplicação, remoção, contribuição individual e total têm O(1) esperado; cada
+contribuição contém no máximo três autores. Reconstrução custa O(E) esperado e
+O(A + U) de memória temporária, além do estado anterior até sucesso. Índices
+ocupam O(A + U); `totais()` custa O(U). Custos não incluem construir a floresta.
+
+```bash
+cd backend
+uv run python -m pytest tests_dados/test_reputacao.py -q
+uv run python -m pytest tests_dados -q
+uv run python -m pytest -q
+```

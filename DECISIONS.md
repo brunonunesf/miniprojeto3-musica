@@ -421,3 +421,27 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
+
+## Motor puro de reputação — #43 (26/11/2026)
+
+- Separar `calcular_creditos` do acumulador `Reputacao`, reutilizando somente
+  consultas públicas da floresta da #41, sem banco, FastAPI ou nova dependência.
+- Eventos imutáveis identificados por tipo + usuário/review na curtida e
+  tipo + review na derivada, compatíveis com a chave composta do PR #74.
+- Manter contribuição por evento e total por autor. Fórmula 4/2/1, auto-curtida
+  de 1 só ao autor e maior parcela por autor/evento; nunca redistribuir sobras.
+- Aplicação/remoção idempotentes; reversão usa créditos originalmente concedidos.
+  Reconstrução completa deduplica e substitui estado atomicamente, inclusive
+  preservando estado anterior em falha da fonte de entrada.
+- Apagados preservam posição, autoria e eventos históricos. A #10 ainda deve
+  adaptar a exclusão física do PR #74, persistir eventos recuperáveis e sincronizar
+  somente writes confirmados. Este motor não comprova integração de API/banco.
+- A #51 fica com seleção e atualização retroativa dos eventos afetados por troca
+  de origem. A #43 fornece cálculo, contribuições e reconstrução como referência.
+- Custo esperado O(1) por evento, O(E) na reconstrução e O(A + U) de memória,
+  além da floresta; reconstrução mantém estado temporário até sucesso.
+- Código e testes elaborados com Codex. Revisão independente continua necessária
+  antes do merge; validação local não substitui revisão de outra pessoa.
+- Validação local: suíte completa com 337 aprovados e 1 ignorado; após adicionar
+  dois cenários de contrato, suíte específica com 27 aprovados e suíte de dados
+  com 185 aprovados. Aviso preexistente de depreciação do TestClient/HTTPX.
