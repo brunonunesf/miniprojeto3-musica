@@ -257,3 +257,9 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - Corrigida no importador: copiar registro e converter capa ausente/null para texto vazio antes de INSERT e UPDATE, preservando o contrato externo e os IDs. Limite do modelo e schema alinhado ao catálogo: 2048 caracteres.
 - Testes de regressão cobrem reimportação, reinício real via lifespan, URLs longas, remoção de capa e credenciais preservadas. Detalhes e evidências em [docs/revisao-integracao-capas.md](docs/revisao-integracao-capas.md).
 - Conciliação da base do #32 preserva decisões de posts, dados, perfil, página inicial e capas, sem duplicar a seção de dados. Sem avisos/comentários/menções ao time; revisão humana e merge continuam pendentes.
+
+## Feed e descoberta — decisão de 25/11/2026
+
+Bruno confirmou feed cronológico dos seguidos, pesquisa e ranking de músicas por quantidade de reviews, e republicação como criação de review derivada. Aprovou o rascunho gerado por IA como referência visual e autorizou sua publicação e organização no GitHub. Descobrir personalizado permanece separado.
+
+Padrões adotados neste plano: ranking de reviews públicas ativas em todo o período, desempate por ID, layout de três colunas a partir de 1024 px e navegação compacta abaixo disso. Não são afirmações extraídas dos áudios, que não foram transcritos. Detalhes, contratos, critérios e uso de IA: [feed e descoberta](docs/feed-e-descoberta.md). Backend de populares: #65; frontend: #66; demais tarefas preservam issues e responsáveis existentes. Imagem e documentação não significam funcionalidades prontas.
