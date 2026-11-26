@@ -151,7 +151,9 @@ def excluir(db: Session, post_id: int, user: User) -> None:
     db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.execute(delete(Comentario).where(Comentario.post_id == post.id))
     # O conteúdo some, mas o lugar na árvore fica (com o mesmo id): as derivadas continuam ligadas a ele.
-    db.add(
+    # `merge` (e não `add`) porque, num banco criado antes do AUTOINCREMENT, o id de uma review apagada
+    # pode ter sido reaproveitado e já existir aqui: nesse caso o registro é substituído, em vez de dar 500.
+    db.merge(
         ReviewApagada(id=post.id, autor_id=post.autor_id, musica_id=post.musica_id, origem_id=post.origem_id)
     )
     db.delete(post)

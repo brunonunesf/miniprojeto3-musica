@@ -352,6 +352,47 @@ def test_banco_antigo_sem_a_coluna_ganha_a_coluna_e_continua_funcionando(client,
     assert forma(arvore(client, ana, a["id"])["raiz"]) == (a["id"], [])
 
 
+def test_banco_antigo_sem_autoincrement_nao_da_500_nem_impede_reiniciar(client, logar, id_da_musica, caplog):
+    """O roteiro da Cecília (#78): `posts` antiga, sem AUTOINCREMENT, reaproveita o id da última review."""
+    import logging
+
+    from fastapi.testclient import TestClient
+
+    from app.db import Base
+    from app.main import app
+    from app.models.post import Post
+    from app.services import musicas as servico_musicas
+
+    # Recria o banco com a tabela posts do jeito antigo (sem AUTOINCREMENT).
+    Base.metadata.drop_all(engine)
+    opcoes = Post.__table__.dialect_options["sqlite"]
+    opcoes["autoincrement"] = False
+    try:
+        Base.metadata.create_all(engine)
+    finally:
+        opcoes["autoincrement"] = True
+    with SessionLocal() as db:
+        servico_musicas.importar_catalogo(db)
+        servico_arvores.reconstruir(db)
+
+    ana = logar("ana")
+    primeira = criar(client, ana, id_da_musica)
+    assert client.delete(f"/posts/{primeira['id']}", headers=ana).status_code == 204
+
+    # Sem AUTOINCREMENT o id volta a ser o mesmo, e colide com o lugar da review apagada na árvore.
+    segunda = avaliar(client, ana, id_da_musica, texto="de novo")
+    assert segunda.status_code == 201  # a review é gravada: nada de erro 500
+    assert segunda.json()["id"] == primeira["id"]
+    assert client.get(f"/posts/{segunda.json()['id']}", headers=ana).status_code == 200
+
+    client.delete(f"/posts/{segunda.json()['id']}", headers=ana)  # apagar de novo também não dá 500
+
+    with caplog.at_level(logging.WARNING, logger="uvicorn.error"):
+        with TestClient(app) as reiniciado:  # e o servidor reinicia, avisando como corrigir
+            assert reiniciado.get("/feed", headers=ana).status_code == 200
+    assert "Recrie o banco" in caplog.text
+
+
 def test_ordem_dos_ramos_apagados_permanece_apos_reconstrucao(client, logar, id_da_musica):
     ana, julia, pedro, a, j, _ = corrente(client, logar, id_da_musica)
     caio = logar("caio")
