@@ -535,3 +535,14 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
   dados e suíte completa com 352 aprovados/1 ignorado. Único aviso: depreciação
   preexistente do TestClient/HTTPX. git diff --check aprovado; nenhuma mudança
   de código necessária na resolução. Merge na main não realizado nesta etapa.
+
+
+## Revisão do PR #78 para integração da #13 — 26/11/2026
+
+- Base já conciliada pelo autor com a main; preservada sem rebase.
+- Reconstrução ordena referências ativas e apagadas conjuntamente por ID estável,
+  preservando a ordem dos ramos após exclusão e reinício. Teste de regressão incluído.
+- Limite de 200 descendentes restringe saída; BFS ainda pode enfileirar muitos
+  filhos, com O(n) de trabalho/memória no pior caso, conforme #41.
+- Exclusão ainda remove curtidas operacionais; persistência dos eventos históricos
+  de reputação permanece pendente na #10. Referência apagada não substitui esse registro.

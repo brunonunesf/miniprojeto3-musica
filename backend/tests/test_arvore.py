@@ -298,3 +298,14 @@ def test_banco_antigo_sem_a_coluna_ganha_a_coluna_e_continua_funcionando(client,
     a = criar(client, ana, id_da_musica)
     assert a["origem_id"] is None
     assert forma(arvore(client, ana, a["id"])["raiz"]) == (a["id"], [])
+
+
+def test_ordem_dos_ramos_apagados_permanece_apos_reconstrucao(client, logar, id_da_musica):
+    ana, julia, pedro, a, j, _ = corrente(client, logar, id_da_musica)
+    caio = logar("caio")
+    criar(client, caio, id_da_musica, texto="ramo", origem_id=a["id"])
+    assert client.delete(f"/posts/{j['id']}", headers=julia).status_code == 204
+    antes = arvore(client, ana, a["id"])
+    with SessionLocal() as db:
+        servico_arvores.reconstruir(db)
+    assert arvore(client, ana, a["id"]) == antes

@@ -22,14 +22,15 @@ def reconstruir(db: Session) -> None:
     ).all()
     registros = [RegistroReview(i, m, a, o) for i, m, a, o in ativas]
     registros += [RegistroReview(i, m, a, o, apagada=True) for i, m, a, o in apagadas]
-    floresta.reconstruir(registros)
+    floresta.reconstruir(sorted(registros, key=lambda r: r.review_id))
 
 
 def ler(db: Session, post_id: int) -> ArvoreOut:
     """A árvore em que a review está: a raiz e todos os ramos, em ordem de publicação por nível.
 
-    Custo: subir até a raiz é O(profundidade) e descer é O(reviews devolvidas), com teto em
-    `LIMITE_DA_ARVORE`. A leitura usa a floresta em memória e uma consulta ao banco para os dados
+    Custo: subir até a raiz é O(profundidade). O limite restringe a saída, mas
+    o BFS pode enfileirar todos os filhos de um nó largo: tempo e memória O(n)
+    no pior caso, conforme o contrato da #41. A leitura usa a floresta em memória e uma consulta ao banco para os dados
     das reviews que ainda existem.
     """
     try:
