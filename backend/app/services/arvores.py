@@ -28,16 +28,19 @@ def reconstruir(db: Session) -> None:
 
     Levanta `ErroArvore` se o banco estiver inconsistente (por exemplo, uma origem que sumiu).
     """
-    ativas = db.execute(select(Post.id, Post.musica_id, Post.autor_id, Post.origem_id)).all()
-    apagadas = db.execute(
-        select(ReviewApagada.id, ReviewApagada.musica_id, ReviewApagada.autor_id, ReviewApagada.origem_id)
-    ).all()
-    registros = [RegistroReview(i, m, a, o) for i, m, a, o in ativas]
-    registros += [RegistroReview(i, m, a, o, apagada=True) for i, m, a, o in apagadas]
-    # Ordem estável por id (que cresce com a publicação, pelo AUTOINCREMENT): sem isto, as reviews
-    # apagadas, que vêm de outra tabela, mudariam a ordem dos ramos depois de um reinício.
-    registros.sort(key=lambda r: r.review_id)
+    # A trava cobre a leitura do banco E a troca da floresta. Quem grava (criar, apagar) só mexe na
+    # floresta depois do commit e dentro da mesma trava, então uma reconstrução nunca sobrescreve uma
+    # alteração mais nova com uma foto antiga do banco.
     with TRAVA:
+        ativas = db.execute(select(Post.id, Post.musica_id, Post.autor_id, Post.origem_id)).all()
+        apagadas = db.execute(
+            select(ReviewApagada.id, ReviewApagada.musica_id, ReviewApagada.autor_id, ReviewApagada.origem_id)
+        ).all()
+        registros = [RegistroReview(i, m, a, o) for i, m, a, o in ativas]
+        registros += [RegistroReview(i, m, a, o, apagada=True) for i, m, a, o in apagadas]
+        # Ordem estável por id (que cresce com a publicação, pelo AUTOINCREMENT): sem isto, as reviews
+        # apagadas, que vêm de outra tabela, mudariam a ordem dos ramos depois de um reinício.
+        registros.sort(key=lambda r: r.review_id)
         floresta.reconstruir(registros)  # atômico: se falhar, a floresta anterior fica
 
 
