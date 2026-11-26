@@ -35,7 +35,12 @@ def ler(db: Session, post_id: int) -> ArvoreOut:
     try:
         raiz = floresta.raiz(post_id)
     except NoInexistente:
-        raise HTTPException(status_code=404, detail="review não encontrada")
+        # A floresta pode estar atrás do banco (dados gravados por fora da API, como um seed).
+        # Se a review existe no banco, ela é refeita e a leitura tenta de novo; senão, é 404.
+        if db.get(Post, post_id) is None and db.get(ReviewApagada, post_id) is None:
+            raise HTTPException(status_code=404, detail="review não encontrada")
+        reconstruir(db)
+        raiz = floresta.raiz(post_id)
 
     pagina = floresta.descendentes(raiz.review_id, ordem="bfs", limit=LIMITE_DA_ARVORE)
     registros = [raiz] + [passo.no for passo in pagina.itens]

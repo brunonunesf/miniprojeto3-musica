@@ -269,6 +269,23 @@ def test_reiniciar_reconstroi_a_mesma_arvore(client, logar, id_da_musica):
     assert arvore(client, ana, a["id"]) == antes
 
 
+def test_dados_gravados_fora_da_api_nao_quebram_apagar_nem_ler(client, logar, id_da_musica):
+    """Um seed grava direto no banco com o backend ligado: a floresta em memória fica para trás."""
+    ana, julia, pedro, a, j, p = corrente(client, logar, id_da_musica)
+
+    floresta.reconstruir([])  # a floresta não conhece nenhuma review, mas o banco conhece
+
+    assert forma(arvore(client, ana, j["id"])["raiz"]) == (a["id"], [(j["id"], [(p["id"], [])])])  # lê e se refaz
+
+    floresta.reconstruir([])
+    assert client.delete(f"/posts/{j['id']}", headers=julia).status_code == 204  # apaga sem erro 500
+    no_j = arvore(client, ana, a["id"])["raiz"]["filhos"][0]
+    assert (no_j["apagada"], no_j["filhos"][0]["id"]) == (True, p["id"])
+
+    # e uma review que nunca existiu continua sendo 404, sem mexer na floresta
+    assert client.get("/posts/999/arvore", headers=ana).status_code == 404
+
+
 def test_banco_antigo_sem_a_coluna_ganha_a_coluna_e_continua_funcionando(client, logar, id_da_musica):
     ana = logar("ana")
     with engine.begin() as conexao:  # volta ao formato de antes da árvore

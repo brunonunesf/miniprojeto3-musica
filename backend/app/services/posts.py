@@ -155,4 +155,9 @@ def excluir(db: Session, post_id: int, user: User) -> None:
     )
     db.delete(post)
     db.commit()
-    floresta.marcar_apagada(post_id)  # só depois da exclusão confirmada
+    # só depois da exclusão confirmada; se a floresta não conhecia a review (dados gravados por fora
+    # da API, como um seed), ela é refeita a partir do banco, que já tem a review apagada
+    try:
+        floresta.marcar_apagada(post_id)
+    except ErroArvore:
+        arvores.reconstruir(db)
