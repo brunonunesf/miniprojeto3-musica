@@ -286,3 +286,13 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Testes puros em `backend/tests_dados/test_arvores.py`, incluindo corrente
   profunda, ramificação, raízes independentes, apagadas, carga inválida atômica,
   paginação e cenário da #13. Isso não comprova integração com API/banco.
+
+### Revisão ampliada da #41 — 25/11/2026
+
+- Corrigida a descoberta de testes: o pytest padrão (e `make test`) agora inclui
+  `tests_dados` além de `tests`. Antes, uma execução padrão podia passar sem
+  validar árvores, catálogo e seed. O isolamento por diretório foi preservado.
+- Ampliada a validação com comparação dos percursos/páginas a um modelo
+  independente em 12 florestas determinísticas, árvore larga com 501 filhos,
+  tipos inválidos em todos os identificadores e falhas de entrada sem mutação.
+  A revisão não encontrou defeito funcional nos algoritmos de árvore.

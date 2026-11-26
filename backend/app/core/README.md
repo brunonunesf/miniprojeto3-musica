@@ -130,5 +130,6 @@ uv run pytest tests_dados -q
 ```
 
 Os testes ficam fora de `tests/` para não carregar o conftest de API/banco.
-`make test` usa o `testpaths` existente e não inclui `tests_dados` automaticamente;
-execute os dois conjuntos ao validar esta entrega.
+`make test` inclui `tests/` e `tests_dados/` pela configuração do pytest.
+O conftest de `tests/` não se aplica aos testes em `tests_dados/`; a execução
+isolada acima continua disponível para validar o core sem iniciar a suíte de API.

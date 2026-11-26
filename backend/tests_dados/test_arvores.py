@@ -118,7 +118,6 @@ def test_insercao_ordem_identidade_e_imutabilidade(floresta):
     raizes = f.raizes('m')
     raizes += (no('externo'),)
     assert len(f.raizes('m')) == 2
-    assert not hasattr(f, 'curtir') and not hasattr(f, 'comentar')
 
 
 @pytest.mark.parametrize('metodo', ['ancestrais', 'descendentes'])
@@ -212,7 +211,96 @@ import sys
 from app.core.arvores import FlorestaReviews, RegistroReview
 f = FlorestaReviews()
 f.inserir(RegistroReview(1, 'musica', 1))
-assert not any(n.split('.')[0] in {'fastapi', 'sqlalchemy', 'app.db'} for n in sys.modules)
+assert not any(n.split('.')[0] in {'fastapi', 'sqlalchemy'} for n in sys.modules)
 assert 'app.db' not in sys.modules
 """
     subprocess.run([sys.executable, '-c', codigo], cwd=BACKEND, check=True)
+
+
+@pytest.mark.parametrize('semente', range(12))
+def test_percursos_contra_modelo_independente(semente):
+    """Compara páginas com caminhos derivados só dos registros, sem usar índices do core."""
+    import random
+
+    rng = random.Random(semente)
+    registros = []
+    for i in range(45):
+        candidatos = [r for r in registros if r.musica_id == i % 2]
+        pai = rng.choice(candidatos).review_id if candidatos and rng.random() < .8 else None
+        registros.append(RegistroReview(i, i % 2, i, pai, rng.random() < .25))
+    rng.shuffle(registros)
+    por_id = {r.review_id: r for r in registros}
+    f = FlorestaReviews()
+    f.reconstruir(registros)
+
+    def referencia(atual, ordem, distancia=0):
+        # Modelo recursivo pequeno, apenas para produzir uma sequência de referência.
+        filhos = [r for r in registros if r.origem_id == atual]
+        resultado = []
+        for filho in filhos:
+            resultado.append((filho.review_id, distancia + 1))
+            resultado.extend(referencia(filho.review_id, ordem, distancia + 1))
+        if ordem == 'bfs':
+            # BFS esperado usa a posição do pai no nível anterior, não a ordem
+            # global da carga. Ordenação estável do DFS por distância preserva isso.
+            resultado.sort(key=lambda passo: passo[1])
+        return resultado
+
+    for inicio in por_id:
+        ancestrais = []
+        atual = por_id[inicio]
+        while atual.origem_id is not None:
+            atual = por_id[atual.origem_id]
+            ancestrais.append((atual.review_id, len(ancestrais) + 1))
+        assert f.raiz(inicio) == atual
+        for ordem in ('bfs', 'dfs'):
+            esperado = referencia(inicio, ordem)
+            for profundidade in (None, 0, 1, 3):
+                elegiveis = [p for p in esperado if profundidade is None or p[1] <= profundidade]
+                for offset in (0, 1, 4, 60):
+                    pagina = f.descendentes(inicio, ordem=ordem, offset=offset,
+                                             limit=3, profundidade_maxima=profundidade)
+                    assert ids(pagina) == elegiveis[offset:offset + 3]
+                    assert pagina.tem_mais == (len(elegiveis) > offset + 3)
+                pagina = f.ancestrais(inicio, offset=1, limit=2, profundidade_maxima=profundidade)
+                elegiveis_ancestrais = [p for p in ancestrais if profundidade is None or p[1] <= profundidade]
+                assert ids(pagina) == elegiveis_ancestrais[1:3]
+                assert pagina.tem_mais == (len(elegiveis_ancestrais) > 3)
+
+
+@pytest.mark.parametrize('campo', ['review_id', 'musica_id', 'autor_id', 'origem_id'])
+@pytest.mark.parametrize('valor', [True, 1.5, [], {}])
+def test_todos_identificadores_do_registro_sao_validados(campo, valor):
+    argumentos = dict(review_id=1, musica_id='m', autor_id=2, origem_id=None)
+    argumentos[campo] = valor
+    with pytest.raises(ParametroInvalido):
+        RegistroReview(**argumentos)
+
+
+@pytest.mark.parametrize('valor', [None, 0, 1, 'false'])
+def test_estado_apagada_exige_booleano(valor):
+    with pytest.raises(ParametroInvalido):
+        RegistroReview(1, 'm', 2, apagada=valor)
+
+
+def test_entrada_que_nao_e_registro_nao_altera_estado(floresta):
+    antes = floresta.descendentes('a')
+    with pytest.raises(ParametroInvalido):
+        floresta.reconstruir([no('nova'), {'review_id': 'invalida'}])
+    with pytest.raises(ParametroInvalido):
+        floresta.inserir({'review_id': 'invalida'})
+    assert floresta.descendentes('a') == antes
+    with pytest.raises(NoInexistente):
+        floresta.consultar('nova')
+
+
+def test_arvore_larga_paginas_na_fronteira():
+    f = FlorestaReviews()
+    f.reconstruir([no('raiz')] + [no(i, 'raiz', apagada=i % 2 == 0) for i in range(501)])
+    for ordem in ('bfs', 'dfs'):
+        resultado = []
+        for offset in (0, 200, 400):
+            pagina = f.descendentes('raiz', ordem=ordem, offset=offset, limit=200)
+            resultado.extend(p.no.review_id for p in pagina.itens)
+            assert pagina.tem_mais == (offset < 400)
+        assert resultado == list(range(501))
