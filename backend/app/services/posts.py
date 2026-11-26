@@ -3,13 +3,16 @@ from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.arvores import ErroArvore, RegistroReview
+from app.core.floresta import floresta
 from app.models.comentario import Comentario
 from app.models.curtida import Curtida
 from app.models.musica import Musica
 from app.models.post import Post
+from app.models.review_apagada import ReviewApagada
 from app.models.user import User
 from app.schemas.post import PostCreate, PostUpdate
-from app.services import users
+from app.services import arvores, users
 
 
 def criar(db: Session, autor: User, dados: PostCreate) -> Post:
@@ -17,7 +20,17 @@ def criar(db: Session, autor: User, dados: PostCreate) -> Post:
     if not musica:
         raise HTTPException(status_code=422, detail="música não encontrada no catálogo")
 
-    post = Post(texto=dados.texto, nota=dados.nota, autor_id=autor.id, musica_id=musica.id)
+    if dados.origem_id is not None:
+        # A origem vem do banco (a fonte da verdade): precisa existir, estar ativa e ser da mesma música.
+        origem = db.get(Post, dados.origem_id)
+        if origem is None:
+            raise HTTPException(status_code=422, detail="review de origem não encontrada ou apagada")
+        if origem.musica_id != musica.id:
+            raise HTTPException(status_code=422, detail="a origem deve ser uma review da mesma música")
+
+    post = Post(
+        texto=dados.texto, nota=dados.nota, autor_id=autor.id, musica_id=musica.id, origem_id=dados.origem_id
+    )
     db.add(post)
     try:
         db.commit()
@@ -26,6 +39,13 @@ def criar(db: Session, autor: User, dados: PostCreate) -> Post:
         db.rollback()
         raise HTTPException(status_code=409, detail="você já fez uma review desta música")
     db.refresh(post)
+
+    # A floresta em memória só muda depois da gravação confirmada.
+    try:
+        floresta.inserir(RegistroReview(post.id, post.musica_id, post.autor_id, post.origem_id))
+    except ErroArvore:
+        arvores.reconstruir(db)  # saiu de sincronia com o banco: refaz a partir dele
+    anotar_interacoes(db, autor, [post])
     return post
 
 
@@ -54,10 +74,18 @@ def anotar_interacoes(db: Session, user: User, reviews: list[Post]) -> None:
             select(Comentario.post_id, func.count()).where(Comentario.post_id.in_(ids)).group_by(Comentario.post_id)
         ).all()
     )
+    # A origem das derivadas, de uma vez só. Se ela foi apagada, não está em `posts` e fica vazia.
+    origem_ids = {r.origem_id for r in reviews if r.origem_id is not None}
+    origens = {}
+    if origem_ids:
+        origens = {
+            o.id: o for o in db.scalars(select(Post).where(Post.id.in_(origem_ids)).options(selectinload(Post.autor)))
+        }
     for review in reviews:
         review.curtidas = curtidas.get(review.id, 0)
         review.curtido_por_mim = review.id in minhas
         review.comentarios = comentarios.get(review.id, 0)
+        review.origem = origens.get(review.origem_id)
 
 
 def listar_reviews(db: Session, user: User, filtro, offset: int, limit: int) -> tuple[list[Post], int]:
@@ -105,6 +133,9 @@ def _buscar_do_autor(db: Session, post_id: int, user: User) -> Post:
 
 def atualizar(db: Session, post_id: int, user: User, dados: PostUpdate) -> Post:
     post = _buscar_do_autor(db, post_id, user)
+    if post.origem_id is not None and not (post.texto if dados.texto is None else dados.texto):
+        # a derivada precisa de texto próprio, também depois de editada
+        raise HTTPException(status_code=422, detail="a review derivada precisa de texto próprio")
     for campo, valor in dados.model_dump(exclude_none=True).items():
         setattr(post, campo, valor)
     db.commit()
@@ -118,5 +149,10 @@ def excluir(db: Session, post_id: int, user: User) -> None:
     # sem isto, curtidas e comentários ficariam órfãos e poderiam grudar numa review nova que reuse o id
     db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.execute(delete(Comentario).where(Comentario.post_id == post.id))
+    # O conteúdo some, mas o lugar na árvore fica (com o mesmo id): as derivadas continuam ligadas a ele.
+    db.add(
+        ReviewApagada(id=post.id, autor_id=post.autor_id, musica_id=post.musica_id, origem_id=post.origem_id)
+    )
     db.delete(post)
     db.commit()
+    floresta.marcar_apagada(post_id)  # só depois da exclusão confirmada
