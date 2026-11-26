@@ -160,3 +160,20 @@ def test_capa_url_json_e_identidade_preservadas(entrada, url):
 def test_rejeita_capa_invalida_com_diagnostico(entrada, url):
     with pytest.raises(ErroCatalogo, match='entrada 1, campo capa_url'):
         validar_catalogo([{**entrada, 'capa_url': url}])
+
+
+def test_catalogo_configurado_e_caminho_explicito_tem_precedencia(monkeypatch, tmp_path):
+    monkeypatch.setenv('CATALOGO_MUSICAL_PATH', 'data/musicas_demo.json')
+    assert len(carregar_catalogo()) == 20
+    assert len(carregar_catalogo(CATALOGO_PADRAO)) == 6
+    resultado = subprocess.run([sys.executable, str(BACKEND / 'scripts/validar_catalogo.py')],
+                               cwd=tmp_path, capture_output=True, text=True)
+    assert resultado.returncode == 0
+    assert '20 entradas' in resultado.stdout
+
+
+def test_configuracao_vazia_ou_inexistente_nao_cai_no_catalogo_padrao(monkeypatch):
+    for valor in ('', 'data/inexistente.json'):
+        monkeypatch.setenv('CATALOGO_MUSICAL_PATH', valor)
+        with pytest.raises(ErroCatalogo):
+            carregar_catalogo()

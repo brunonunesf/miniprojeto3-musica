@@ -245,7 +245,7 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Onde aparecem:** toda review (`GET /posts/{id}`, edição, criação e itens do feed) traz `curtidas` e `curtido_por_mim`. O segundo é de quem olha: a mesma review mostra `true` para quem curtiu e `false` para os demais. No feed, as curtidas de uma página inteira vêm em 2 consultas, e não em uma por review.
 - **Curtir não cria review, escuta nem nó na árvore, e não altera a nota.** A reputação (#11) fica com o Bruno; a tabela `curtidas`, com uma linha por pessoa e review, é a base do evento de curtida único que a fórmula pede, e descurtir a remove.
 - **Apagar uma review apaga as curtidas dela.** Sem isso as curtidas ficariam órfãs e poderiam grudar numa review nova que reaproveite o mesmo id.
-- **Esquema do banco:** a tabela `curtidas` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- **Esquema do banco:** a tabela `curtidas` é nova. `create_all` cria tabelas ausentes sem apagar os dados existentes. Validar em banco separado; não apagar `app.db` como preparação do seed.
 - **Testes:** o `test_curtidas_idempotentes` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_curtidas.py` cobre o resto. `make test`: 106 passed, 3 skipped (perfil, comentários e seed).
 - Claude Code implementou as curtidas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
@@ -258,7 +258,7 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Apagar a review apaga os comentários dela**, para não grudarem numa review nova que reaproveite o id.
 - **Fora desta entrega:** editar e apagar comentário, que a #6 e a #38 não pedem. Podem virar uma issue própria se o time quiser.
 - **Testes:** o `test_comentarios_planos_cronologicos` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_comentarios.py` cobre o resto. `make test`: 280 passed, 2 skipped (perfil e seed).
-- **Esquema do banco:** a tabela `comentarios` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- **Esquema do banco:** a tabela `comentarios` é nova. `create_all` cria tabelas ausentes sem apagar os dados existentes. Validar em banco separado; não apagar `app.db` como preparação do seed.
 - Claude Code implementou os comentários e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
 ## Reviews no perfil — issue #4 — 26/11/2026
@@ -289,7 +289,7 @@ Segue o contrato de `docs/feed-e-descoberta.md`.
 - **Problema apontado por Bruno:** curtir e comentar conferiam se a review existia e só depois gravavam. Se outra requisição a apagasse no intervalo, a interação era gravada mesmo assim, porque o SQLite não confere chave estrangeira por padrão, e uma review nova que reaproveitasse o id apagado herdava a curtida ou o comentário antigo. Foi reproduzido com duas sessões.
 - **Correção em três partes:** (1) as conexões SQLite passam a ligar `PRAGMA foreign_keys=ON`, então gravar curtida ou comentário numa review que já não existe é recusado pelo banco; (2) a tabela `posts` usa `AUTOINCREMENT`, então o id de uma review apagada **nunca é reaproveitado**, o que cobre também o caso em que a review é apagada e recriada antes da gravação; (3) quando o banco recusa a gravação, o serviço confere de novo e devolve `404` se a review sumiu, e mantém o comportamento idempotente quando a curtida já existia.
 - **Testes de regressão:** `test_corrida_exclusao.py` simula a intercalação (apagar, e apagar e recriar, no meio da operação) para curtidas e comentários, e confere que o id não é reaproveitado. Sem a correção, os 5 testes falham. `test_feed_nao_faz_uma_consulta_por_review` garante que o número de consultas do feed não cresce com o tamanho da página.
-- **Esquema do banco:** `posts` mudou (`AUTOINCREMENT`). Quem tem um `backend/app.db` antigo continua funcionando, mas sem a proteção contra o reaproveitamento de id; para ter, é preciso recriá-lo com `rm backend/app.db && make seed`.
+- **Esquema do banco:** `posts` mudou (`AUTOINCREMENT`). Tabelas `posts` já existentes não recebem essa proteção por `create_all`; precisam de migração explícita, fora desta entrega de dados. Não apagar `app.db`. O preflight do seed rejeita esquema sem AUTOINCREMENT; a reconstrução da demo é separada e depende da integração completa.
 - **Limite:** a chave estrangeira vale para o SQLite. Em outro banco, a garantia seria a das restrições dele.
 - Claude Code corrigiu e escreveu os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
@@ -421,3 +421,12 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
+
+
+## Issue #13 — adaptador sobre #74 corrigido — 26/11/2026
+
+- #74 no commit a68afe2 passou com 312 testes aprovados/1 skip e foi integrado à main. Preservadas as correções de foreign keys por conexão, AUTOINCREMENT e exclusão concorrente.
+- Implementada fábrica de adaptador com mapeamento para User/Musica/Post/Follow/Curtida, hash oficial, schemas, preflight de esquema/constraints/colisões e validação semântica antes do commit e da marca. Serviços que fazem commit interno não são chamados na carga.
+- Catálogo configurável por CATALOGO_MUSICAL_PATH: demo e startup devem usar as mesmas 20 gravações; padrão mantém as seis fictícias. Cenário issue13-v2 tem contagens controladas para ranking: 5, 4, 4, sete vezes 3, oito vezes 2 e duas sem reviews.
+- Persistência de origens ainda ausente: carga completa interrompe antes de gravar, sem transformar derivadas em raízes. Testes usam fixtures explicitamente sem origens, não acessíveis por flag do produto; não comprovam carga completa nem concluem #13.
+- Ajustado teste do núcleo para tabela real curtidas; skip mantido e explica dependência da #10. Atualizados documentos de esquema para não recomendar apagar app.db. Detalhes em docs/demo-issue-13.md.

@@ -1,10 +1,12 @@
-"""Orquestração transacional; adaptador de persistência é integração pendente."""
+"""Orquestração transacional; carga completa aguarda integração de origens."""
 from typing import Protocol
 from importlib import import_module
 from importlib.util import find_spec
 
 from sqlalchemy import Column, MetaData, String, Table, inspect, select
 from cenarios_demo import preparar_cenario
+
+SENHA_DEMO = "demo-trilha-13-2026"
 
 metadata = MetaData()
 cargas = Table('demo_seed_cargas', metadata, Column('versao', String(80), primary_key=True))
@@ -31,15 +33,21 @@ def seed_fake(db, adaptador: AdaptadorDemo | None = None):
     cenario = preparar_cenario()
     # Consultar a marca primeiro: reexecução não repõe itens removidos.
     if inspect(db.get_bind()).has_table(cargas.name):
-        if db.scalar(select(cargas.c.versao).where(cargas.c.versao == cenario['versao'])):
+        versoes = set(db.scalars(select(cargas.c.versao)))
+        if cenario['versao'] in versoes:
             return 'já aplicada; ações preservadas'
+        if versoes:
+            raise IntegracaoPendente('Banco possui outra versão da carga; use reset explícito após '
+                                     'concluir a integração. Dados e ações existentes foram preservados.')
     if adaptador is None:
         adaptador = carregar_adaptador()
     try:
         with db.no_autoflush:
             adaptador.verificar(db, cenario)
         cargas.create(db.connection(), checkfirst=True)
-        adaptador.gravar(db, cenario, 'demo-trilha-13-2026')
+        adaptador.gravar(db, cenario, SENHA_DEMO)
+        db.flush()
+        adaptador.validar(db, cenario)
         db.execute(cargas.insert().values(versao=cenario['versao']))
         db.commit()
     except Exception:
@@ -71,6 +79,9 @@ def preparar_validar_banco(caminho, adaptador):
     from sqlalchemy import create_engine, event
     from sqlalchemy.orm import Session
 
+    requisito = getattr(adaptador, 'verificar_requisitos', None)
+    if requisito is not None:
+        requisito(preparar_cenario())
     engine = create_engine('sqlite:///' + str(caminho))
     @event.listens_for(engine, 'connect')
     def habilitar_fk(conexao, _):
@@ -79,6 +90,5 @@ def preparar_validar_banco(caminho, adaptador):
         adaptador.preparar_banco(engine)
         with Session(engine) as db:
             seed_fake(db, adaptador)
-            adaptador.validar(db, preparar_cenario())
     finally:
         engine.dispose()
