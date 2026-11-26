@@ -70,6 +70,10 @@ function ArvoreDaReview({ id }: { id: string }) {
         <RamoArvore no={arvore.raiz} atual={atual} exemplo={ARVORE_SIMULADA} />
       </ul>
 
+      {arvore.truncada && (
+        <p className="text-sm text-zinc-600">Esta árvore é grande demais: só uma parte aparece aqui.</p>
+      )}
+
       {arvore.raiz.filhos.length === 0 && (
         <p className="text-zinc-600">Ninguém recomendou a partir desta review ainda.</p>
       )}

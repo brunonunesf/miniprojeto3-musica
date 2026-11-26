@@ -1,9 +1,11 @@
 import Link from "next/link";
 
+import { AcaoDerivar } from "@/components/AcaoDerivar";
 import { Avatar } from "@/components/Avatar";
 import { BotaoCurtir } from "@/components/BotaoCurtir";
 import { Capa } from "@/components/Capa";
 import { Compartilhar } from "@/components/Compartilhar";
+import { SeloDeOrigem } from "@/components/SeloDeOrigem";
 import type { Post } from "@/lib/api";
 import { nomeDaVersao } from "@/lib/musica";
 import { tempoRelativo } from "@/lib/tempo";
@@ -46,29 +48,41 @@ export function ReviewCard({ post, exemplo = false }: Props) {
             <p className="text-4xl font-bold text-brand-700">{post.nota}<span className="text-2xl">/10</span></p>
           </div>
 
-          {post.origem ? (
-            <p className="selo flex flex-wrap items-center gap-x-3">
-              <span>A partir da review de {post.origem.autor.name}</span>
-              <Link href={`${detalhe}/arvore`} className="font-semibold text-brand-700 underline">Ver árvore</Link>
-            </p>
+          {post.origem || post.origem_id ? (
+            <SeloDeOrigem post={post} />
           ) : (
             <p className="selo">{post.tem_texto && !exemplo ? <Link href={detalhe}>{analise}</Link> : analise}</p>
           )}
 
           <div className="mt-auto flex flex-wrap items-center gap-x-2 gap-y-1 border-t border-zinc-200 pt-2">
             <BotaoCurtir post={post} somenteLeitura={exemplo} />
-            <button type="button" disabled className="acao-card" aria-label="Comentar (em breve)" title="Comentários em breve">
-              <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-                <path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.2A8.4 8.4 0 1 1 21 11.5Z" />
-              </svg>
-            </button>
-            <button type="button" disabled className="acao-card" title="Review derivada em breve">
-              <span aria-hidden="true">→</span> Escrever review a partir desta <small>(em breve)</small>
-            </button>
+            <AtalhoComentarios post={post} exemplo={exemplo} />
+            <AcaoDerivar post={post} exemplo={exemplo} />
             {!exemplo && <Compartilhar caminho={detalhe} titulo={`${post.musica.titulo} — ${post.musica.artista}`} />}
           </div>
         </div>
       </div>
     </article>
+  );
+}
+
+function AtalhoComentarios({ post, exemplo }: { post: Post; exemplo: boolean }) {
+  const icone = (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+      <path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.4L3 21l2.1-5.2A8.4 8.4 0 1 1 21 11.5Z" />
+    </svg>
+  );
+  if (exemplo || post.comentarios === undefined) {
+    return (
+      <button type="button" disabled className="acao-card" aria-label="Comentários indisponíveis">
+        {icone}
+      </button>
+    );
+  }
+  return (
+    <Link href={`/posts/${post.id}#comentarios`} className="acao-card" aria-label={`Comentários: ${post.comentarios}`}>
+      {icone}
+      <span aria-hidden="true">{post.comentarios}</span>
+    </Link>
   );
 }
