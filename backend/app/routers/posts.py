@@ -23,10 +23,10 @@ def criar_post(
 @router.get("/{post_id}", response_model=PostOut)
 def ver_post(
     post_id: int = Path(ge=1, le=ID_MAXIMO),
-    _: User = Depends(get_current_user),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return service.buscar(db, post_id)
+    return service.detalhar(db, user, post_id)
 
 
 @router.patch("/{post_id}", response_model=PostOut)

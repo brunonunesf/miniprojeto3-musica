@@ -44,6 +44,14 @@ class UserOut(BaseModel):
     created_at: datetime
 
 
+class PerfilOut(UserOut):
+    """O perfil de alguém visto por quem está logado."""
+
+    seguidores: int
+    seguindo: int
+    eu_sigo: bool  # quem olha já segue esta pessoa (estado do botão de seguir)
+
+
 class UserPage(BaseModel):
     """Padrão de paginação do projeto: todo endpoint de listagem devolve isto."""
 

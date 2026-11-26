@@ -223,6 +223,76 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Esquema do banco:** `create_all` cria tabelas ausentes, mas não altera colunas existentes. Não apagar `app.db` para esta correção: a normalização não muda nulabilidade e o SQLite não impõe o comprimento de VARCHAR. Use banco separado para testar; outros tipos de alteração de esquema exigem migração específica.
 - Claude Code implementou o CRUD de reviews, a importação e as rotas do catálogo e seus testes (`test_posts_crud`, `test_posts.py` e `test_musicas.py`). Foi verificado com `make test` (75 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
 
+## Follow e feed — issues #4 e #6 — 25/11/2026
+
+**O que vem das issues e o que foi escolha de implementação.** Já estava nas issues #4 e #6 e no `test_nucleo`: o feed mostra somente quem a pessoa segue, sem as próprias reviews, da mais nova para a mais antiga, com `items` e `total`, e o follow é idempotente e atualiza os contadores. As issues pedem para *definir* e foram escolhas de quem implementou, abertas a revisão do time: o desempate pelo `id`, o `limit` de 1 a 100 com padrão 10, o `422` ao seguir a si mesmo, o `204` do follow, o campo `eu_sigo` no perfil (para o estado do botão, #35) e o formato dos itens do feed. A disposição visual do feed é da tela (#36, Cecília) e ainda não foi combinada.
+
+- **Seguir:** `POST /usuarios/{username}/follow` e `DELETE` na mesma rota, ambos `204` e **idempotentes**: seguir de novo ou deixar de seguir quem não se segue não é erro nem altera contadores. A relação é única por par (chave composta no banco). Usuário inexistente devolve `404`; **seguir a si mesmo devolve `422`**. Seguir não cria nem pontua nada: não gera reputação, escuta nem nó.
+- **Perfil:** `GET /usuarios/{username}` passou a devolver também `seguidores`, `seguindo` e `eu_sigo` (se quem olha já segue a pessoa), que é o estado do botão de seguir. Os contadores são calculados por contagem na hora, e nunca ficam negativos.
+- **Feed:** `GET /feed?offset=0&limit=10` devolve as reviews **somente de quem a pessoa segue**, sem incluir as próprias, da mais nova para a mais antiga, com `items`, `total`, `offset` e `limit`. O `total` conta o conjunto inteiro filtrado. `limit` vai de 1 a 100 (padrão 10) e `offset` não pode ser negativo nem maior que o inteiro do banco (`422`).
+- **Empates:** reviews criadas no mesmo instante são ordenadas pelo `id` (maior primeiro), para a ordem ser estável.
+- **Formato dos itens:** os mesmos de `GET /posts/{id}`, com `musica`, `nota`, `tem_texto`, `autor` e `texto`. A interface decide o que mostrar: o cartão compacto usa capa, nome, nota e o indicador `tem_texto`, e abre a review para ler o texto. Autor e música são carregados em lote, sem uma consulta extra por review.
+- **Limite da paginação por offset:** o banco precisa contar e pular as linhas anteriores, então páginas muito fundas custam mais (O(offset)). Além disso, se alguém publicar uma review entre duas páginas, um item pode aparecer repetido ou ser pulado. É aceitável para este tamanho de rede; uma paginação por cursor (a partir da data e do `id` do último item) resolveria os dois problemas, se for preciso.
+- **Testes:** o `test_feed_cronologico_dos_seguidos` foi adaptado ao formato de review (cada autor avalia uma versão uma vez) sem remover nenhuma verificação, e `test_follow_unfollow_com_contadores` foi ativado. `make test`: 93 passed, 4 skipped (perfil, curtidas, comentários e seed).
+- **Fora desta entrega:** curtidas e comentários (#6, próxima parte) e `GET /usuarios/{username}/posts` (#4), que o `test_perfil_editavel` ainda exige.
+- Claude Code implementou follow, feed e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Curtidas — issue #6 — 25/11/2026
+
+- **Rotas:** `POST /posts/{post_id}/curtir` e `DELETE` na mesma rota. Ambas exigem login, são **idempotentes** e devolvem `200` com `{"curtidas": n, "curtido_por_mim": bool}`, para a tela confirmar o estado real sem uma segunda consulta. Review inexistente devolve `404` e id fora do limite do banco devolve `422`.
+- **Uma curtida por pessoa e review:** a chave composta do banco impede duplicatas, inclusive em envios simultâneos. Curtir de novo ou descurtir o que não está curtido não é erro, e a contagem nunca fica negativa.
+- **Curtir a própria review é permitido.** Isso segue a regra de reputação já aprovada, que dá 1 ponto ao autor por curtida própria sem propagar para ancestrais. O ponto em si ainda não é calculado aqui.
+- **Onde aparecem:** toda review (`GET /posts/{id}`, edição, criação e itens do feed) traz `curtidas` e `curtido_por_mim`. O segundo é de quem olha: a mesma review mostra `true` para quem curtiu e `false` para os demais. No feed, as curtidas de uma página inteira vêm em 2 consultas, e não em uma por review.
+- **Curtir não cria review, escuta nem nó na árvore, e não altera a nota.** A reputação (#11) fica com o Bruno; a tabela `curtidas`, com uma linha por pessoa e review, é a base do evento de curtida único que a fórmula pede, e descurtir a remove.
+- **Apagar uma review apaga as curtidas dela.** Sem isso as curtidas ficariam órfãs e poderiam grudar numa review nova que reaproveite o mesmo id.
+- **Esquema do banco:** a tabela `curtidas` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- **Testes:** o `test_curtidas_idempotentes` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_curtidas.py` cobre o resto. `make test`: 106 passed, 3 skipped (perfil, comentários e seed).
+- Claude Code implementou as curtidas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Comentários — issue #6 — 26/11/2026
+
+- **Rotas:** `POST /posts/{post_id}/comentarios` (`201`, devolve o comentário) e `GET /posts/{post_id}/comentarios`. Ambas exigem login. Review inexistente devolve `404` e id acima do inteiro do banco devolve `422`.
+- **Comentário plano:** só texto de 1 a 1000 caracteres, com espaços das pontas removidos; vazio, só espaços ou acima do limite devolve `422` e nada é gravado. Não há respostas, e comentar **não gera reputação, nem review derivada, nem nó na árvore**, e não altera a nota. A autoria vem da sessão: um `autor_id` enviado pelo cliente é ignorado. O limite de 1000 é escolha de implementação, aberta a revisão.
+- **Lista:** do mais antigo para o mais novo, com desempate pelo `id`, paginada (`offset` e `limit` de 1 a 100, padrão 50, `items`, `total`, `offset`, `limit`). O `total` conta todos os comentários da review.
+- **Contagem nas reviews:** toda review (detalhe, criação, edição e itens do feed) traz `comentarios`, o número de comentários, para o cartão do feed. Curtidas e comentários de uma página inteira saem em 3 consultas, e não em uma por review.
+- **Apagar a review apaga os comentários dela**, para não grudarem numa review nova que reaproveite o id.
+- **Fora desta entrega:** editar e apagar comentário, que a #6 e a #38 não pedem. Podem virar uma issue própria se o time quiser.
+- **Testes:** o `test_comentarios_planos_cronologicos` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_comentarios.py` cobre o resto. `make test`: 280 passed, 2 skipped (perfil e seed).
+- **Esquema do banco:** a tabela `comentarios` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- Claude Code implementou os comentários e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Reviews no perfil — issue #4 — 26/11/2026
+
+- **Rota:** `GET /usuarios/{username}/posts?offset=0&limit=10` devolve as reviews de uma pessoa, da mais nova para a mais antiga, com desempate pelo `id`, e `items`, `total`, `offset` e `limit`. Exige login. Pessoa sem reviews devolve lista vazia; usuário inexistente devolve `404`.
+- **Visibilidade:** qualquer pessoa logada vê as reviews de outra no perfil, sem precisar segui-la. Isso difere do feed, que mostra só quem se segue. As reviews são públicas dentro da rede; as bibliotecas privadas seguem outra regra (#12) e não passam por aqui.
+- **Formato:** os itens são os mesmos do feed e de `GET /posts/{id}`, com música, nota, `tem_texto`, `curtidas`, `curtido_por_mim` e `comentarios`, vistos por quem olha.
+- **Paginação:** `limit` de 1 a 100 (padrão 10) e `offset` limitado ao inteiro do banco (`422` fora disso), como no feed, com a mesma ressalva sobre o custo e a repetição de itens da paginação por offset.
+- **Sem duplicação:** o feed e o perfil passam a usar a mesma consulta (`listar_reviews`), que também servirá às reviews de uma música (#65).
+- **Testes:** o `test_perfil_editavel` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_reviews_do_usuario.py` cobre o resto.
+- Claude Code implementou a rota e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Músicas mais avaliadas e reviews por música — issue #65 — 26/11/2026
+
+Segue o contrato de `docs/feed-e-descoberta.md`.
+
+- **`GET /musicas/populares?offset=0&limit=10`:** as músicas do catálogo com o número de reviews (`quantidade_reviews`) além dos dados musicais de `GET /musicas`. Exige login e devolve `items`, `total`, `offset` e `limit`. A rota fixa é registrada **antes** de `/musicas/{id}`, para "populares" não ser lido como um id.
+- **O que conta:** a quantidade de reviews ativas de cada gravação, em todo o período. É a contagem de reviews na rede: **não** é popularidade em serviço de streaming nem contagem de escutas. Curtir, comentar, editar e seguir não aumentam o número, e apagar uma review o reduz. **Só entram músicas com pelo menos uma review**, e uma música sem reviews sai da vitrine.
+- **Ordem:** mais reviews primeiro, e o `id` da música desempata, do menor para o maior. Original, remix, ao vivo e remaster são gravações distintas, contadas separadamente, e o mesmo título de outro artista também.
+- **`GET /musicas/{id}/reviews?offset=0&limit=10`:** as reviews de uma gravação, no formato do feed (música, nota, `tem_texto`, `curtidas`, `curtido_por_mim`, `comentarios`), da mais nova para a mais antiga e com desempate pelo `id`. Música inexistente devolve `404`, e música sem reviews devolve lista vazia. Usa a mesma consulta do feed e do perfil.
+- **Busca:** `GET /musicas?q=` já existia e é reaproveitada, por título e artista, sem diferença de caixa nem de acento.
+- **Limites e erros:** `limit` de 1 a 100 e `offset` limitado ao inteiro do banco (`422` fora disso), sem sessão `401`. Como o ranking é uma contagem feita na hora, o custo cresce com o número de reviews (O(n) por consulta), o que é aceitável para este tamanho de rede, e a paginação por offset pode mudar com novas interações, sem promessa de snapshot.
+- **Testes:** `test_populares.py` cobre empates, exclusão, edição, curtidas e comentários, versões distintas, zero reviews, paginação, autorização, parâmetros inválidos e a ordem das rotas. `make test` passou.
+- Claude Code implementou as rotas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Integridade ao apagar uma review — revisão do PR #74 — 26/11/2026
+
+- **Problema apontado por Bruno:** curtir e comentar conferiam se a review existia e só depois gravavam. Se outra requisição a apagasse no intervalo, a interação era gravada mesmo assim, porque o SQLite não confere chave estrangeira por padrão, e uma review nova que reaproveitasse o id apagado herdava a curtida ou o comentário antigo. Foi reproduzido com duas sessões.
+- **Correção em três partes:** (1) as conexões SQLite passam a ligar `PRAGMA foreign_keys=ON`, então gravar curtida ou comentário numa review que já não existe é recusado pelo banco; (2) a tabela `posts` usa `AUTOINCREMENT`, então o id de uma review apagada **nunca é reaproveitado**, o que cobre também o caso em que a review é apagada e recriada antes da gravação; (3) quando o banco recusa a gravação, o serviço confere de novo e devolve `404` se a review sumiu, e mantém o comportamento idempotente quando a curtida já existia.
+- **Testes de regressão:** `test_corrida_exclusao.py` simula a intercalação (apagar, e apagar e recriar, no meio da operação) para curtidas e comentários, e confere que o id não é reaproveitado. Sem a correção, os 5 testes falham. `test_feed_nao_faz_uma_consulta_por_review` garante que o número de consultas do feed não cresce com o tamanho da página.
+- **Esquema do banco:** `posts` mudou (`AUTOINCREMENT`). Quem tem um `backend/app.db` antigo continua funcionando, mas sem a proteção contra o reaproveitamento de id; para ter, é preciso recriá-lo com `rm backend/app.db && make seed`.
+- **Limite:** a chave estrangeira vale para o SQLite. Em outro banco, a garantia seria a das restrições dele.
+- Claude Code corrigiu e escreveu os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 
 ## Issue #13 — seed e cenários aprovados — 25/11/2026
 

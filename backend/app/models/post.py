@@ -12,8 +12,9 @@ class Post(Base):
     """Uma review: nota de 0 a 10 para uma música, com texto opcional."""
 
     __tablename__ = "posts"
-    # uma review por pessoa e música (DECISIONS.md)
-    __table_args__ = (UniqueConstraint("autor_id", "musica_id"),)
+    # Uma review por pessoa e música (DECISIONS.md). O AUTOINCREMENT faz o SQLite nunca reaproveitar
+    # o id de uma review apagada, para curtidas e comentários antigos não grudarem numa review nova.
+    __table_args__ = (UniqueConstraint("autor_id", "musica_id"), {"sqlite_autoincrement": True})
 
     id: Mapped[int] = mapped_column(primary_key=True)
     texto: Mapped[str] = mapped_column(String(5000), default="")

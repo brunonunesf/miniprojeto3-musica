@@ -39,9 +39,22 @@ class PostOut(BaseModel):
     musica: MusicaOut
     autor: UserOut
     created_at: datetime
+    # preenchidos por services.posts.anotar_interacoes; zero/falso se não há interações
+    curtidas: int = 0
+    curtido_por_mim: bool = False
+    comentarios: int = 0
 
     @computed_field
     @property
     def tem_texto(self) -> bool:
         """Indicador do feed: a review tem texto para abrir e ler."""
         return bool(self.texto)
+
+
+class PostPage(BaseModel):
+    """Padrão de paginação do projeto, para listas de reviews."""
+
+    items: list[PostOut]
+    total: int
+    offset: int
+    limit: int

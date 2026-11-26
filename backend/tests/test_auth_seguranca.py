@@ -2,7 +2,7 @@
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.db import SessionLocal
 from app.models.session import Session
@@ -77,8 +77,14 @@ def test_bypass_somente_debug(client, monkeypatch, debug):
 def test_sessao_sem_usuario(client, monkeypatch):
     monkeypatch.delenv("DEBUG", raising=False)
     with SessionLocal() as db:
-        db.add(Session(token="orfao", user_id=99999))
-        db.commit()
+        # Uma sessão órfã só existe com a chave estrangeira desligada nesta conexão; religa em seguida.
+        db.execute(text("PRAGMA foreign_keys=OFF"))
+        try:
+            db.add(Session(token="orfao", user_id=99999))
+            db.commit()
+        finally:
+            db.execute(text("PRAGMA foreign_keys=ON"))
+        assert db.execute(text("PRAGMA foreign_keys")).scalar() == 1  # não vaza para outros testes
     assert client.get("/auth/eu", headers={"Authorization": "Bearer orfao"}).status_code == 401
 
 

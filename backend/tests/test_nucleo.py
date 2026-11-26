@@ -87,15 +87,17 @@ def test_posts_crud(client, logar, id_da_musica):
 # ---------- FEED ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar GET /feed cronológico paginado (núcleo)")
-def test_feed_cronologico_dos_seguidos(client, logar):
+def test_feed_cronologico_dos_seguidos(client, logar, id_da_musica):
     ana = logar("ana")
     bia = logar("bia")
     caio = logar("caio")
 
-    client.post("/posts", json={"texto": "post da bia 1"}, headers=bia)
-    client.post("/posts", json={"texto": "post da bia 2"}, headers=bia)
-    client.post("/posts", json={"texto": "post do caio"}, headers=caio)
+    # cada post é uma review; uma pessoa só avalia cada versão uma vez
+    m1 = id_da_musica(bia, "demo-horizonte-original")
+    m2 = id_da_musica(bia, "demo-mare-original")
+    client.post("/posts", json={"musica_id": m1, "nota": 8, "texto": "post da bia 1"}, headers=bia)
+    client.post("/posts", json={"musica_id": m2, "nota": 7, "texto": "post da bia 2"}, headers=bia)
+    client.post("/posts", json={"musica_id": m1, "nota": 6, "texto": "post do caio"}, headers=caio)
 
     # ana segue só a bia → feed dela tem só posts da bia, mais novo primeiro
     client.post("/usuarios/bia/follow", headers=ana)
@@ -114,8 +116,7 @@ def test_feed_cronologico_dos_seguidos(client, logar):
 # ---------- PERFIL ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar perfil: PATCH /usuarios/eu + GET /usuarios/{username} (núcleo)")
-def test_perfil_editavel(client, logar):
+def test_perfil_editavel(client, logar, id_da_musica):
     ana = logar("ana", "Ana")
 
     r = client.patch(
@@ -131,7 +132,8 @@ def test_perfil_editavel(client, logar):
     assert r.json()["avatar_url"] == "https://exemplo.com/a.png"
 
     # listagem dos próprios posts, paginada como tudo
-    client.post("/posts", json={"texto": "post no perfil"}, headers=ana)
+    review = {"musica_id": id_da_musica(ana), "nota": 8, "texto": "post no perfil"}
+    client.post("/posts", json=review, headers=ana)
     r = client.get("/usuarios/ana/posts", headers=ana)
     assert r.status_code == 200
     assert r.json()["total"] == 1
@@ -140,7 +142,6 @@ def test_perfil_editavel(client, logar):
 # ---------- FOLLOW ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar follow/unfollow com contadores (núcleo)")
 def test_follow_unfollow_com_contadores(client, logar):
     ana = logar("ana")
     logar("bia")
@@ -161,12 +162,12 @@ def test_follow_unfollow_com_contadores(client, logar):
 # ---------- CURTIDAS ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar curtir/descurtir idempotente (núcleo)")
-def test_curtidas_idempotentes(client, logar):
+def test_curtidas_idempotentes(client, logar, id_da_musica):
     ana = logar("ana")
     bia = logar("bia")
 
-    post_id = client.post("/posts", json={"texto": "curte aí"}, headers=bia).json()["id"]
+    review = {"musica_id": id_da_musica(bia), "nota": 8, "texto": "curte aí"}
+    post_id = client.post("/posts", json=review, headers=bia).json()["id"]
 
     client.post(f"/posts/{post_id}/curtir", headers=ana)
     client.post(f"/posts/{post_id}/curtir", headers=ana)  # 2ª vez não duplica
@@ -180,12 +181,12 @@ def test_curtidas_idempotentes(client, logar):
 # ---------- COMENTÁRIOS ----------
 
 
-@pytest.mark.skip(reason="Remova ao implementar comentários planos em ordem cronológica (núcleo)")
-def test_comentarios_planos_cronologicos(client, logar):
+def test_comentarios_planos_cronologicos(client, logar, id_da_musica):
     ana = logar("ana")
     bia = logar("bia")
 
-    post_id = client.post("/posts", json={"texto": "comentem"}, headers=ana).json()["id"]
+    review = {"musica_id": id_da_musica(ana), "nota": 8, "texto": "comentem"}
+    post_id = client.post("/posts", json=review, headers=ana).json()["id"]
 
     client.post(f"/posts/{post_id}/comentarios", json={"texto": "primeiro!"}, headers=bia)
     client.post(f"/posts/{post_id}/comentarios", json={"texto": "segundo"}, headers=ana)
