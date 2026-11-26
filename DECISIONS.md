@@ -271,6 +271,19 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Testes:** o `test_perfil_editavel` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_reviews_do_usuario.py` cobre o resto.
 - Claude Code implementou a rota e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
+## Músicas mais avaliadas e reviews por música — issue #65 — 26/11/2026
+
+Segue o contrato de `docs/feed-e-descoberta.md`.
+
+- **`GET /musicas/populares?offset=0&limit=10`:** as músicas do catálogo com o número de reviews (`quantidade_reviews`) além dos dados musicais de `GET /musicas`. Exige login e devolve `items`, `total`, `offset` e `limit`. A rota fixa é registrada **antes** de `/musicas/{id}`, para "populares" não ser lido como um id.
+- **O que conta:** a quantidade de reviews ativas de cada gravação, em todo o período. É a contagem de reviews na rede: **não** é popularidade em serviço de streaming nem contagem de escutas. Curtir, comentar, editar e seguir não aumentam o número, e apagar uma review o reduz. **Só entram músicas com pelo menos uma review**, e uma música sem reviews sai da vitrine.
+- **Ordem:** mais reviews primeiro, e o `id` da música desempata, do menor para o maior. Original, remix, ao vivo e remaster são gravações distintas, contadas separadamente, e o mesmo título de outro artista também.
+- **`GET /musicas/{id}/reviews?offset=0&limit=10`:** as reviews de uma gravação, no formato do feed (música, nota, `tem_texto`, `curtidas`, `curtido_por_mim`, `comentarios`), da mais nova para a mais antiga e com desempate pelo `id`. Música inexistente devolve `404`, e música sem reviews devolve lista vazia. Usa a mesma consulta do feed e do perfil.
+- **Busca:** `GET /musicas?q=` já existia e é reaproveitada, por título e artista, sem diferença de caixa nem de acento.
+- **Limites e erros:** `limit` de 1 a 100 e `offset` limitado ao inteiro do banco (`422` fora disso), sem sessão `401`. Como o ranking é uma contagem feita na hora, o custo cresce com o número de reviews (O(n) por consulta), o que é aceitável para este tamanho de rede, e a paginação por offset pode mudar com novas interações, sem promessa de snapshot.
+- **Testes:** `test_populares.py` cobre empates, exclusão, edição, curtidas e comentários, versões distintas, zero reviews, paginação, autorização, parâmetros inválidos e a ordem das rotas. `make test` passou.
+- Claude Code implementou as rotas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
 
 ## Issue #13 — seed e cenários aprovados — 25/11/2026
 

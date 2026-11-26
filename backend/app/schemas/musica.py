@@ -20,3 +20,16 @@ class MusicaPage(BaseModel):
     total: int
     offset: int
     limit: int
+
+
+class MusicaPopularOut(MusicaOut):
+    """Música da vitrine "mais avaliadas": os dados do catálogo e quantas reviews ela tem."""
+
+    quantidade_reviews: int
+
+
+class MusicaPopularPage(BaseModel):
+    items: list[MusicaPopularOut]
+    total: int
+    offset: int
+    limit: int
