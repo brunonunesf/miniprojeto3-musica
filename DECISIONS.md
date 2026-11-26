@@ -248,6 +248,13 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
 - Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
 
+## Perfil: seguir e reviews — issue #34 (25/11/2026)
+
+- O perfil ganhou contadores, botão de seguir e a lista paginada de reviews. Feed e perfil compartilham a paginação (`usePaginacao` e `ListaDeReviews`).
+- Contrato **proposto**: `GET /usuarios/{username}` com `seguidores`, `seguindo` e `eu_sigo`; `POST` e `DELETE /usuarios/{username}/follow`; `GET /usuarios/{username}/posts?offset=&limit=`. Os campos e as rotas de follow seguem a branch `feat/back-curtidas` de Daniel, ainda fora da `main`; a rota de reviews por usuário ainda não existe.
+- Sem esses campos, o perfil não mostra botão nem contadores. Com `NEXT_PUBLIC_PERFIL_SIMULADO=true`, usa exemplos e avisa isso.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
 ## Página inicial pública (25/11/2026)
 
 - `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
