@@ -472,3 +472,49 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - `GET /musicas/populares` e `GET /musicas/{id}/reviews` (#65) ainda não existem; a tela explica a indisponibilidade. Com `NEXT_PUBLIC_FEED_SIMULADO=true`, feed e vitrine usam exemplos identificados.
 - A branch reúne o trabalho dos PRs #58, #61, #62 e #63.
 - Claude Code implementou as telas e os testes. O time decidiu em 26/11 não fazer revisão cruzada dos PRs.
+
+## Motor puro de reputação — #43 (26/11/2026)
+
+- Separar `calcular_creditos` do acumulador `Reputacao`, reutilizando somente
+  consultas públicas da floresta da #41, sem banco, FastAPI ou nova dependência.
+- Eventos imutáveis identificados por tipo + usuário/review na curtida e
+  tipo + review na derivada, compatíveis com a chave composta do PR #74.
+- Manter contribuição por evento e total por autor. Fórmula 4/2/1, auto-curtida
+  de 1 só ao autor e maior parcela por autor/evento; nunca redistribuir sobras.
+- Aplicação/remoção idempotentes; reversão usa créditos originalmente concedidos.
+  Reconstrução completa deduplica e substitui estado atomicamente, inclusive
+  preservando estado anterior em falha da fonte de entrada.
+- Apagados preservam posição, autoria e eventos históricos. A #10 ainda deve
+  adaptar a exclusão física do PR #74, persistir eventos recuperáveis e sincronizar
+  somente writes confirmados. Este motor não comprova integração de API/banco.
+- A #51 fica com seleção e atualização retroativa dos eventos afetados por troca
+  de origem. A #43 fornece cálculo, contribuições e reconstrução como referência.
+- Custo esperado O(1) por evento, O(E) na reconstrução e O(A + U) de memória,
+  além da floresta; reconstrução mantém estado temporário até sucesso.
+- Código e testes elaborados com Codex. Na publicação original, a revisão
+  independente estava pendente; atualização de revisão registrada abaixo.
+- Validação local: suíte completa com 337 aprovados e 1 ignorado; após adicionar
+  dois cenários de contrato, suíte específica com 27 aprovados e suíte de dados
+  com 185 aprovados. Aviso preexistente de depreciação do TestClient/HTTPX.
+
+## Conciliação e estado atual — PRs #75/#76 — 26/11/2026
+
+- Main incorporada à branch da #43 por merge, sem rebase ou force push.
+  O único conflito era a adição de seções ao final deste documento; preservados
+  integralmente os registros da main e a seção de reputação, sem mudar contratos.
+- #75 integrado: adaptador real disponível, mas carga completa da #13 ainda
+  bloqueada pela persistência de origens da #10; fixtures de raízes não comprovam
+  árvore persistida nem encerram a demonstração.
+- Feed, curtidas e populares já possuem rotas entregues pelo #74. Descrições
+  anteriores de indisponibilidade nas seções de telas são registros históricos.
+- #43 entrega o motor puro. Persistência/API e preservação dos eventos na exclusão
+  permanecem na #10; recálculo retroativo de subárvore permanece na #51.
+- Bruno informou nesta conversa que revisou o #76 e considerou a entrega correta.
+  Esse relato não equivale a uma aprovação registrada pelo GitHub nem transforma
+  a revisão automatizada local em revisão independente.
+- Preservadas as correções da #75: sem apagar app.db para preparar o seed,
+  catálogo compartilhado por configuração e migração explícita quando necessária.
+- Validação após conciliação: 27 testes específicos de reputação, 189 testes de
+  dados e suíte completa com 352 aprovados/1 ignorado. Único aviso: depreciação
+  preexistente do TestClient/HTTPX. git diff --check aprovado; nenhuma mudança
+  de código necessária na resolução. Merge na main não realizado nesta etapa.
