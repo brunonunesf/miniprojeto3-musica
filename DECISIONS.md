@@ -531,3 +531,9 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 
 - A barra passou para `components/Navbar.tsx`, com a mesma largura e altura em todas as páginas e o item da seção atual destacado. Visitantes veem a marca e o acesso a entrar ou criar conta.
 - Claude Code fez a mudança e o teste. Por decisão do time, não houve revisão por outra pessoa.
+
+## Página da música e legenda da vitrine — issue #66 (26/11/2026)
+
+- A falha ao carregar uma música oferece "Tentar novamente".
+- A legenda "Quantidade de reviews nesta rede, em todo o período" fica no componente da vitrine, usado no feed e em `/musicas`.
+- Claude Code fez os ajustes. Por decisão do time, não houve revisão por outra pessoa.

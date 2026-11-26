@@ -65,3 +65,16 @@ test("compartilhar copia o link da review", async ({ page, context }) => {
   await expect(page.getByText("Link copiado.")).toBeVisible();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toBe("http://localhost:3000/posts/7");
 });
+
+test("vitrine explica a contagem e a página da música permite repetir", async ({ page }) => {
+  await entrar(page);
+  await page.goto("/musicas");
+  await expect(page.getByText("Quantidade de reviews nesta rede, em todo o período")).toBeVisible();
+  const ehMusica = naApi("/musicas/6");
+  await page.route(ehMusica, (route) => route.abort());
+  await page.goto("/musicas/6");
+  await expect(page.getByText("Não foi possível conectar.", { exact: false })).toBeVisible();
+  await page.unroute(ehMusica);
+  await page.getByRole("button", { name: "Tentar novamente" }).click();
+  await expect(page.getByRole("heading", { name: "Maré" })).toBeVisible();
+});
