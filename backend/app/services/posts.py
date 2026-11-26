@@ -41,10 +41,11 @@ def criar(db: Session, autor: User, dados: PostCreate) -> Post:
     db.refresh(post)
 
     # A floresta em memória só muda depois da gravação confirmada.
-    try:
-        floresta.inserir(RegistroReview(post.id, post.musica_id, post.autor_id, post.origem_id))
-    except ErroArvore:
-        arvores.reconstruir(db)  # saiu de sincronia com o banco: refaz a partir dele
+    with arvores.TRAVA:
+        try:
+            floresta.inserir(RegistroReview(post.id, post.musica_id, post.autor_id, post.origem_id))
+        except ErroArvore:
+            arvores.tentar_reconstruir(db)  # saiu de sincronia com o banco: refaz a partir dele
     anotar_interacoes(db, autor, [post])
     return post
 
@@ -150,14 +151,17 @@ def excluir(db: Session, post_id: int, user: User) -> None:
     db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.execute(delete(Comentario).where(Comentario.post_id == post.id))
     # O conteúdo some, mas o lugar na árvore fica (com o mesmo id): as derivadas continuam ligadas a ele.
-    db.add(
+    # `merge` (e não `add`) porque, num banco criado antes do AUTOINCREMENT, o id de uma review apagada
+    # pode ter sido reaproveitado e já existir aqui: nesse caso o registro é substituído, em vez de dar 500.
+    db.merge(
         ReviewApagada(id=post.id, autor_id=post.autor_id, musica_id=post.musica_id, origem_id=post.origem_id)
     )
     db.delete(post)
     db.commit()
     # só depois da exclusão confirmada; se a floresta não conhecia a review (dados gravados por fora
     # da API, como um seed), ela é refeita a partir do banco, que já tem a review apagada
-    try:
-        floresta.marcar_apagada(post_id)
-    except ErroArvore:
-        arvores.reconstruir(db)
+    with arvores.TRAVA:
+        try:
+            floresta.marcar_apagada(post_id)
+        except ErroArvore:
+            arvores.tentar_reconstruir(db)

@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
     with SessionLocal() as db:
         servico_musicas.importar_catalogo(db)  # catálogo curado; repetir é seguro
         usernames = list(db.scalars(select(User.username)))
-        servico_arvores.reconstruir(db)  # floresta de reviews (core/arvores.py)
+        servico_arvores.tentar_reconstruir(db)  # floresta de reviews; dado inconsistente não impede a subida
     contador_iniciais.reconstruir(usernames)
     yield
 
