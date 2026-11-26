@@ -129,3 +129,9 @@ A #13 permanece aberta; persistência completa e validação do reset com a rede
 ## Feed e descoberta — planejamento visual aprovado em 25/11
 
 O feed continua cronológico, com reviews dos seguidos. Pesquisa e músicas mais avaliadas na comunidade formam uma área própria; Descobrir mantém sugestões personalizadas. Veja o [plano, contratos e responsabilidades](docs/feed-e-descoberta.md) e o [rascunho visual aprovado](docs/planejamento/feed-descoberta-rascunho.png). São entregas planejadas, ainda dependentes das implementações e integrações nas issues.
+
+Na demo musical, use `CATALOGO_MUSICAL_PATH=data/musicas_demo.json` tanto no seed
+quanto no backend. A fábrica do adaptador sobre o #74 está implementada, mas a
+carga completa ainda recusa execução por faltar integração de origens (#10).
+Os testes do mapeamento não significam conclusão da #13; veja o estado atual em
+[documentação da demonstração](docs/demo-issue-13.md#adaptador-sobre-o-74-corrigido--26112026).

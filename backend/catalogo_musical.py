@@ -1,6 +1,7 @@
 """Contrato de dados da #9, independente de app, banco e serviços externos."""
 
 import json
+import os
 from pathlib import Path
 from typing import Literal
 
@@ -76,8 +77,18 @@ def validar_catalogo(conteudo: object) -> list[dict]:
     return registros
 
 
-def carregar_catalogo(caminho: str | Path = CATALOGO_PADRAO) -> list[dict]:
+def carregar_catalogo(caminho: str | Path | None = None) -> list[dict]:
     """Lê e valida tudo antes de retornar; não importa nem inicializa a aplicação."""
+    if caminho is None:
+        configurado = os.environ.get("CATALOGO_MUSICAL_PATH")
+        if configurado is not None:
+            if not configurado.strip():
+                raise ErroCatalogo("CATALOGO_MUSICAL_PATH não pode ficar vazio")
+            caminho = Path(configurado)
+            if not caminho.is_absolute():
+                caminho = Path(__file__).resolve().parent / caminho
+        else:
+            caminho = CATALOGO_PADRAO
     caminho = Path(caminho)
     try:
         conteudo = json.loads(caminho.read_text(encoding="utf-8"))

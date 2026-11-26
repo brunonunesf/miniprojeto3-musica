@@ -245,7 +245,7 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Onde aparecem:** toda review (`GET /posts/{id}`, edição, criação e itens do feed) traz `curtidas` e `curtido_por_mim`. O segundo é de quem olha: a mesma review mostra `true` para quem curtiu e `false` para os demais. No feed, as curtidas de uma página inteira vêm em 2 consultas, e não em uma por review.
 - **Curtir não cria review, escuta nem nó na árvore, e não altera a nota.** A reputação (#11) fica com o Bruno; a tabela `curtidas`, com uma linha por pessoa e review, é a base do evento de curtida único que a fórmula pede, e descurtir a remove.
 - **Apagar uma review apaga as curtidas dela.** Sem isso as curtidas ficariam órfãs e poderiam grudar numa review nova que reaproveite o mesmo id.
-- **Esquema do banco:** a tabela `curtidas` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- **Esquema do banco:** a tabela `curtidas` é nova. `create_all` cria tabelas ausentes sem apagar os dados existentes. Validar em banco separado; não apagar `app.db` como preparação do seed.
 - **Testes:** o `test_curtidas_idempotentes` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_curtidas.py` cobre o resto. `make test`: 106 passed, 3 skipped (perfil, comentários e seed).
 - Claude Code implementou as curtidas e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
@@ -258,7 +258,7 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Apagar a review apaga os comentários dela**, para não grudarem numa review nova que reaproveite o id.
 - **Fora desta entrega:** editar e apagar comentário, que a #6 e a #38 não pedem. Podem virar uma issue própria se o time quiser.
 - **Testes:** o `test_comentarios_planos_cronologicos` foi adaptado ao formato de review e ativado, sem remover verificações, e `test_comentarios.py` cobre o resto. `make test`: 280 passed, 2 skipped (perfil e seed).
-- **Esquema do banco:** a tabela `comentarios` é nova. Quem tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`.
+- **Esquema do banco:** a tabela `comentarios` é nova. `create_all` cria tabelas ausentes sem apagar os dados existentes. Validar em banco separado; não apagar `app.db` como preparação do seed.
 - Claude Code implementou os comentários e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
 ## Reviews no perfil — issue #4 — 26/11/2026
@@ -289,7 +289,7 @@ Segue o contrato de `docs/feed-e-descoberta.md`.
 - **Problema apontado por Bruno:** curtir e comentar conferiam se a review existia e só depois gravavam. Se outra requisição a apagasse no intervalo, a interação era gravada mesmo assim, porque o SQLite não confere chave estrangeira por padrão, e uma review nova que reaproveitasse o id apagado herdava a curtida ou o comentário antigo. Foi reproduzido com duas sessões.
 - **Correção em três partes:** (1) as conexões SQLite passam a ligar `PRAGMA foreign_keys=ON`, então gravar curtida ou comentário numa review que já não existe é recusado pelo banco; (2) a tabela `posts` usa `AUTOINCREMENT`, então o id de uma review apagada **nunca é reaproveitado**, o que cobre também o caso em que a review é apagada e recriada antes da gravação; (3) quando o banco recusa a gravação, o serviço confere de novo e devolve `404` se a review sumiu, e mantém o comportamento idempotente quando a curtida já existia.
 - **Testes de regressão:** `test_corrida_exclusao.py` simula a intercalação (apagar, e apagar e recriar, no meio da operação) para curtidas e comentários, e confere que o id não é reaproveitado. Sem a correção, os 5 testes falham. `test_feed_nao_faz_uma_consulta_por_review` garante que o número de consultas do feed não cresce com o tamanho da página.
-- **Esquema do banco:** `posts` mudou (`AUTOINCREMENT`). Quem tem um `backend/app.db` antigo continua funcionando, mas sem a proteção contra o reaproveitamento de id; para ter, é preciso recriá-lo com `rm backend/app.db && make seed`.
+- **Esquema do banco:** `posts` mudou (`AUTOINCREMENT`). Tabelas `posts` já existentes não recebem essa proteção por `create_all`; precisam de migração explícita, fora desta entrega de dados. Não apagar `app.db`. O preflight do seed rejeita esquema sem AUTOINCREMENT; a reconstrução da demo é separada e depende da integração completa.
 - **Limite:** a chave estrangeira vale para o SQLite. Em outro banco, a garantia seria a das restrições dele.
 - Claude Code corrigiu e escreveu os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
@@ -317,6 +317,13 @@ Segue o contrato de `docs/feed-e-descoberta.md`.
 - `eu` e `stats` são usernames reservados, porque colidem com rotas fixas de `/usuarios`.
 - Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
 - Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Perfil: seguir e reviews — issue #34 (25/11/2026)
+
+- O perfil ganhou contadores, botão de seguir e a lista paginada de reviews. Feed e perfil compartilham a paginação (`usePaginacao` e `ListaDeReviews`).
+- Contrato **proposto**: `GET /usuarios/{username}` com `seguidores`, `seguindo` e `eu_sigo`; `POST` e `DELETE /usuarios/{username}/follow`; `GET /usuarios/{username}/posts?offset=&limit=`. Os campos e as rotas de follow seguem a branch `feat/back-curtidas` de Daniel, ainda fora da `main`; a rota de reviews por usuário ainda não existe.
+- Sem esses campos, o perfil não mostra botão nem contadores. Com `NEXT_PUBLIC_PERFIL_SIMULADO=true`, usa exemplos e avisa isso.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
 
 ## Página inicial pública (25/11/2026)
 
@@ -422,6 +429,50 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
 
+
+## Issue #13 — adaptador sobre #74 corrigido — 26/11/2026
+
+- #74 no commit a68afe2 passou com 312 testes aprovados/1 skip e foi integrado à main. Preservadas as correções de foreign keys por conexão, AUTOINCREMENT e exclusão concorrente.
+- Implementada fábrica de adaptador com mapeamento para User/Musica/Post/Follow/Curtida, hash oficial, schemas, preflight de esquema/constraints/colisões e validação semântica antes do commit e da marca. Serviços que fazem commit interno não são chamados na carga.
+- Catálogo configurável por CATALOGO_MUSICAL_PATH: demo e startup devem usar as mesmas 20 gravações; padrão mantém as seis fictícias. Cenário issue13-v2 tem contagens controladas para ranking: 5, 4, 4, sete vezes 3, oito vezes 2 e duas sem reviews.
+- Persistência de origens ainda ausente: carga completa interrompe antes de gravar, sem transformar derivadas em raízes. Testes usam fixtures explicitamente sem origens, não acessíveis por flag do produto; não comprovam carga completa nem concluem #13.
+- Ajustado teste do núcleo para tabela real curtidas; skip mantido e explica dependência da #10. Atualizados documentos de esquema para não recomendar apagar app.db. Detalhes em docs/demo-issue-13.md.
+
+## Tela de feed — issue #36 (25/11/2026)
+
+- `/feed` consome `GET /feed?offset=&limit=` no formato de página (`items`, `total`) com reviews no formato de `PostOut`. A rota ainda não existe no backend.
+- Cartão compacto, como decidido para o feed: capa, música, nota e indicador de análise; o texto abre no detalhe.
+- Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
+- Curtidas e comentários, também da #36, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Botão de curtir — issue #36 (25/11/2026)
+
+- Feed e detalhe mostram contagem e estado, com `POST` e `DELETE /posts/{id}/curtir` (branch `feat/back-curtidas`, ainda fora da `main`).
+- A tela usa a contagem devolvida pelo servidor; em falha nada muda. Curtir não é tratado como descoberta.
+- Sem os campos `curtidas` e `curtido_por_mim`, o botão não aparece. Reviews de exemplo não têm botão.
+- Claude Code implementou o botão e os testes. A revisão por outra pessoa continua pendente.
+
+
+## Tela da árvore de recomendações — issue #42 (25/11/2026)
+
+- `/posts/[id]/arvore` mostra a corrente como lista hierárquica, com a review atual destacada e o caminho "Descoberta via …".
+- Contrato **proposto** para o backend: `GET /posts/{id}/arvore` devolve `{musica, raiz}`, e cada nó tem `id`, `apagada`, `autor`, `nota` e `filhos`. Falta combinar com Daniel e Bruno.
+- Review apagada mantém os ramos e não mostra autoria nem conteúdo. O backend também não deve enviá-los.
+- Com `NEXT_PUBLIC_ARVORE_SIMULADA=true`, a tela usa uma corrente fictícia e avisa isso.
+- Publicar review derivada, corrigir origem e exibir reputação, também da #42, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Novo layout do feed — issues #36 e #66 (26/11/2026)
+
+- `/feed` segue a referência aprovada em `docs/feed-e-descoberta.md`: perfil à esquerda, reviews no centro e pesquisa, mais avaliadas e Descobrir à direita a partir de 1024 px; abaixo disso, atalhos compactos.
+- Cabeçalho com Feed, Descobrir e Pessoas, avatar e "Sair". Entraram `/musicas`, `/musicas/[id]` e `/descobrir`.
+- Compartilhar usa o recurso do aparelho ou copia o link.
+- Aparecem desativados, como "em breve": comentários, review derivada e biblioteca. O selo de origem só aparece se o servidor enviar `origem`.
+- `GET /musicas/populares` e `GET /musicas/{id}/reviews` (#65) ainda não existem; a tela explica a indisponibilidade. Com `NEXT_PUBLIC_FEED_SIMULADO=true`, feed e vitrine usam exemplos identificados.
+- A branch reúne o trabalho dos PRs #58, #61, #62 e #63.
+- Claude Code implementou as telas e os testes. O time decidiu em 26/11 não fazer revisão cruzada dos PRs.
+
 ## Motor puro de reputação — #43 (26/11/2026)
 
 - Separar `calcular_creditos` do acumulador `Reputacao`, reutilizando somente
@@ -440,8 +491,30 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
   de origem. A #43 fornece cálculo, contribuições e reconstrução como referência.
 - Custo esperado O(1) por evento, O(E) na reconstrução e O(A + U) de memória,
   além da floresta; reconstrução mantém estado temporário até sucesso.
-- Código e testes elaborados com Codex. Revisão independente continua necessária
-  antes do merge; validação local não substitui revisão de outra pessoa.
+- Código e testes elaborados com Codex. Na publicação original, a revisão
+  independente estava pendente; atualização de revisão registrada abaixo.
 - Validação local: suíte completa com 337 aprovados e 1 ignorado; após adicionar
   dois cenários de contrato, suíte específica com 27 aprovados e suíte de dados
   com 185 aprovados. Aviso preexistente de depreciação do TestClient/HTTPX.
+
+## Conciliação e estado atual — PRs #75/#76 — 26/11/2026
+
+- Main incorporada à branch da #43 por merge, sem rebase ou force push.
+  O único conflito era a adição de seções ao final deste documento; preservados
+  integralmente os registros da main e a seção de reputação, sem mudar contratos.
+- #75 integrado: adaptador real disponível, mas carga completa da #13 ainda
+  bloqueada pela persistência de origens da #10; fixtures de raízes não comprovam
+  árvore persistida nem encerram a demonstração.
+- Feed, curtidas e populares já possuem rotas entregues pelo #74. Descrições
+  anteriores de indisponibilidade nas seções de telas são registros históricos.
+- #43 entrega o motor puro. Persistência/API e preservação dos eventos na exclusão
+  permanecem na #10; recálculo retroativo de subárvore permanece na #51.
+- Bruno informou nesta conversa que revisou o #76 e considerou a entrega correta.
+  Esse relato não equivale a uma aprovação registrada pelo GitHub nem transforma
+  a revisão automatizada local em revisão independente.
+- Preservadas as correções da #75: sem apagar app.db para preparar o seed,
+  catálogo compartilhado por configuração e migração explícita quando necessária.
+- Validação após conciliação: 27 testes específicos de reputação, 189 testes de
+  dados e suíte completa com 352 aprovados/1 ignorado. Único aviso: depreciação
+  preexistente do TestClient/HTTPX. git diff --check aprovado; nenhuma mudança
+  de código necessária na resolução. Merge na main não realizado nesta etapa.
