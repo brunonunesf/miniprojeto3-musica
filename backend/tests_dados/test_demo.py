@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 import pytest
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine, text, select
 from sqlalchemy.orm import Session
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -29,7 +29,7 @@ def test_ciclos_e_duplicatas_rejeitados():
         validar_cenario(c)
 
 
-def test_sem_adaptador_nao_grava():
+def test_carga_sem_origens_nao_grava():
     engine = create_engine('sqlite://')
     with Session(engine) as db:
         with pytest.raises(IntegracaoPendente):
@@ -40,6 +40,9 @@ def test_sem_adaptador_nao_grava():
 class AdaptadorTeste:
     """Verifica apenas a orquestração, não simula entrega do backend."""
     def verificar(self, db, cenario):
+        pass
+
+    def validar(self, db, cenario):
         pass
 
     def gravar(self, db, cenario, senha):
@@ -173,3 +176,27 @@ def test_reviews_do_cenario_atendem_schema_real_do_backend():
         # IDs internos só serão resolvidos pelo adaptador; nota/texto já são verificáveis.
         review = PostCreate(musica_id=1, nota=post['nota'], texto=post['texto'])
         assert review.nota == post['nota']
+
+
+def test_ranking_controlado_e_duas_musicas_sem_reviews():
+    from collections import Counter
+    c = preparar_cenario()
+    contagens = Counter(p['musica'] for p in c['posts'])
+    por_titulo = {m['titulo']: contagens[m['chave_catalogo']] for m in c['musicas']}
+    assert por_titulo['Clareou'] == 5
+    assert por_titulo['Meteoro - Ao Vivo'] == por_titulo['Os Anjos Cantam'] == 4
+    assert por_titulo['Evidências'] == por_titulo['Dias De Luta, Dias De Gloria'] == 0
+    assert sorted(por_titulo.values()) == [0, 0] + [2]*8 + [3]*7 + [4]*2 + [5]
+    assert c['versao'] == 'issue13-v2'
+
+
+def test_versao_anterior_nao_e_repopulada_mesmo_sem_registros():
+    from seed_demo import cargas
+    engine = create_engine('sqlite://')
+    with Session(engine) as db:
+        cargas.create(db.connection())
+        db.execute(cargas.insert().values(versao='issue13-v1'))
+        db.commit()
+        with pytest.raises(IntegracaoPendente, match='outra versão'):
+            seed_fake(db)
+        assert list(db.scalars(select(cargas.c.versao))) == ['issue13-v1']

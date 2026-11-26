@@ -164,3 +164,46 @@ Foram corrigidos dois pontos adicionais e reforçada uma validação:
 O adaptador completo continua pendente: a main agora tem músicas/posts, mas ainda não oferece a fábrica proposta para seed nem todos os requisitos de origens/follows/likes desta carga. O comando continua interrompendo antes de gravar quando a fábrica está ausente. Aprovar e integrar este PR é aceitar a entrega parcial documentada, sem fechar a #13 ou declarar a demonstração completa.
 
 Resultado final sobre a combinação pronta para main: **235 passed e 6 skipped** no `make test` (incluindo dados/árvores); **158 testes de dados** na execução isolada. `make check`, `make seed-validar` e `git diff --check` passaram. TypeScript passou em cópia limpa do frontend: a primeira execução local encontrou somente tipos gerados em `.next` de outras branches; a conferência limpa não reutilizou esse cache e não exigiu alteração no código do front. Não foram executados testes de navegador nesta revisão de dados/backend.
+
+## Adaptador sobre o #74 corrigido — 26/11/2026
+
+Esta seção atualiza o estado descrito nas seções históricas. O #74 foi integrado com foreign keys por conexão, AUTOINCREMENT e regressões da exclusão concorrente. As tabelas reais são users, musicas, posts, follows e curtidas; o teste antigo que consultava likes foi atualizado, preservando o mínimo de 30.
+
+A fábrica `app.services.demo_seed.criar_adaptador()` agora existe. Mapeamento, preflight e validação usam os modelos e schemas oficiais, sem tabelas substitutas. A carga usa hash oficial e flush; validação semântica acontece antes do commit e da marca da versão. O adaptador não chama serviços que fazem commit internamente. Preflight verifica tabelas/colunas, PKs, unicidade, FKs, foreign_keys ativo, AUTOINCREMENT, colisões e catálogo. Não há migração automática do banco de desenvolvimento.
+
+**Bloqueio real:** origens ainda não foram integradas. O adaptador recusa cenários com origens sem descartá-las. A fábrica existir não significa que a carga completa foi liberada. O #13 continua aberto e o teste completo do núcleo continua pulado com motivo atualizado. Após a #10, inspecionar o contrato e implementar origem/eventos oficiais antes de habilitar essa carga.
+
+### Cenário v2 e ranking
+
+As 20 músicas e os 25 personagens permanecem. Clareou tem 5 reviews; Meteoro e Os Anjos Cantam, 4 cada. Infiel, Cheia de Marra, Kenny G, A Morte do Autotune, Negro Drama, Burguesinha e Mina do Condomínio têm 3 cada. Apesar de Você, Velha Infância, Cheguei, Show das Poderosas, Deixa Acontecer, Tá Vendo Aquela Lua, Anunciação e Asa Branca têm 2 cada. Evidências e Dias de Luta, Dias de Glória ficam sem reviews. São 50 reviews, 20 follows e 30 curtidas; Ryan não tem sinais. O resultado é determinístico.
+
+A versão é `issue13-v2`. Não reinterpretar marcas v1 nem repor dados removidos para atingir contagens iniciais. Sem marca da versão atual, dados preexistentes de usuários/reviews/follows/curtidas provocam erro de colisão e são preservados. Músicas preexistentes só são reutilizadas quando chave e metadados correspondem exatamente.
+
+### Configuração compartilhada
+
+Executar de backend/:
+
+```sh
+CATALOGO_MUSICAL_PATH=data/musicas_demo.json uv run python scripts/validar_catalogo.py
+CATALOGO_MUSICAL_PATH=data/musicas_demo.json uv run python scripts/seed.py --validar-demo
+CATALOGO_MUSICAL_PATH=data/musicas_demo.json DATABASE_URL=sqlite:///./demo/issue13.db uv run python scripts/seed.py
+CATALOGO_MUSICAL_PATH=data/musicas_demo.json DATABASE_URL=sqlite:///./demo/issue13.db uv run python scripts/seed.py --reset-demo --confirmar-reset --aplicacao-parada
+```
+
+Os dois últimos comandos atualmente encerram explicando a dependência de origens antes de criar dados ou substituir o banco. Quando habilitados, o backend da demonstração deve ser iniciado com as mesmas variáveis. Caminhos relativos do catálogo são relativos a backend/. Sem configuração, permanece o catálogo fictício de seis faixas. Reinício não deve importar esse catálogo dentro da demo de 20 músicas.
+
+### O que os testes desta etapa comprovam
+
+Fixtures de integração explicitamente chamadas de raízes substituem a entrada somente nos testes, sem modificar os modelos e sem opção de bypass no CLI. Sobre elas, os testes conferem 25 usuários, 20 músicas, 50 reviews, 20 follows, 30 curtidas, credenciais, IDs, APIs, ranking, edição/exclusão, descurtida/unfollow, reexecução, reinício e reset com backup usando SQLite e modelos reais.
+
+Essas fixtures não são evidência de árvore persistida. A carga de produção com corrente e ramo é testada para recusar sem dados/marca. A regressão da corrida de curtidas/comentários fica preservada no #74. Não há reputação ou sugestões inventadas, teste de reescuta sem serviço entregue, nem declaração de demonstração completa.
+
+### Evidências desta entrega
+
+- #74 corrigido: suíte completa com 312 passed/1 skipped antes do merge.
+- Nova implementação: `make test` com 324 passed/1 skipped. Em seguida, a verificação de referências órfãs ganhou uma regressão adicional: a suíte final de adaptador e dados passou com **171 testes em ambiente novo**, instalado por `uv sync --frozen`.
+- `make check` em SQLite separado, `make seed-validar`, validador do catálogo e `git diff --check` passaram.
+- Smoke do CLI real em cópia descartável: carga bloqueada sem criar arquivo; reset bloqueado preservando os bytes do banco e sem arquivos parciais.
+- Preflight também rejeita dados órfãos anteriores à ativação das foreign keys. Não corrige nem apaga esses dados automaticamente.
+- Marcas de outra versão são recusadas, mesmo se todos os registros tiverem sido removidos; não há repopulação automática entre v1/v2.
+- A carga inicial deve ser preparada com a aplicação parada e o backend iniciado depois, reconstruindo suas estruturas em memória. Nenhum banco pessoal foi apagado e nenhum aviso/comentário/menção foi enviado ao time nesta etapa.

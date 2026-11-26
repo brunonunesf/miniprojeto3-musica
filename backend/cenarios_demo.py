@@ -6,7 +6,7 @@ from pathlib import Path
 
 from catalogo_musical import carregar_catalogo
 
-VERSAO = "issue13-v1"
+VERSAO = "issue13-v2"
 SEMENTE = 13
 NOMES = [
     "Bruno Nunes", "Cecília Candeia", "Daniel Dantas", "Fernando Neto",
@@ -39,17 +39,25 @@ def preparar_cenario():
     for i, origem in enumerate([None, 'review-001', 'review-002', 'review-001', None]):
         post(usuarios[i]['username'], clareou, origem)
     ocupados = {(p['autor'], p['musica']) for p in posts}
-    pares = [(u['username'], m['chave_catalogo']) for u in usuarios[:-1] for m in musicas
-             if (u['username'], m['chave_catalogo']) not in ocupados]
-    rng.shuffle(pares)
-    for autor, musica in pares[:45]:
-        post(autor, musica)
+    # 5 + 2*4 + 7*3 + 8*2 + 2*0 = 50; os dois últimos itens ficam sem reviews.
+    demais = [m for m in musicas if m['chave_catalogo'] != clareou]
+    quotas = {clareou: 5}
+    for i, musica in enumerate(demais):
+        quotas[musica['chave_catalogo']] = 4 if i < 2 else 3 if i < 9 else 2 if i < 17 else 0
+    for musica in musicas:
+        chave = musica['chave_catalogo']
+        autores = [u['username'] for u in usuarios[:-1] if (u['username'], chave) not in ocupados]
+        rng.shuffle(autores)
+        existentes = sum(p['musica'] == chave for p in posts)
+        for autor in autores[:quotas[chave] - existentes]:
+            post(autor, chave)
     follows = [(u['username'], v['username']) for u in usuarios[:-1] for v in usuarios[:-1] if u != v]
     rng.shuffle(follows)
     # Os protagonistas seguem a corrente, garantindo conteúdo no feed.
-    fixos = [(usuarios[1]['username'], usuarios[0]['username']),
+    fixos = [(usuarios[0]['username'], usuarios[1]['username']),
+             (usuarios[1]['username'], usuarios[0]['username']),
              (usuarios[2]['username'], usuarios[1]['username'])]
-    follows = fixos + [p for p in follows if p not in fixos][:18]
+    follows = fixos + [p for p in follows if p not in fixos][:17]
     likes = [(u['username'], p['chave']) for u in usuarios[:-1] for p in posts if u['username'] != p['autor']]
     rng.shuffle(likes)
     cenario = dict(versao=VERSAO, semente=SEMENTE, usuarios=usuarios, musicas=musicas,

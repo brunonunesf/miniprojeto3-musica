@@ -71,3 +71,9 @@ A issue #9 permanece aberta para integração e validação conjunta. As branche
 Os seis exemplos fictícios usam `capa_url: null`; não foram associadas capas de artistas reais a faixas fictícias. Catálogos anteriores sem o campo continuam válidos. O retorno do carregador inclui `capa_url` como texto ou `None`, e pode ser serializado diretamente em JSON. URLs passam pela normalização padrão de `HttpUrl` (por exemplo, barra final no domínio); parâmetros e caminho são preservados. O limite de 2048 caracteres é aplicado ao valor normalizado.
 
 A validação é estrutural e não testa existência, disponibilidade, formato do arquivo ou permissão de uso da imagem; não realiza acesso à rede. O front pode usar uma capa padrão quando o valor estiver ausente ou a imagem falhar. Persistência e inclusão nas respostas da API ficam com o backend; a URL não participa da identidade nem da deduplicação musical.
+
+## Catálogo selecionado por ambiente
+
+`carregar_catalogo()` e o startup do backend usam `CATALOGO_MUSICAL_PATH` quando definida. Caminho relativo é resolvido a partir de `backend/`, independentemente do diretório de execução. Exemplo: `CATALOGO_MUSICAL_PATH=data/musicas_demo.json`. Um argumento explícito a `carregar_catalogo(caminho)` tem precedência; sem variável, o padrão continua `data/musicas.json` (seis fictícias). Configuração vazia/inválida falha, sem retornar silenciosamente ao padrão.
+
+O validador de linha de comando também usa a configuração quando não recebe arquivo explícito. Essa seleção não baixa músicas nem altera IDs. Na demonstração, iniciar seed e aplicação com a mesma variável para não importar outro catálogo ao reiniciar.
