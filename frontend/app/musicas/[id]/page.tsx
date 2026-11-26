@@ -19,9 +19,11 @@ export default function MusicaPage() {
 function MusicaDe({ id }: { id: string }) {
   const [musica, setMusica] = useState<Musica | null>(null);
   const [erro, setErro] = useState("");
+  const [tentativa, setTentativa] = useState(0);
 
   useEffect(() => {
     let ativa = true;
+    setErro("");
     apiGet<Musica>(`/musicas/${encodeURIComponent(id)}`).then(
       (resposta) => {
         if (ativa) setMusica(resposta);
@@ -33,9 +35,16 @@ function MusicaDe({ id }: { id: string }) {
     return () => {
       ativa = false;
     };
-  }, [id]);
+  }, [id, tentativa]);
 
-  if (erro) return <MensagemErro>{erro}</MensagemErro>;
+  if (erro) {
+    return (
+      <div className="space-y-4">
+        <MensagemErro>{erro}</MensagemErro>
+        <button className="btn-primary" onClick={() => setTentativa((n) => n + 1)}>Tentar novamente</button>
+      </div>
+    );
+  }
   if (!musica) return <p role="status" className="text-zinc-600">Carregando música…</p>;
 
   return (
