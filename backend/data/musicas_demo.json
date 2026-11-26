@@ -1,0 +1,298 @@
+[
+  {
+    "chave_catalogo": "spotify-4ra6zuylxk69bf3dpvpggo",
+    "titulo": "Meteoro - Ao Vivo",
+    "artista": "Luan Santana",
+    "tipo_versao": "ao_vivo",
+    "descricao_versao": "Meteoro - Ao Vivo",
+    "generos": [
+      "sertanejo"
+    ],
+    "tags": [
+      "brasileira",
+      "sertanejo"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-6ccku0lwjzohlaxbwp2ptk",
+    "titulo": "Os Anjos Cantam",
+    "artista": "Jorge & Mateus",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "sertanejo"
+    ],
+    "tags": [
+      "brasileira",
+      "sertanejo"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-38mpandijgayvdcc6npx95",
+    "titulo": "Infiel - Ao Vivo",
+    "artista": "Marília Mendonça",
+    "tipo_versao": "ao_vivo",
+    "descricao_versao": "Infiel - Ao Vivo",
+    "generos": [
+      "sertanejo"
+    ],
+    "tags": [
+      "brasileira",
+      "sertanejo"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-3jfrtzp1xapqeixeuxtavs",
+    "titulo": "Cheia de Marra",
+    "artista": "Mc Livinho",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "funk"
+    ],
+    "tags": [
+      "brasileira",
+      "funk"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-3mkda6vwf0ifrl86yztljw",
+    "titulo": "Kenny G",
+    "artista": "Matuê",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "trap"
+    ],
+    "tags": [
+      "brasileira",
+      "trap"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-1qyibnys01tjmkmoetljxn",
+    "titulo": "A Morte do Autotune",
+    "artista": "Matuê",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "trap"
+    ],
+    "tags": [
+      "brasileira",
+      "trap"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-3ytxzejfevydffmuhhvti8",
+    "titulo": "Negro Drama",
+    "artista": "Racionais MC's",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "rap"
+    ],
+    "tags": [
+      "brasileira",
+      "rap"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-0onaza6lvufgqvmt8qsfd5",
+    "titulo": "Clareou",
+    "artista": "Xande de Pilares",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "samba",
+      "pagode"
+    ],
+    "tags": [
+      "brasileira",
+      "samba",
+      "pagode"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-35wfw6eyw39ypop2lrh11c",
+    "titulo": "Burguesinha",
+    "artista": "Seu Jorge",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "samba",
+      "samba-rock"
+    ],
+    "tags": [
+      "brasileira",
+      "samba",
+      "samba-rock"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-3qa7vf91ehkfoyeda5wcjb",
+    "titulo": "Mina do Condomínio",
+    "artista": "Seu Jorge",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "samba-rock"
+    ],
+    "tags": [
+      "brasileira",
+      "samba-rock"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-2gafzg9z7ugs1imm4idrnr",
+    "titulo": "Apesar De Você",
+    "artista": "Chico Buarque, MPB4, Quarteto Em Cy",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "mpb"
+    ],
+    "tags": [
+      "brasileira",
+      "mpb"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-1msxblw7fkabfey4lgpg0e",
+    "titulo": "Velha Infância - 2004 Digital Remaster",
+    "artista": "Tribalistas",
+    "tipo_versao": "remaster",
+    "descricao_versao": "Velha Infância - 2004 Digital Remaster",
+    "generos": [
+      "mpb",
+      "pop"
+    ],
+    "tags": [
+      "brasileira",
+      "mpb",
+      "pop"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-6cbzb9mvac5s8htwklloi0",
+    "titulo": "Cheguei",
+    "artista": "LUDMILLA",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "pop",
+      "funk"
+    ],
+    "tags": [
+      "brasileira",
+      "pop",
+      "funk"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-28auftkmnjaqnqklhr0wev",
+    "titulo": "Show das Poderosas",
+    "artista": "Anitta",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "funk",
+      "pop"
+    ],
+    "tags": [
+      "brasileira",
+      "funk",
+      "pop"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-50mawjudheoftcuiprmgxr",
+    "titulo": "Deixa Acontecer",
+    "artista": "Grupo Revelação",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "pagode"
+    ],
+    "tags": [
+      "brasileira",
+      "pagode"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-6djkwvaqxuvmaazo4u4cio",
+    "titulo": "Tá Vendo Aquela Lua",
+    "artista": "Exaltasamba",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "pagode"
+    ],
+    "tags": [
+      "brasileira",
+      "pagode"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-661ns9g25zhdih4qvshbo7",
+    "titulo": "Anunciação",
+    "artista": "Alceu Valença",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "mpb",
+      "forro"
+    ],
+    "tags": [
+      "brasileira",
+      "mpb",
+      "forro"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-0jabbolc53vve33ouz7d4a",
+    "titulo": "Asa Branca",
+    "artista": "Luiz Gonzaga",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "baiao",
+      "forro"
+    ],
+    "tags": [
+      "brasileira",
+      "baiao",
+      "forro"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-1x95pcqg939kcbjl6yvqgw",
+    "titulo": "Evidências",
+    "artista": "Chitãozinho & Xororó",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "sertanejo"
+    ],
+    "tags": [
+      "brasileira",
+      "sertanejo"
+    ]
+  },
+  {
+    "chave_catalogo": "spotify-006pmmcuro2tfjh8sngsov",
+    "titulo": "Dias De Luta, Dias De Gloria",
+    "artista": "Charlie Brown Jr.",
+    "tipo_versao": "original",
+    "descricao_versao": "Gravação selecionada na playlist; identidade pelo ID Spotify",
+    "generos": [
+      "rock",
+      "rap rock"
+    ],
+    "tags": [
+      "brasileira",
+      "rock",
+      "rap rock"
+    ]
+  }
+]

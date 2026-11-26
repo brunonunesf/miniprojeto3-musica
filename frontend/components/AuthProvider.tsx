@@ -124,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             <div className="flex min-w-0 flex-wrap items-center gap-4 text-sm">
               <Link href="/" aria-current={pathname === "/" ? "page" : undefined}>Início</Link>
               <Link href="/usuarios" aria-current={pathname === "/usuarios" ? "page" : undefined}>Usuários</Link>
+              <Link href="/posts/novo" aria-current={pathname === "/posts/novo" ? "page" : undefined}>Nova review</Link>
               <Link href={`/usuarios/${usuario.username}`} aria-current={pathname === `/usuarios/${usuario.username}` ? "page" : undefined} className="max-w-36 truncate text-zinc-600" title={`Meu perfil: ${usuario.name}`}>{usuario.name}</Link>
               <button onClick={sair} className="font-semibold text-brand-700">Sair</button>
             </div>

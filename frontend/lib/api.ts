@@ -75,6 +75,28 @@ export type User = {
   created_at: string;
 };
 
+export type Musica = {
+  id: number;
+  chave_catalogo: string;
+  titulo: string;
+  artista: string;
+  tipo_versao: "original" | "remix" | "ao_vivo" | "remaster";
+  descricao_versao: string;
+  generos: string[];
+  tags: string[];
+  capa_url: string;
+};
+
+export type Post = {
+  id: number;
+  texto: string;
+  nota: number;
+  tem_texto: boolean;
+  musica: Musica;
+  autor: User;
+  created_at: string;
+};
+
 export type Page<T> = {
   items: T[];
   total: number;

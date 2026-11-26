@@ -87,7 +87,7 @@ def main() -> None:
     if ERROS:
         print(f"{len(ERROS)} problema(s). Corrija acima e rode de novo (docs/guias/00-setup.md ajuda).")
         sys.exit(1)
-    print("tudo verde — próximos passos: make seed, make dev-back, make dev-front")
+    print("tudo verde — próximos passos: make seed-validar, make dev-back, make dev-front; make seed-minimo para as contas de exemplo")
 
 
 if __name__ == "__main__":
