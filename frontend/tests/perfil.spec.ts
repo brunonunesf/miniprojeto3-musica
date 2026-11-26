@@ -54,3 +54,21 @@ test("cadastro recusa username reservado", async ({ page }) => {
   await cadastrar(page, "stats", "Alguém");
   await expect(page.getByText("Esse usuário é reservado. Escolha outro.")).toBeVisible();
 });
+
+test("editar o nome atualiza também os cartões das reviews", async ({ page }) => {
+  const username = `cartoes_${Date.now()}`;
+  await cadastrar(page, username, "Nome Velho");
+  await expect(page.getByRole("button", { name: "Sair", exact: true })).toBeVisible();
+  await page.goto("/posts/novo");
+  await page.getByRole("radio", { name: /Lua de Barro/ }).check();
+  await page.getByLabel("Nota (0 a 10)").selectOption("8");
+  await page.getByRole("button", { name: "Publicar review" }).click();
+  await expect(page).toHaveURL(/\/posts\/\d+$/);
+  await page.goto(`/usuarios/${username}`);
+  await expect(page.getByRole("article")).toContainText("Nome Velho");
+  await page.getByRole("button", { name: "Editar perfil" }).click();
+  await page.getByLabel("Nome", { exact: true }).fill("Nome Novo");
+  await page.getByRole("button", { name: "Salvar" }).click();
+  await expect(page.getByRole("article")).toContainText("Nome Novo");
+  await expect(page.getByRole("article")).not.toContainText("Nome Velho");
+});

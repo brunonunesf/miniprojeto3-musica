@@ -4,11 +4,14 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
+import { AcaoDerivar } from "@/components/AcaoDerivar";
 import { useSessao } from "@/components/AuthProvider";
 import { BotaoCurtir } from "@/components/BotaoCurtir";
 import { CamposReview } from "@/components/CamposReview";
 import { Capa } from "@/components/Capa";
+import { Comentarios } from "@/components/Comentarios";
 import { MensagemErro } from "@/components/MensagemErro";
+import { SeloDeOrigem } from "@/components/SeloDeOrigem";
 import { apiDelete, apiGet, apiPatch, type Post } from "@/lib/api";
 import { nomeDaVersao } from "@/lib/musica";
 
@@ -71,7 +74,11 @@ function Review({ id }: { id: string }) {
           <Link href={`/usuarios/${post.autor.username}`} className="font-semibold text-brand-700">{post.autor.name}</Link>
           {" "}em {new Date(post.created_at).toLocaleDateString("pt-BR")}
         </p>
-        <BotaoCurtir post={post} />
+        <SeloDeOrigem post={post} />
+        <div className="flex flex-wrap items-center gap-3">
+          <BotaoCurtir post={post} />
+          {!minha && <AcaoDerivar post={post} />}
+        </div>
       </article>
 
       <Link href={`/posts/${post.id}/arvore`} className="inline-block font-semibold text-brand-700">
@@ -90,6 +97,8 @@ function Review({ id }: { id: string }) {
       ) : (
         <AcoesDoAutor postId={post.id} aoEditar={() => setEditando(true)} />
       ))}
+
+      {post.comentarios !== undefined && <Comentarios postId={post.id} />}
     </div>
   );
 }

@@ -8,8 +8,11 @@ import { buscarReviewsDe, PERFIL_SIMULADO } from "@/lib/perfil";
 import { usePaginacao } from "@/lib/usePaginacao";
 
 export function ReviewsDoPerfil({ autor }: { autor: User }) {
-  // O autor não muda enquanto o componente existe: a key do perfil o recria.
-  const buscar = useCallback((offset: number) => buscarReviewsDe(autor, offset), [autor.username]);
+  // Nome e foto aparecem nos cartões: mudando um deles, a lista é buscada de novo.
+  const buscar = useCallback(
+    (offset: number) => buscarReviewsDe(autor, offset),
+    [autor.username, autor.name, autor.avatar_url],
+  );
   const reviews = usePaginacao(buscar);
 
   return (

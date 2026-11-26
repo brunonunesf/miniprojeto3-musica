@@ -1,4 +1,4 @@
-"""Contrato de dados da #9, independente de app, banco e serviços externos."""
+"""Contrato de dados da #39, independente de app, banco e serviços externos."""
 
 import json
 import os

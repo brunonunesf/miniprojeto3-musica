@@ -548,3 +548,64 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
   filhos, com O(n) de trabalho/memória no pior caso, conforme #41.
 - Exclusão ainda remove curtidas operacionais; persistência dos eventos históricos
   de reputação permanece pendente na #10. Referência apagada não substitui esse registro.
+
+
+## #13 — carga completa sobre origens do #78 — 26/11/2026
+
+- Adaptador usa os modelos oficiais com origem, valida floresta antes de gravar,
+  insere pais antes dos filhos e valida vínculos exatos antes do commit/marca.
+- Versão issue13-v2 e massa preservadas; sem transformação de derivadas em raízes.
+  Referências apagadas existentes sem marca provocam colisão e são preservadas.
+- Teste integrado do núcleo ativado. Testes reais verificam árvore/API/reinício,
+  repetição, rollback de origem divergente, reset com backup e pontos via core #43.
+- Pontos da carga inicial são comparados a oráculo independente, sem integração
+  persistente da reputação. Exclusão de curtidas históricas permanece pendência #10.
+- #13 continua aberta para critérios restantes, incluindo Descobrir. Implementação
+  em branch própria baseada no #78; merge desse backend exige decisão de Bruno.
+- Validação final desta combinação: 378 testes aprovados, sem skips; 189 testes
+  de dados aprovados. Único aviso: depreciação preexistente TestClient/HTTPX.
+  make check em SQLite separado, make seed-validar e git diff --check aprovados.
+- Instalação limpa via uv sync --frozen e CLI real em cópia descartável:
+  catálogo de 20 músicas válido, primeira carga completa, repetição preservada,
+  inicialização da API e reset com backup concluídos. Nenhum banco pessoal alterado.
+## Comentários e review derivada no front — issues #36, #33 e #42 (26/11/2026)
+
+- O detalhe da review mostra os comentários em ordem cronológica, com paginação; em falha, o texto digitado é mantido. O cartão do feed mostra a contagem.
+- "Escrever review a partir desta" abre o formulário com música e origem preenchidas e exige análise própria. Review repetida mostra o erro e o acesso às próprias reviews, sem trocar a origem.
+- A ação só é habilitada quando a review traz `origem_id` (branch `feat/back-arvore`): um servidor sem esse campo ignoraria a origem.
+- A correção de origem e a reputação continuam sem tela.
+- Claude Code implementou as telas e os testes.
+
+## Barra de navegação única — 26/11/2026
+
+- A barra passou para `components/Navbar.tsx`, com a mesma largura e altura em todas as páginas e o item da seção atual destacado. Visitantes veem a marca e o acesso a entrar ou criar conta.
+- Claude Code fez a mudança e o teste. Por decisão do time, não houve revisão por outra pessoa.
+
+## Página da música e legenda da vitrine — issue #66 (26/11/2026)
+
+- A falha ao carregar uma música oferece "Tentar novamente".
+- A legenda "Quantidade de reviews nesta rede, em todo o período" fica no componente da vitrine, usado no feed e em `/musicas`.
+- Claude Code fez os ajustes. Por decisão do time, não houve revisão por outra pessoa.
+
+
+## Aceite e encerramento da entrega de dados #13 — 26/11/2026
+
+- Bruno escolheu concluir a entrega de dados sem aguardar Descobrir e demais integrações de produto. A decisão não altera a pendência dessas funcionalidades nas respectivas issues nem declara reputação pelo perfil/API implementada.
+- #78 conciliado com main e integrado após 375 testes aprovados/1 skip. #82 atualizado sobre essa main, sem novos defeitos bloqueantes encontrados; suíte final com 378 testes aprovados e zero skips, incluindo seed completo e cálculo independente de reputação.
+- Instalação nova: catálogo/seed/CLI, startup/check, reexecução, reset com backup e restauração efetiva aprovados. Capturas da interface real mostram corrente/ramo, raiz independente, ranking e conta nova, sem mocks. Evidências em docs/evidencias/issue13/README.md e validacao.json.
+- No ensaio, edição/exclusão/descurtida/unfollow foram preservados na reexecução. Reset recompôs a massa inicial e o backup recuperou o estado anterior; nenhum banco pessoal foi alterado. Não houve aviso, comentário ou menção ao time nesta etapa.
+- Reputação histórica após exclusão, correção/recálculo, reescutas/bibliotecas e Descobrir permanecem nas issues próprias. Reescuta não foi apresentada como validada sem serviço integrado. Instruções institucionais foram conferidas no material versionado, sem afirmar envio ou acesso ao Classroom.
+
+## Issue #39 — catálogo e identidade musical — 26/11/2026
+
+- Bruno aprovou concluir o escopo de dados reaproveitando a entrega do #32 e a integração do #60. As referências históricas à #9 acima descrevem o estado daquela entrega; a integração já existe e o aceite atual é da #39.
+- Preservadas seis fictícias para homônimos/versões e 20 reais para demo, sem expansão ou alteração de chaves. Gêneros/tags continuam listas abertas; normalização existente e revisão de consistência sem vocabulário fechado.
+- Chave curada estável e opaca identifica a entrada; ID interno é atribuído pelo banco e preservado na reimportação. Entrada manual é curadoria do arquivo, sem cadastro pela interface. Metadados iguais não autorizam fusão; original/remix/ao vivo/remaster são distintos.
+- Referências Spotify existentes não provam equivalência entre serviços. Vínculo futuro exige confirmação manual da gravação/edição, com fontes, responsável e justificativa registrados; sem confirmação, manter entradas separadas. Sem OAuth, matching ou schema novo nesta entrega.
+- Codex atualizou documentação e acrescentou teste de navegador sem mocks para o aceite. Dados/API: 217 testes aprovados; validadores: 6 e 20 entradas; build/typecheck aprovados; Chrome desktop: cenário técnico e real aprovados, com duas contas, publicação, perfil e feed.
+- Evidências e reprodução: `docs/evidencias/issue39/README.md`. Sem mudanças de contrato público, migração ou implementação de outra área. PR com `Closes #39`, sujeito à revisão de outra pessoa antes do merge.
+
+### Revisão do PR #83 — 26/11/2026
+
+- Atendidas as três sugestões publicadas por Bruno: corrigida frase histórica de catálogo real; teste agora identifica cada cartão de perfil/feed por link da review e exige quantidade, artista e versão; criada rotina única para executar os dois catálogos em bancos separados, interrompendo em erro.
+- Seleção do cenário resolve caminho relativo/absoluto como o carregador, evitando depender da grafia literal da variável. Dados e contratos preservados. Nova revisão estática do diff e validações registradas nas evidências da #39; Bruno autorizou publicação e merge após as correções e a nova revisão.
