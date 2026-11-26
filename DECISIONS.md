@@ -546,3 +546,23 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
   filhos, com O(n) de trabalho/memória no pior caso, conforme #41.
 - Exclusão ainda remove curtidas operacionais; persistência dos eventos históricos
   de reputação permanece pendente na #10. Referência apagada não substitui esse registro.
+
+
+## #13 — carga completa sobre origens do #78 — 26/11/2026
+
+- Adaptador usa os modelos oficiais com origem, valida floresta antes de gravar,
+  insere pais antes dos filhos e valida vínculos exatos antes do commit/marca.
+- Versão issue13-v2 e massa preservadas; sem transformação de derivadas em raízes.
+  Referências apagadas existentes sem marca provocam colisão e são preservadas.
+- Teste integrado do núcleo ativado. Testes reais verificam árvore/API/reinício,
+  repetição, rollback de origem divergente, reset com backup e pontos via core #43.
+- Pontos da carga inicial são comparados a oráculo independente, sem integração
+  persistente da reputação. Exclusão de curtidas históricas permanece pendência #10.
+- #13 continua aberta para critérios restantes, incluindo Descobrir. Implementação
+  em branch própria baseada no #78; merge desse backend exige decisão de Bruno.
+- Validação final desta combinação: 378 testes aprovados, sem skips; 189 testes
+  de dados aprovados. Único aviso: depreciação preexistente TestClient/HTTPX.
+  make check em SQLite separado, make seed-validar e git diff --check aprovados.
+- Instalação limpa via uv sync --frozen e CLI real em cópia descartável:
+  catálogo de 20 músicas válido, primeira carga completa, repetição preservada,
+  inicialização da API e reset com backup concluídos. Nenhum banco pessoal alterado.

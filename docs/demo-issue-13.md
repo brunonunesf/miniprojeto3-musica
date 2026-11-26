@@ -207,3 +207,68 @@ Essas fixtures não são evidência de árvore persistida. A carga de produção
 - Preflight também rejeita dados órfãos anteriores à ativação das foreign keys. Não corrige nem apaga esses dados automaticamente.
 - Marcas de outra versão são recusadas, mesmo se todos os registros tiverem sido removidos; não há repopulação automática entre v1/v2.
 - A carga inicial deve ser preparada com a aplicação parada e o backend iniciado depois, reconstruindo suas estruturas em memória. Nenhum banco pessoal foi apagado e nenhum aviso/comentário/menção foi enviado ao time nesta etapa.
+
+
+## Carga completa com origens oficiais — continuação sobre #78 — 26/11/2026
+
+Esta seção substitui o estado anterior de carga bloqueada. O adaptador usa
+`Post.origem_id` e `ReviewApagada` do #78. Valida o cenário como floresta antes de
+escrever, insere em ordem de dependência e confere as origens reais antes do
+commit e da marca. A massa e a versão `issue13-v2` permanecem iguais.
+
+Banco antigo sem o esquema necessário é recusado, sem migração pelo seed.
+Iniciar a aplicação para aplicar as migrações oficiais antes de carregar um banco
+existente; na primeira preparação/reset, o banco temporário usa o esquema novo.
+O seed exige que a aplicação esteja parada; iniciar o backend depois reconstrói
+contadores e floresta. Reexecutar preserva ações; reset continua explícito e com backup.
+
+### Roteiro reproduzível
+
+1. Em instalação limpa, executar `uv sync --frozen` em `backend/`.
+2. Configurar `CATALOGO_MUSICAL_PATH=data/musicas_demo.json` e
+   `DATABASE_URL=sqlite:///./demo/issue13.db` no seed e no backend.
+3. Com aplicação parada, executar `uv run python scripts/seed.py --validar-demo`
+   e `uv run python scripts/seed.py`. Esperado: 25 usuários, 20 músicas,
+   50 reviews, 20 follows e 30 curtidas, com três origens persistidas.
+4. Iniciar o backend e autenticar `bruno_nunes`, `cecilia_candeia` ou
+   `daniel_dantas` com a senha fictícia `demo-trilha-13-2026`.
+5. Localizar Clareou pelo catálogo e as reviews pelos endpoints de perfil/música;
+   usar os IDs retornados, sem presumir IDs fixos. Ler `/posts/{id}/arvore`:
+   Bruno → Cecília → Daniel, Fernando em ramo de Bruno, Gustavo em raiz independente.
+6. Conferir feed, pesquisa, ranking com empate e duas músicas sem reviews.
+   Ryan Rodrigues continua sem sinais. Editar nota/texto não aumenta a contagem;
+   excluir reduz a contagem e preserva a referência na árvore.
+7. Parar e reiniciar o backend: árvore e ações permanecem. Reexecutar o seed não
+   restaura curtidas/follows/reviews removidos nem altera o texto editado.
+8. Com aplicação parada, executar o reset abaixo e conferir backup e massa original.
+
+```sh
+uv run python scripts/seed.py --reset-demo --confirmar-reset --aplicacao-parada
+```
+
+### Reputação e limites desta etapa
+
+Teste integrado reconstrói a floresta e os eventos a partir das reviews/curtidas
+persistidas, aplica o core #43 e compara totais por autor com um cálculo
+independente sobre as chaves do cenário. Isso comprova pontos da carga inicial,
+sem gravar pontos fictícios nem afirmar que o perfil/API já expõe reputação.
+O #78 ainda apaga curtidas operacionais na exclusão: preservar eventos históricos
+para reputação é pendência da #10, mesmo com autoria e origem conservadas.
+
+Descobrir personalizado depende de #55/#23/#56. Correção de origem, reescuta e
+bibliotecas só entram no roteiro quando integradas. Não há evidência nova dessas
+funcionalidades nesta entrega; #13 permanece aberta. Uso de IA: Codex implementou
+esta continuação e sua revisão técnica; revisão humana/merge seguem separados.
+
+### Evidências da combinação com #78
+
+- Suíte completa: **378 passed**, sem skips. O teste do núcleo do seed está ativo.
+- Suíte de dados: **189 passed**. Regressões de árvore do #78: **23 passed**.
+- Adaptador completo: **11 passed**, incluindo origens, ordem de entrada invertida,
+  rollback sem marca, APIs, reinício, pontos do core e reset real com backup.
+- `make check` com SQLite separado, `make seed-validar` e `git diff --check` aprovados.
+- Cópia limpa com `uv sync --frozen`: CLI valida 20 músicas e cenário 25/50/20/30;
+  primeira carga prepara o banco, segunda retorna “já aplicada; ações preservadas”.
+  Startup/check da API aprovado; reset explícito cria backup e recompõe a massa.
+- Único aviso da suíte: depreciação preexistente TestClient/HTTPX.
+- Sem teste novo de navegador; evidências de árvore desta etapa são via API.
