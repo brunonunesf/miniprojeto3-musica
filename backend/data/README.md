@@ -18,7 +18,7 @@ Os testes ficam em `tests_dados/`, separados de `tests/`, cujo `conftest.py` pre
 
 ## Contrato dos registros
 
-O arquivo é um array JSON UTF-8 não vazio. Todos os campos abaixo são obrigatórios; campos extras são recusados.
+O arquivo é um array JSON UTF-8 não vazio. Os campos abaixo são obrigatórios, exceto `capa_url`; campos extras continuam recusados.
 
 | Campo | Regra |
 |---|---|
@@ -26,6 +26,7 @@ O arquivo é um array JSON UTF-8 não vazio. Todos os campos abaixo são obrigat
 | `titulo`, `artista` | 1–200 caracteres após limpar espaços excedentes. Preservam caixa e acentos. |
 | `tipo_versao` | `original`, `remix`, `ao_vivo` ou `remaster`. |
 | `descricao_versao` | Até 200 caracteres após limpar espaços; não pode ficar vazia para remix, ao vivo ou remaster. Na original pode ser vazia. |
+| `capa_url` | Opcional, omitida ou `null` quando não houver capa. Quando preenchida, URL absoluta HTTP/HTTPS de até 2048 caracteres; não aceita texto vazio, caminho local ou esquemas como `data:` e `javascript:`. |
 | `generos`, `tags` | Listas não vazias de textos; cada termo tem 1–80 caracteres após limpeza. Espaços são normalizados, aplica-se `casefold` e repetições são removidas, preservando a primeira ordem. |
 
 A normalização produz novos registros em memória. O arquivo de origem e suas chaves não são reescritos. Não há remoção automática de acentos, classificação por IA ou vocabulário fechado: mantenha os termos consistentes com o catálogo existente e revise novos sinônimos manualmente.
@@ -64,3 +65,9 @@ A `chave_catalogo` identifica a entrada curada; o **ID interno do banco será at
 Requisitos futuros confirmados neste chat: uma review ativa por pessoa/versão; editar texto preserva a identidade musical; republicar reutiliza a review, com comentário opcional e intervalo de 24h; edição real volta a destacar o mesmo cartão, sem criar avisos por edição e sem consumir esse intervalo. Esses comportamentos **não estão implementados nesta entrega** e dependem das issues e áreas correspondentes. Trocar a música de uma review continua pendente.
 
 A issue #9 permanece aberta para integração e validação conjunta. As branches dos PRs #28–#31 preservam referências anteriores, sem autorização implícita para integrar código de outras áreas. O PR de dados substitui o #28; #29–#31 continuam fechados.
+
+## Capas — ajuste da revisão do PR #32
+
+Os seis exemplos fictícios usam `capa_url: null`; não foram associadas capas de artistas reais a faixas fictícias. Catálogos anteriores sem o campo continuam válidos. O retorno do carregador inclui `capa_url` como texto ou `None`, e pode ser serializado diretamente em JSON. URLs passam pela normalização padrão de `HttpUrl` (por exemplo, barra final no domínio); parâmetros e caminho são preservados. O limite de 2048 caracteres é aplicado ao valor normalizado.
+
+A validação é estrutural e não testa existência, disponibilidade, formato do arquivo ou permissão de uso da imagem; não realiza acesso à rede. O front pode usar uma capa padrão quando o valor estiver ausente ou a imagem falhar. Persistência e inclusão nas respostas da API ficam com o backend; a URL não participa da identidade nem da deduplicação musical.
