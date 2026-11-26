@@ -39,7 +39,7 @@ A normalização produz novos registros em memória. O arquivo de origem e suas 
 4. Para corrigir grafia, descrição, gênero ou tags da mesma entrada, mantenha a chave. Não reutilize uma chave antiga para outra gravação e não renomeie chaves para acompanhar mudanças de título.
 5. Valide o conjunto inteiro antes de entregar. Se qualquer entrada falhar, o carregador lança erro e não retorna uma lista parcial.
 
-Os exemplos cobrem uma original com remix, ao vivo e remaster, outro artista com o mesmo título e uma faixa adicional. O cadastro de músicas reais, expansão do catálogo e matching externo ficam para outra entrega combinada.
+Os exemplos cobrem uma original com remix, ao vivo e remaster, outro artista com o mesmo título e uma faixa adicional. A expansão adicional do catálogo real e o matching externo ficam para outra entrega combinada.
 
 ## Consumo pelo backend e seed
 

@@ -25,11 +25,15 @@ Na raiz, instalar dependências conforme o setup do projeto. Em `frontend/`:
 
 ```bash
 npm run build
+# Rotina recomendada: executa os dois catálogos e falha se qualquer rodada falhar.
+PLAYWRIGHT_CHANNEL=chrome npm run test:e2e:catalogo
+
+# Execuções individuais, para diagnóstico:
 PLAYWRIGHT_CHANNEL=chrome npx playwright test tests/catalogo-identidade.spec.ts --project=desktop --output=test-results/issue39-tecnico
 CATALOGO_MUSICAL_PATH=data/musicas_demo.json PLAYWRIGHT_CHANNEL=chrome npx playwright test tests/catalogo-identidade.spec.ts --project=desktop --output=test-results/issue39-real
 ```
 
-Deixar portas 3000 e 8000 livres. O segundo comando usa as seis fictícias; o terceiro usa as 20 reais. Cada execução aprovou **1 teste**. Chrome local é requisito para `PLAYWRIGHT_CHANNEL=chrome`; o projeto também suporta navegador instalado pelo Playwright.
+Deixar portas 3000 e 8000 livres. A rotina executa explicitamente o técnico e depois o real, cada um com banco próprio. Os comandos individuais usam, respectivamente, as seis fictícias e as 20 reais. Cada execução aprovou **1 teste**. Chrome local é requisito para `PLAYWRIGHT_CHANNEL=chrome`; o projeto também suporta navegador instalado pelo Playwright.
 
 O roteiro automatizado equivale a: cadastrar Ana, selecionar/publicar música, cadastrar Bia em sessão separada, selecionar/publicar a mesma gravação e comparar o ID retornado. No catálogo técnico, Ana também publica as demais versões e o homônimo. Bia consulta o perfil de Ana, passa a segui-la e vê suas reviews no feed. As capturas abaixo registram detalhe, perfil e feed; não são mockups.
 
@@ -42,3 +46,9 @@ O roteiro automatizado equivale a: cadastrar Ana, selecionar/publicar música, c
 ## Limites
 
 A checagem visual foi executada por automação de navegador em desktop; não é revisão manual humana nem teste de disponibilidade/licença de capas externas. Não se confirma equivalência Spotify/Deezer. Backend/frontend existentes são exercitados apenas nos cenários da #39. O encerramento depende de revisão de outra pessoa e merge do PR; esta evidência não encerra #3 ou #33.
+
+## Ajustes após revisão do PR #83 — 26/11/2026
+
+As três recomendações foram atendidas: frase histórica sobre cadastro real corrigida; rotina `test:e2e:catalogo` executa os dois cenários; perfil e feed agora conferem quantidade e cada review esperada pelo link com ID, artista e versão completa. O teste conserva os objetos retornados pela API, inclusive IDs e chaves musicais; cinco títulos iguais não bastam para aprová-lo. A resolução do caminho do catálogo aceita caminho absoluto e grafias relativas equivalentes, com base em `backend/`, e rejeita catálogos fora dos dois cenários de aceite.
+
+Nova revisão do diff: sem alteração em dados, contratos públicos ou persistência. Build, typecheck e 217 testes de dados/API aprovados; rotina Chrome desktop aprovada nos dois catálogos. Uma rodada adicional com caminho absoluto do catálogo real também passou (1 teste). As capturas foram renovadas na rotina dos dois cenários. A revisão não representa execução de toda a suíte de navegador nem aprovação humana independente.

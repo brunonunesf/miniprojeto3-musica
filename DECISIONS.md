@@ -602,3 +602,8 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - Referências Spotify existentes não provam equivalência entre serviços. Vínculo futuro exige confirmação manual da gravação/edição, com fontes, responsável e justificativa registrados; sem confirmação, manter entradas separadas. Sem OAuth, matching ou schema novo nesta entrega.
 - Codex atualizou documentação e acrescentou teste de navegador sem mocks para o aceite. Dados/API: 217 testes aprovados; validadores: 6 e 20 entradas; build/typecheck aprovados; Chrome desktop: cenário técnico e real aprovados, com duas contas, publicação, perfil e feed.
 - Evidências e reprodução: `docs/evidencias/issue39/README.md`. Sem mudanças de contrato público, migração ou implementação de outra área. PR com `Closes #39`, sujeito à revisão de outra pessoa antes do merge.
+
+### Revisão do PR #83 — 26/11/2026
+
+- Atendidas as três sugestões publicadas por Bruno: corrigida frase histórica de catálogo real; teste agora identifica cada cartão de perfil/feed por link da review e exige quantidade, artista e versão; criada rotina única para executar os dois catálogos em bancos separados, interrompendo em erro.
+- Seleção do cenário resolve caminho relativo/absoluto como o carregador, evitando depender da grafia literal da variável. Dados e contratos preservados. Nova revisão estática do diff e validações registradas nas evidências da #39; Bruno autorizou publicação e merge após as correções e a nova revisão.

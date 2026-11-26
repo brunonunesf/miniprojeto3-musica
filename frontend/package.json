@@ -10,7 +10,8 @@
     "build": "next build",
     "start": "next start",
     "test:e2e": "playwright test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:e2e:catalogo": "node scripts/test-catalogo.mjs"
   },
   "dependencies": {
     "next": "^15.5.0",
