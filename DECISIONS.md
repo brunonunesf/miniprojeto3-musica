@@ -609,3 +609,10 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 
 - Atendidas as três sugestões publicadas por Bruno: corrigida frase histórica de catálogo real; teste agora identifica cada cartão de perfil/feed por link da review e exige quantidade, artista e versão; criada rotina única para executar os dois catálogos em bancos separados, interrompendo em erro.
 - Seleção do cenário resolve caminho relativo/absoluto como o carregador, evitando depender da grafia literal da variável. Dados e contratos preservados. Nova revisão estática do diff e validações registradas nas evidências da #39; Bruno autorizou publicação e merge após as correções e a nova revisão.
+
+## Reputação no perfil e apagar comentário — telas de #42 e do PR #87 (26/11/2026)
+
+- O perfil mostra o número de reputação que o servidor envia, inclusive zero, com uma frase de explicação. Sem o campo, nada aparece. A tela não recalcula pontos.
+- "Apagar" aparece só nos próprios comentários e pede confirmação. Comentário já apagado em outro lugar sai da lista; em servidor sem a rota, ele permanece e a tela avisa.
+- Dependem do backend dos PRs #86 e #87. A correção de origem (#42) continua pendente.
+- Claude Code fez as telas e os testes. Por decisão do time, não houve revisão por outra pessoa.
