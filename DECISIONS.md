@@ -518,3 +518,11 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
   dados e suíte completa com 352 aprovados/1 ignorado. Único aviso: depreciação
   preexistente do TestClient/HTTPX. git diff --check aprovado; nenhuma mudança
   de código necessária na resolução. Merge na main não realizado nesta etapa.
+
+## Comentários e review derivada no front — issues #36, #33 e #42 (26/11/2026)
+
+- O detalhe da review mostra os comentários em ordem cronológica, com paginação; em falha, o texto digitado é mantido. O cartão do feed mostra a contagem.
+- "Escrever review a partir desta" abre o formulário com música e origem preenchidas e exige análise própria. Review repetida mostra o erro e o acesso às próprias reviews, sem trocar a origem.
+- A ação só é habilitada quando a review traz `origem_id` (branch `feat/back-arvore`): um servidor sem esse campo ignoraria a origem.
+- A correção de origem e a reputação continuam sem tela.
+- Claude Code implementou as telas e os testes.
