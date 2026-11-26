@@ -337,3 +337,17 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - Bruno autorizou revisar integralmente e mesclar os três PRs, corrigindo falhas antes da integração. #32 e #60 entram primeiro; #59 passa a ter main como base para não ser mesclado apenas numa branch de funcionalidade.
 - Revisão do #59 incluiu massa, contrato, rollback/preservação, reset/backup, catálogo, estrutura de árvores e testes. Corrigidos fechamento explícito das conexões SQLite do backup e ausência de nota nos cenários; reforçada rejeição de identidades duplicadas. Evidências em docs/demo-issue-13.md.
 - Integração não conclui a #13: seed real depende de adaptador e persistência dos requisitos restantes. Sem comentários, menções ou mensagens ao time nesta etapa.
+
+## Telas de review — issue #3 (25/11/2026)
+
+- Front de criar, ver, editar e excluir review sobre a API de `feat/posts`: `/posts/novo` e `/posts/[id]`.
+- Música sem capa, ou com imagem indisponível, mostra um substituto. A exclusão pede confirmação.
+- O feed e a lista de reviews do perfil dependem de rotas que ainda não existem.
+- Claude Code implementou as telas e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Seleção de música no catálogo — issue #33 (25/11/2026)
+
+- `/posts/novo` deixou de aceitar título, artista, versão e capa digitados: a pessoa busca no catálogo (`GET /musicas`) e a review envia `musica_id`. Substitui o formulário descrito em "Telas de review".
+- A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
+- A troca de música de uma review existente continua não oferecida.
+- Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
