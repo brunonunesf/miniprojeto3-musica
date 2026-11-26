@@ -200,20 +200,6 @@ Implementação e validação estão na [issue #23](https://github.com/brunonune
 - Na preparação do PR #27, as atualizações recentes de `origin/main` foram incorporadas sem reescrever o histórico: preservados os testes adicionais `test_auth_casos.py`, a documentação de Cecília e o registro das propostas visuais em revisão. O conflito na tabela de andamento foi conciliado para mencionar os dois PRs.
 - Verificação final após conciliar a `main`: **38 testes de backend passaram**, com 7 pendentes de outras features; **12 testes de navegador passaram** em desktop e celular. TypeScript e o build da versão final passaram; os testes de navegador usaram os servidores locais de prévia com SQLite separado dos dados de desenvolvimento.
 
-## Perfil — conciliação com a identidade aprovada (25/11/2026)
-
-- As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.
-- `eu` e `stats` são usernames reservados, porque colidem com rotas fixas de `/usuarios`.
-- Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
-- Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
-
-## Página inicial pública (25/11/2026)
-
-- `/` apresenta a rede a visitantes e mostra o início a quem entrou. As demais páginas continuam exigindo sessão, e uma sessão inválida continua levando a `/login`.
-- A apresentação usa a arte da identidade aprovada; o fundo de ondas neon foi descartado. Claude Code fez a adaptação.
-
-## Posts e reviews — issues #3 e #9 — 24/11/2026
-
 ## Posts e reviews — issues #3 e #9 — 25/11/2026
 
 Inspirado no Letterboxd, o post da rede **é uma review de uma música do catálogo**: a música e a nota são obrigatórias e o texto é opcional. Uma review pode ser só a nota. A pessoa **escolhe** a música em um catálogo curado; não digita uma música nova.
@@ -227,34 +213,40 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Nota:** inteira de 0 a 10, obrigatória e editável. Escala provisória, aprovada "por enquanto"; meia nota ou estrelas podem vir depois. Nota fora do intervalo ou decimal devolve `422`.
 - **Texto:** opcional, até 5000 caracteres, com espaços das pontas removidos. O limite é generoso, na linha do Letterboxd, porque o feed mostra só o indicador e o texto completo aparece apenas no detalhe; ele existe para proteger a API e o banco. O valor foi proposto por Daniel e a #3 pede que o time o confirme. Quando houver review derivada (#10), o DECISIONS.md já exige texto próprio nela.
 - **Forma da review no feed (decisão de produto):** cartão compacto com a **capa**, o **nome da música** e a **nota**, mais um **indicador de que existe texto** (`tem_texto`); clicar na review abre o detalhe com o texto completo.
-- **Capa:** a música tem `capa_url` opcional, hoje vazia, porque o catálogo ainda não traz esse campo. Quando o Bruno o incluir nos dados, a importação o grava sem mudança no backend. Enquanto isso, a interface mostra uma imagem substituta.
+- **Capa (atualizado após revisão):** catálogo aceita `capa_url` ausente/null; importador normaliza para texto vazio no banco/API. Quando preenchida, o limite é 2048 caracteres. A normalização corrige a falha na segunda subida descrita em `docs/revisao-integracao-capas.md`.
 - **Uma review por pessoa e versão.** Uma segunda review da mesma versão pelo mesmo autor devolve `409`, inclusive em envios simultâneos, porque a decisão é da restrição única do banco e não de uma consulta prévia; apagar a review libera uma nova. A oferta de edição ou reescuta fica para a #18.
 - **A música não muda na edição.** `PATCH` altera só nota e texto, e um `musica_id` enviado ali é ignorado; trocar a música de uma review é decisão pendente da #9.
 - **Ids absurdos:** um id maior que o inteiro do banco (`musica_id` no corpo, ou `post_id` e `musica_id` na rota) devolve `422`, e não um erro `500`. Foi apontado na revisão da Cecília.
 - **Autoria vem da sessão.** Um `autor_id` enviado pelo cliente é ignorado. Editar ou excluir review de outra pessoa devolve `403` sem alterar o banco; review inexistente devolve `404`, verificado antes da permissão.
 - **Preparação da árvore:** `origem_id` ainda não existe. Será uma coluna opcional do `Post` na #10, sem quebrar o contrato acima.
 - **Exclusão:** por enquanto apaga a review. A política para descendentes de uma review excluída será definida junto com a #10.
-- **Esquema do banco:** as tabelas `posts` e `musicas` são novas. Quem já tem um `backend/app.db` antigo precisa recriá-lo com `rm backend/app.db && make seed`, porque o `create_all` não altera tabelas existentes.
-- Claude Code implementou o CRUD de reviews, o catálogo manual de músicas e seus testes (`test_posts_crud` e `backend/tests/test_posts.py`). Foi verificado com `make test` (56 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
-
+- **Esquema do banco:** `create_all` cria tabelas ausentes, mas não altera colunas existentes. Não apagar `app.db` para esta correção: a normalização não muda nulabilidade e o SQLite não impõe o comprimento de VARCHAR. Use banco separado para testar; outros tipos de alteração de esquema exigem migração específica.
 - Claude Code implementou o CRUD de reviews, a importação e as rotas do catálogo e seus testes (`test_posts_crud`, `test_posts.py` e `test_musicas.py`). Foi verificado com `make test` (75 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
+
+
+## Issue #13 — seed e cenários aprovados — 25/11/2026
+
+- Prioridade: cenários reproduzíveis de árvores e Descobrir, com integração conforme contratos do backend. Documentação não encerra a issue.
+- Catálogo de demonstração: 20 gravações reais da playlist de Bruno, com Apesar de Você substituindo Sozinho. IDs Spotify são referências externas; sem download de áudio/OAuth. Catálogo fictício anterior preservado como fixture técnica.
+- 25 personagens fornecidos por Bruno; Bruno Nunes, Cecília Candeia e Daniel Dantas protagonizam a corrente. Reviews e ações são fictícias. Massa inicial: 50 reviews, 20 follows e 30 likes; semente fixa 13. Clareou possui corrente, ramo e raiz independente; Ryan Rodrigues inicia sem sinais.
+- Banco exclusivo de demonstração; preservar ações dos ensaios e registrar carga aplicada. Reexecução não restaura registros removidos. Reset separado e explícito; sem carga parcial: requisitos ausentes interrompem antes de gravar.
+- Implementados definição/validação independente e orquestração com contrato de adaptador. Persistência real, reset funcional e validação integrada continuam pendentes dos modelos do backend; não são considerados entregues.
+- Detalhes, nomes, faixas, contratos, roteiro e limites: [docs/demo-issue-13.md](docs/demo-issue-13.md). Bruno prepara dados; Daniel alinha persistência; algoritmos continuam nas #41/#43/#55.
+
+
+## Issue #13 — continuação do contrato e reset — 25/11/2026
+
+- Bruno confirmou: Daniel entrega os modelos/serviços; não criar persistência paralela na #13. Primeiro marco é carga e APIs; as demais integrações seguem progressivamente.
+- Reset com backup anterior, reconstrução/validação em temporário e substituição atômica; aplicação parada e confirmação explícita obrigatórias. Cópias locais não são apagadas automaticamente.
+- Implementado mecanismo independente dos modelos e ligação automática à fábrica proposta `app.services.demo_seed.criar_adaptador()`. O adaptador requer verificar/gravar/preparar_banco/validar. A interface concreta precisa ser alinhada aos modelos entregues por Daniel.
+- Os modelos necessários continuam ausentes na base consultada. Adaptador real, carga pela API e validação do reset com a rede real permanecem pendentes; testes de infraestrutura não comprovam essas entregas.
 
 ## Perfil — conciliação com a identidade aprovada (25/11/2026)
 
-## Telas de review — issue #3 (25/11/2026)
-
-- Front de criar, ver, editar e excluir review sobre a API de `feat/posts`: `/posts/novo` e `/posts/[id]`.
-- Música sem capa, ou com imagem indisponível, mostra um substituto. A exclusão pede confirmação.
-- O feed e a lista de reviews do perfil dependem de rotas que ainda não existem.
-- Claude Code implementou as telas e os testes de navegador. A revisão por outra pessoa continua pendente.
-
-## Tela de feed — issue #36 (25/11/2026)
-
-- `/feed` consome `GET /feed?offset=&limit=` no formato de página (`items`, `total`) com reviews no formato de `PostOut`. A rota ainda não existe no backend.
-- Cartão compacto, como decidido para o feed: capa, música, nota e indicador de análise; o texto abre no detalhe.
-- Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
-- Curtidas e comentários, também da #36, não foram feitos.
-- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+- As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.
+- `eu` e `stats` são usernames reservados, porque colidem com rotas fixas de `/usuarios`.
+- Cada perfil recria o componente e descarta respostas de um perfil já abandonado.
+- Claude Code fez a conciliação e as correções apontadas na revisão de Bruno, verificadas com `pytest`, TypeScript, build e testes de navegador. A revisão por outra pessoa continua pendente.
 
 ## Página inicial pública (25/11/2026)
 
@@ -270,9 +262,100 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - O PR exclusivo de dados substitui o #28, preservando sua branch com API/seletor como referência. Os PRs #29–#31 permanecem fechados, sem incorporar suas implementações. O trabalho parte da main atual; a alteração anterior de responsabilidades já consta nessa base e foi preservada.
 - Validação: 37 testes de dados passaram sem carregar a infraestrutura de API/banco, incluindo bloqueio explícito de imports da aplicação e das bibliotecas de banco. O validador aprovou as seis entradas. Não foram alterados modelos persistidos, rotas, frontend ou o seed de usuários.
 
+## Catálogo — ajuste da revisão do PR #32 — 25/11/2026
+
+- Bruno autorizou adicionar `capa_url` opcional: ausente ou `null` representa música sem capa; valor preenchido deve ser URL absoluta HTTP/HTTPS de até 2048 caracteres. O carregador devolve texto JSON compatível e não consulta/baixa a imagem.
+- As seis faixas fictícias permanecem sem imagens inventadas; `capa_url: null` explícito. A interface pode apresentar fallback, sob responsabilidade do front. Persistência/exposição pela API continuam com o backend.
+- Conflito em DECISIONS.md resolvido preservando o registro de dados e os registros recentes da main sobre perfil e página inicial. Sem merge do PR nem reescrita do histórico.
+
+
+## Revisão da integração — atualização da base do #59 — 25/11/2026
+
+- Incorporada a base atualizada do #32 com `capa_url` opcional e a main já conciliada. Resolvido conflito em DECISIONS.md preservando decisões de seed, catálogo, capas, perfil e página inicial. Sem incorporar a branch de backend do #60.
+- A revisão combinada encontrou falha de `None` versus `NOT NULL` na reimportação do catálogo do #60, capaz de impedir a segunda inicialização. Correção implementada no #60: normalizar ausência/null para texto vazio no importador; modelo/schema alinhados a 2048 caracteres.
+- Evidências e causa documentadas no #60 em `docs/revisao-integracao-capas.md`; testes de reinício, reimportação, URL longa e remoção de capa adicionados lá. Nenhum aviso, comentário ou menção ao time foi enviado nesta correção.
+- A atualização não conclui o adaptador do seed: origens/follows/likes e validação integrada continuam dependências da #13.
+
+## Estrutura e percursos de árvores — issue #41 — 25/11/2026
+
+- Entrega exclusivamente de dados em `app/core/arvores.py`, sem banco/FastAPI.
+  Classe instanciável e singleton para futura integração da #10; não altera
+  endpoints, modelos, startup, seed ou interface. Troca de origem fica na #49.
+- Floresta indexada por ID, filhos por pai e raízes por música. Nó imutável:
+  IDs de review/música/autor, origem opcional e marca de apagada, sem conteúdo.
+  IDs int/string sem coerção; mesma música significa mesma identidade interna,
+  não igualdade de título. Várias raízes por música são válidas.
+- Reconstrução aceita registros fora de ordem, exige referências completas e
+  rejeita integralmente duplicata, pai ausente, outra música e ciclo, preservando
+  o estado anterior. Referência apagada existente é válida e conserva autoria.
+- Inserção incremental exige ID novo e pai ativo da mesma música. Exclusão
+  estrutural idempotente apenas marca apagada; descendentes, distância e raiz
+  permanecem. Unicidade de review ativa, texto, permissões e transações são do
+  backend. Curtidas, comentários e reescutas não alimentam a floresta.
+- BFS e DFS pré-ordem iterativos; ancestrais do pai à raiz; nó inicial excluído.
+  Referências apagadas aparecem como nós sem conteúdo e contam como nível.
+  Irmãos/raízes seguem inserção; backend deve fornecer carga ordenada e estável.
+- Percursos paginados: offset não negativo, limit padrão 50/máximo 200,
+  profundidade opcional sem corte padrão; zero retorna vazio. Profundidade
+  aplicada antes da paginação. Retorno imutável com itens, distância e tem_mais,
+  sem total. Mudanças entre consultas podem alterar páginas.
+- Custos reais: reconstrução O(n) esperado com detecção de ciclos linear,
+  memória O(n); inserção/consulta/pai/exclusão O(1) esperado/amortizado;
+  raiz O(h); listar raízes O(r). Percursos custam o trabalho examinado,
+  incluindo offset e um item extra. Descendentes também pagam pelas ligações
+  enfileiradas, com fronteira O(n) no pior caso mesmo com página pequena.
+  Contrato e exemplos completos em `backend/app/core/README.md`.
+- Testes puros em `backend/tests_dados/test_arvores.py`, incluindo corrente
+  profunda, ramificação, raízes independentes, apagadas, carga inválida atômica,
+  paginação e cenário da #13. Isso não comprova integração com API/banco.
+
+### Revisão ampliada da #41 — 25/11/2026
+
+- Corrigida a descoberta de testes: o pytest padrão (e `make test`) agora inclui
+  `tests_dados` além de `tests`. Antes, uma execução padrão podia passar sem
+  validar árvores, catálogo e seed. O isolamento por diretório foi preservado.
+- Ampliada a validação com comparação dos percursos/páginas a um modelo
+  independente em 12 florestas determinísticas, árvore larga com 501 filhos,
+  tipos inválidos em todos os identificadores e falhas de entrada sem mutação.
+  A revisão não encontrou defeito funcional nos algoritmos de árvore.
+
+## Integração de capas — erro encontrado e corrigido — 25/11/2026
+
+- Revisão adicional de Codex, autorizada por Bruno, encontrou incompatibilidade entre `None` do catálogo e coluna `NOT NULL` do backend. Reproduzida falha na reimportação e segunda inicialização com o mesmo banco.
+- Corrigida no importador: copiar registro e converter capa ausente/null para texto vazio antes de INSERT e UPDATE, preservando o contrato externo e os IDs. Limite do modelo e schema alinhado ao catálogo: 2048 caracteres.
+- Testes de regressão cobrem reimportação, reinício real via lifespan, URLs longas, remoção de capa e credenciais preservadas. Detalhes e evidências em [docs/revisao-integracao-capas.md](docs/revisao-integracao-capas.md).
+- Conciliação da base do #32 preserva decisões de posts, dados, perfil, página inicial e capas, sem duplicar a seção de dados. Sem avisos/comentários/menções ao time; revisão humana e merge continuam pendentes.
+
+## Feed e descoberta — decisão de 25/11/2026
+
+Bruno confirmou feed cronológico dos seguidos, pesquisa e ranking de músicas por quantidade de reviews, e republicação como criação de review derivada. Aprovou o rascunho gerado por IA como referência visual e autorizou sua publicação e organização no GitHub. Descobrir personalizado permanece separado.
+
+Padrões adotados neste plano: ranking de reviews públicas ativas em todo o período, desempate por ID, layout de três colunas a partir de 1024 px e navegação compacta abaixo disso. Não são afirmações extraídas dos áudios, que não foram transcritos. Detalhes, contratos, critérios e uso de IA: [feed e descoberta](docs/feed-e-descoberta.md). Backend de populares: #65; frontend: #66; demais tarefas preservam issues e responsáveis existentes. Imagem e documentação não significam funcionalidades prontas.
+
+## Revisão integral e integração autorizada dos PRs #32/#60/#59 — 25/11/2026
+
+- Bruno autorizou revisar integralmente e mesclar os três PRs, corrigindo falhas antes da integração. #32 e #60 entram primeiro; #59 passa a ter main como base para não ser mesclado apenas numa branch de funcionalidade.
+- Revisão do #59 incluiu massa, contrato, rollback/preservação, reset/backup, catálogo, estrutura de árvores e testes. Corrigidos fechamento explícito das conexões SQLite do backup e ausência de nota nos cenários; reforçada rejeição de identidades duplicadas. Evidências em docs/demo-issue-13.md.
+- Integração não conclui a #13: seed real depende de adaptador e persistência dos requisitos restantes. Sem comentários, menções ou mensagens ao time nesta etapa.
+
+## Telas de review — issue #3 (25/11/2026)
+
+- Front de criar, ver, editar e excluir review sobre a API de `feat/posts`: `/posts/novo` e `/posts/[id]`.
+- Música sem capa, ou com imagem indisponível, mostra um substituto. A exclusão pede confirmação.
+- O feed e a lista de reviews do perfil dependem de rotas que ainda não existem.
+- Claude Code implementou as telas e os testes de navegador. A revisão por outra pessoa continua pendente.
+
 ## Seleção de música no catálogo — issue #33 (25/11/2026)
 
 - `/posts/novo` deixou de aceitar título, artista, versão e capa digitados: a pessoa busca no catálogo (`GET /musicas`) e a review envia `musica_id`. Substitui o formulário descrito em "Telas de review".
 - A busca mostra até 20 resultados e pede para refinar quando há mais. A música escolhida aparece com artista e versão antes de publicar.
 - A troca de música de uma review existente continua não oferecida.
 - Claude Code fez a adaptação e os testes. A revisão por outra pessoa continua pendente.
+
+## Tela de feed — issue #36 (25/11/2026)
+
+- `/feed` consome `GET /feed?offset=&limit=` no formato de página (`items`, `total`) com reviews no formato de `PostOut`. A rota ainda não existe no backend.
+- Cartão compacto, como decidido para o feed: capa, música, nota e indicador de análise; o texto abre no detalhe.
+- Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
+- Curtidas e comentários, também da #36, não foram feitos.
+- Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
