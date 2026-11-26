@@ -8,7 +8,17 @@ import type { Page } from "@/lib/api";
 import { FEED_SIMULADO } from "@/lib/feed";
 import { buscarPopulares, type MusicaPopular } from "@/lib/musicas";
 
+/** Vitrine das músicas mais avaliadas, com a legenda do que é contado. */
 export function Populares({ limite }: { limite: number }) {
+  return (
+    <>
+      <p className="mb-4 text-sm text-zinc-600">Quantidade de reviews nesta rede, em todo o período</p>
+      <Vitrine limite={limite} />
+    </>
+  );
+}
+
+function Vitrine({ limite }: { limite: number }) {
   const [pagina, setPagina] = useState<Page<MusicaPopular> | null>(null);
   const [erro, setErro] = useState("");
   const [tentativa, setTentativa] = useState(0);

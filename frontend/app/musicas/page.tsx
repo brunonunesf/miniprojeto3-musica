@@ -10,7 +10,6 @@ export default function MusicasPage() {
       </div>
       <section className="painel" aria-labelledby="titulo-populares">
         <h2 id="titulo-populares" className="text-xl font-bold">Mais avaliadas na comunidade</h2>
-        <p className="mb-4 text-sm text-zinc-600">Quantidade de reviews nesta rede, em todo o período</p>
         <Populares limite={20} />
       </section>
     </div>

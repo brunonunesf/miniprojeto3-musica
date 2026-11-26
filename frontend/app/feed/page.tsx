@@ -66,7 +66,6 @@ export default function FeedPage() {
         </div>
         <section className="painel" aria-labelledby="titulo-populares">
           <h2 id="titulo-populares" className="text-xl font-bold">Mais avaliadas na comunidade</h2>
-          <p className="mb-4 text-sm text-zinc-600">Por quantidade de reviews</p>
           <Populares limite={4} />
           <Link href="/musicas" className="mt-4 block text-center text-sm font-semibold text-brand-700 underline">Ver todas</Link>
         </section>
