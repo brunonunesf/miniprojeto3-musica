@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { BotaoCurtir } from "@/components/BotaoCurtir";
 import { Capa } from "@/components/Capa";
 import type { Post } from "@/lib/api";
 import { nomeDaVersao } from "@/lib/musica";
@@ -32,6 +33,7 @@ export function ReviewCard({ post, exemplo = false }: Props) {
         </div>
         <p className="text-2xl font-bold text-brand-700">{post.nota}<span className="text-sm text-zinc-500">/10</span></p>
       </div>
+      {!exemplo && <BotaoCurtir post={post} />}
       <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <span className="text-zinc-500">{post.tem_texto ? "Tem análise" : "Só nota"}</span>
         {!exemplo && (

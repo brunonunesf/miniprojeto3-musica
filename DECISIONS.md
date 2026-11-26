@@ -359,3 +359,10 @@ Padrões adotados neste plano: ranking de reviews públicas ativas em todo o per
 - Com `NEXT_PUBLIC_FEED_SIMULADO=true`, a tela usa dados fictícios e avisa isso. A variável não deve ser ligada na demonstração como se fosse o feed real.
 - Curtidas e comentários, também da #36, não foram feitos.
 - Claude Code implementou a tela e os testes de navegador. A revisão por outra pessoa continua pendente.
+
+## Botão de curtir — issue #36 (25/11/2026)
+
+- Feed e detalhe mostram contagem e estado, com `POST` e `DELETE /posts/{id}/curtir` (branch `feat/back-curtidas`, ainda fora da `main`).
+- A tela usa a contagem devolvida pelo servidor; em falha nada muda. Curtir não é tratado como descoberta.
+- Sem os campos `curtidas` e `curtido_por_mim`, o botão não aparece. Reviews de exemplo não têm botão.
+- Claude Code implementou o botão e os testes. A revisão por outra pessoa continua pendente.
