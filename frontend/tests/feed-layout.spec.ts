@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Page, type Route } from "@playwright/test";
 
 const musica = {
   id: 1, chave_catalogo: "teste-1", titulo: "Maré", artista: "Faroleiros",
@@ -40,6 +40,10 @@ test("três colunas no computador e atalhos no celular", async ({ page }, info) 
 test("pesquisa abre a página da música e falha lateral não bloqueia o feed", async ({ page }) => {
   await entrar(page);
   await page.route(naApi("/feed"), (route) => route.fulfill(pagina([])));
+  // O servidor real já tem estas rotas; um servidor sem elas responde 404, então simulamos a falha lateral.
+  const semRota = (route: Route) => route.fulfill({ status: 404, json: { detail: "Not Found" } });
+  await page.route(naApi("/musicas/populares"), semRota);
+  await page.route((url) => url.port === "8000" && /^\/musicas\/\d+\/reviews$/.test(url.pathname), semRota);
   await page.goto("/musicas");
   await expect(page.getByText("mais avaliadas ainda não estão disponíveis", { exact: false })).toBeVisible();
   await page.getByLabel("Buscar música ou artista").fill("mare");

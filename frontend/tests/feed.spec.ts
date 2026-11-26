@@ -64,7 +64,9 @@ test("estado vazio e servidor sem a rota do feed", async ({ page }) => {
   await page.route(ehFeed, (route) => pagina(route, [], 0));
   await abrirFeed(page);
   await expect(page.getByText("Nenhuma review por aqui ainda.", { exact: false })).toBeVisible();
+  // O servidor real já tem o /feed; um servidor sem a rota responde 404, então simulamos isso.
   await page.unroute(ehFeed);
+  await page.route(ehFeed, (route) => route.fulfill({ status: 404, json: { detail: "Not Found" } }));
   await page.getByRole("button", { name: "Atualizar" }).click();
   await expect(page.getByText("O feed ainda não está disponível neste servidor.")).toBeVisible();
 });
