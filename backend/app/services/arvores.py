@@ -34,6 +34,9 @@ def reconstruir(db: Session) -> None:
     ).all()
     registros = [RegistroReview(i, m, a, o) for i, m, a, o in ativas]
     registros += [RegistroReview(i, m, a, o, apagada=True) for i, m, a, o in apagadas]
+    # Ordem estável por id (que cresce com a publicação, pelo AUTOINCREMENT): sem isto, as reviews
+    # apagadas, que vêm de outra tabela, mudariam a ordem dos ramos depois de um reinício.
+    registros.sort(key=lambda r: r.review_id)
     with TRAVA:
         floresta.reconstruir(registros)  # atômico: se falhar, a floresta anterior fica
 
@@ -63,8 +66,9 @@ def _percorrer(post_id: int):
 def ler(db: Session, post_id: int) -> ArvoreOut:
     """A árvore em que a review está: a raiz e todos os ramos, em ordem de publicação por nível.
 
-    Custo: subir até a raiz é O(profundidade) e descer é O(reviews devolvidas), com teto em
-    `LIMITE_DA_ARVORE`. A leitura usa a floresta em memória e uma consulta ao banco para os dados
+    Custo: subir até a raiz é O(profundidade). O limite restringe a saída, mas
+    o BFS pode enfileirar todos os filhos de um nó largo: tempo e memória O(n)
+    no pior caso, conforme o contrato da #41. A leitura usa a floresta em memória e uma consulta ao banco para os dados
     das reviews que ainda existem.
     """
     try:
