@@ -1,4 +1,4 @@
-"""Orquestração transacional; carga completa aguarda integração de origens."""
+"""Orquestração transacional da carga completa com origens oficiais."""
 from typing import Protocol
 from importlib import import_module
 from importlib.util import find_spec

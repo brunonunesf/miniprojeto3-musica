@@ -1,4 +1,4 @@
-"""Adaptador aos modelos oficiais do #74. Sem simular origens ainda ausentes."""
+"""Adaptador da carga completa aos modelos oficiais, incluindo origens da #78."""
 from datetime import datetime, timezone
 
 import bcrypt
@@ -11,13 +11,15 @@ from app.models.musica import Musica
 from app.models.post import Post
 from app.models.follow import Follow
 from app.models.curtida import Curtida
+from app.models.review_apagada import ReviewApagada
+from app.core.arvores import FlorestaReviews, RegistroReview
 from app.schemas.post import PostCreate
 from app.services.auth import gerar_hash
 from catalogo_musical import carregar_catalogo
 from cenarios_demo import validar_cenario
 from seed_demo import IntegracaoPendente, SENHA_DEMO
 
-MODELOS = (User, Musica, Post, Follow, Curtida)
+MODELOS = (User, Musica, Post, Follow, Curtida, ReviewApagada)
 
 
 def _musica(registro):
@@ -32,12 +34,9 @@ def _exigir(condicao, mensagem):
 class AdaptadorBackend:
     def verificar_requisitos(self, cenario):
         validar_cenario(cenario)
-        # Nenhum destino implícito, tabela auxiliar ou descarte silencioso de origens.
-        if any(p['origem'] is not None for p in cenario['posts']):
-            raise IntegracaoPendente(
-                'Carga completa não aplicada: persistência de origens da #10 ainda não integrada '
-                'ao adaptador. Corrente e ramos foram preservados; nenhum dado foi gravado.'
-            )
+        floresta = FlorestaReviews()
+        floresta.reconstruir(RegistroReview(p['chave'], p['musica'], p['autor'], p['origem'])
+                            for p in cenario['posts'])
         _exigir(carregar_catalogo() == cenario['musicas'],
                 'Catálogo diferente da demo. Configure CATALOGO_MUSICAL_PATH=data/musicas_demo.json '
                 'no seed e na aplicação; não importar o catálogo fictício nesta base.')
@@ -74,7 +73,7 @@ class AdaptadorBackend:
             _exigir(campos in unicas, f'Restrição única ausente: {modelo.__tablename__}')
         ddl = db.scalar(text("SELECT sql FROM sqlite_master WHERE type='table' AND name='posts'"))
         _exigir(ddl and 'AUTOINCREMENT' in ddl.upper(), 'Posts sem AUTOINCREMENT; use reset do banco de demo')
-        for modelo in (User, Post, Follow, Curtida):
+        for modelo in (User, Post, Follow, Curtida, ReviewApagada):
             _exigir(not db.scalar(select(func.count()).select_from(modelo)),
                     f'Colisão: {modelo.__tablename__} já contém dados sem carga aplicada; banco preservado')
         existentes = list(db.scalars(select(Musica)))
@@ -101,12 +100,19 @@ class AdaptadorBackend:
                 musicas[musica.chave_catalogo] = musica
         db.flush()
         posts = {}
-        for registro in cenario['posts']:
+        from graphlib import TopologicalSorter
+        por_chave = {p['chave']: p for p in cenario['posts']}
+        ordem = TopologicalSorter({p['chave']: [p['origem']] if p['origem'] else []
+                                   for p in cenario['posts']}).static_order()
+        for chave in ordem:
+            registro = por_chave[chave]
+            origem_id = posts[registro['origem']].id if registro['origem'] else None
             dados = PostCreate(musica_id=musicas[registro['musica']].id,
-                               nota=registro['nota'], texto=registro['texto'])
+                               nota=registro['nota'], texto=registro['texto'], origem_id=origem_id)
             post = Post(**dados.model_dump(), autor_id=usuarios[registro['autor']].id,
                         created_at=datetime.fromisoformat(registro['created_at']))
             db.add(post)
+            db.flush()  # ID real disponível antes de inserir descendentes
             posts[registro['chave']] = post
         db.flush()
         db.add_all(Follow(seguidor_id=usuarios[r['seguidor']].id, seguido_id=usuarios[r['seguido']].id)
@@ -144,6 +150,9 @@ class AdaptadorBackend:
                 data = data.replace(tzinfo=timezone.utc)
             _exigir(data == datetime.fromisoformat(p['created_at']), 'Data de review divergente')
             por_chave[p['chave']] = real
+        for p in cenario['posts']:
+            esperado = por_chave[p['origem']].id if p['origem'] else None
+            _exigir(por_chave[p['chave']].origem_id == esperado, 'Origem de review divergente')
         follows = {(r.seguidor_id, r.seguido_id) for r in db.scalars(select(Follow))}
         _exigir(follows == {(usuarios[r['seguidor']].id, usuarios[r['seguido']].id)
                            for r in cenario['follows']}, 'Follows divergentes')

@@ -199,7 +199,7 @@ def test_comentarios_planos_cronologicos(client, logar, id_da_musica):
 # ---------- SEED FAKE ----------
 
 
-@pytest.mark.skip(reason="Carga completa depende de persistência de origens (#10); mapeamento do #74 é testado em test_seed_adaptador.py")
+@pytest.mark.usefixtures("catalogo_demo_nucleo")
 def test_seed_fake_popula_a_rede(client):
     # contrato: função seed_fake(db) em scripts/seed.py — a demo nunca começa vazia
     import sys
@@ -216,3 +216,13 @@ def test_seed_fake_popula_a_rede(client):
         assert (db.scalar(text("select count(*) from posts")) or 0) >= 50
         assert (db.scalar(text("select count(*) from follows")) or 0) >= 20
         assert (db.scalar(text("select count(*) from curtidas")) or 0) >= 30
+
+
+@pytest.fixture
+def catalogo_demo_nucleo(monkeypatch):
+    monkeypatch.setenv('CATALOGO_MUSICAL_PATH', 'data/musicas_demo.json')
+    from seed_demo import cargas
+    from app.db import engine
+    cargas.drop(engine, checkfirst=True)
+    yield
+    cargas.drop(engine, checkfirst=True)
