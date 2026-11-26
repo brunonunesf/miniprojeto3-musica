@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { Avatar } from "@/components/Avatar";
-import { PautaDecorativa } from "@/components/PautaDecorativa";
+import { Navbar } from "@/components/Navbar";
 import { ApiError, apiGet, apiPost, type User } from "@/lib/api";
 
 type Estado = "verificando" | "autenticado" | "visitante" | "erro";
@@ -14,12 +12,6 @@ type Sessao = {
   atualizarUsuario: (novo: User) => void;
 };
 const Contexto = createContext<Sessao | null>(null);
-
-const NAVEGACAO = [
-  ["/feed", "Feed"],
-  ["/descobrir", "Descobrir"],
-  ["/usuarios", "Pessoas"],
-];
 
 export function useSessao() {
   const sessao = useContext(Contexto);
@@ -123,37 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <Contexto.Provider value={{ usuario, entrar, atualizarUsuario }}>
       <a href="#conteudo" className="skip-link">Pular para o conteúdo</a>
-      <header className="border-b border-orange-100 bg-[#fffaf4]">
-        <nav aria-label="Navegação principal" className={`mx-auto flex ${largura} flex-wrap items-center justify-between gap-3 px-4 py-3`}>
-          <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
-            <span aria-hidden="true" className="text-2xl text-brand-500">♫</span>
-            Descoberta musical
-          </Link>
-          {estado === "autenticado" && usuario ? (
-            <>
-              <PautaDecorativa />
-              <div className="order-last flex w-full justify-center gap-2 text-sm font-semibold md:order-none md:w-auto">
-                {NAVEGACAO.map(([rota, nome]) => (
-                  <Link key={rota} href={rota} aria-current={pathname === rota ? "page" : undefined} className="rounded-lg px-4 py-2 aria-[current=page]:bg-orange-100">
-                    {nome}
-                  </Link>
-                ))}
-              </div>
-              <PautaDecorativa />
-              <div className="flex items-center gap-4 text-sm">
-                <Link href={`/usuarios/${usuario.username}`} aria-label={usuario.name} title={`Meu perfil: ${usuario.name}`} className="rounded-full">
-                  <Avatar user={usuario} />
-                </Link>
-                <button onClick={sair} className="font-semibold text-brand-700">Sair</button>
-              </div>
-            </>
-          ) : estado === "visitante" ? (
-            <Link href={pathname === "/login" ? "/registro" : "/login"} className="text-sm font-semibold text-brand-700">
-              {pathname === "/login" ? "Criar conta" : "Entrar"}
-            </Link>
-          ) : null}
-        </nav>
-      </header>
+      <Navbar usuario={estado === "autenticado" ? usuario : null} visitante={estado === "visitante"} pathname={pathname} aoSair={sair} />
       <main id="conteudo" className={`mx-auto ${largura} px-4 ${pathname === "/feed" ? "py-6" : "py-8 sm:py-12"}`}>
         {aviso && <p role="status" className="mb-6 rounded-xl border border-orange-200 bg-orange-50 p-4 text-sm text-orange-900">{aviso}</p>}
         {estado === "erro" ? (
