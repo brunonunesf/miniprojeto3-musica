@@ -51,7 +51,7 @@ cd miniprojeto3-musica
 cd backend && uv sync && cd ..
 cd frontend && npm install && cp .env.local.example .env.local && cd ..
 make check
-make seed
+make seed-minimo
 make test
 ```
 
@@ -64,7 +64,7 @@ make dev-front  # http://localhost:3000/login
 
 Acesse `/registro` para criar uma conta ou `/login` para entrar. O cadastro entra automaticamente. Se a conta for criada mas o login falhar, a tela de login confirma a criação e mantém o usuário preenchido; não é preciso cadastrar novamente.
 
-O seed mínimo oferece `ana`, `bruno` e `carlos`, com a senha de demonstração `senha-forte-123`. `make seed` só popula um banco vazio; contas antigas sem hash não passam a ter senha automaticamente. Não apague um banco existente para testar: use um `DATABASE_URL` separado.
+O seed mínimo oferece `ana`, `bruno` e `carlos`, com a senha de demonstração `senha-forte-123`. `make seed-minimo` só popula um banco vazio; contas antigas sem hash não passam a ter senha automaticamente. Não apague um banco existente para testar: use um `DATABASE_URL` separado.
 
 A página inicial e `/usuarios` exigem sessão na interface. A tela de usuários mantém a demonstração original do esqueleto, incluindo criação sem senha; para criar uma conta que possa entrar, use `/registro`. As rotas públicas de usuários mantêm o contrato original. A proteção de cada ação futura deve ser imposta também pelo backend.
 
@@ -115,6 +115,16 @@ Síntese das mensagens de texto sobre música da conversa do grupo em 18 e 19/11
 ### Catálogo musical — entrega de dados da #9
 
 O catálogo inicial contém seis faixas e artistas **fictícios**, com identidades distintas para original, remix, ao vivo e remaster. A entrega inclui dados, carregamento/validação independente e testes, sem banco, API ou interface. Veja o [contrato, a curadoria e os comandos de validação](backend/data/README.md). Persistência e vínculo com reviews serão integrados pelos responsáveis de backend; seleção e apresentação, pela responsável de frontend. A #9 permanece aberta.
+
+### Seed musical da issue #13
+
+`make seed-validar` confere a massa de demonstração sem banco. `make seed` agora
+exige `DATABASE_URL=sqlite:///./demo/issue13.db` (resolvido dentro de `backend/`)
+e interrompe sem carga enquanto faltar o adaptador de persistência do backend.
+O seed antigo de três usuários continua disponível em `make seed-minimo`;
+a orientação anterior de `make seed` para essas contas foi substituída.
+Consulte [cenários, versões musicais e pendências](docs/demo-issue-13.md).
+A #13 permanece aberta; persistência completa e validação do reset com a rede real ainda estão pendentes. O mecanismo de reset com backup está implementado; exige `--reset-demo --confirmar-reset --aplicacao-parada` e o adaptador real do backend.
 
 ## Feed e descoberta — planejamento visual aprovado em 25/11
 

@@ -223,6 +223,24 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - **Esquema do banco:** `create_all` cria tabelas ausentes, mas não altera colunas existentes. Não apagar `app.db` para esta correção: a normalização não muda nulabilidade e o SQLite não impõe o comprimento de VARCHAR. Use banco separado para testar; outros tipos de alteração de esquema exigem migração específica.
 - Claude Code implementou o CRUD de reviews, a importação e as rotas do catálogo e seus testes (`test_posts_crud`, `test_posts.py` e `test_musicas.py`). Foi verificado com `make test` (75 passed, 6 skipped). O código ainda precisa ser revisado por outra pessoa do time.
 
+
+## Issue #13 — seed e cenários aprovados — 25/11/2026
+
+- Prioridade: cenários reproduzíveis de árvores e Descobrir, com integração conforme contratos do backend. Documentação não encerra a issue.
+- Catálogo de demonstração: 20 gravações reais da playlist de Bruno, com Apesar de Você substituindo Sozinho. IDs Spotify são referências externas; sem download de áudio/OAuth. Catálogo fictício anterior preservado como fixture técnica.
+- 25 personagens fornecidos por Bruno; Bruno Nunes, Cecília Candeia e Daniel Dantas protagonizam a corrente. Reviews e ações são fictícias. Massa inicial: 50 reviews, 20 follows e 30 likes; semente fixa 13. Clareou possui corrente, ramo e raiz independente; Ryan Rodrigues inicia sem sinais.
+- Banco exclusivo de demonstração; preservar ações dos ensaios e registrar carga aplicada. Reexecução não restaura registros removidos. Reset separado e explícito; sem carga parcial: requisitos ausentes interrompem antes de gravar.
+- Implementados definição/validação independente e orquestração com contrato de adaptador. Persistência real, reset funcional e validação integrada continuam pendentes dos modelos do backend; não são considerados entregues.
+- Detalhes, nomes, faixas, contratos, roteiro e limites: [docs/demo-issue-13.md](docs/demo-issue-13.md). Bruno prepara dados; Daniel alinha persistência; algoritmos continuam nas #41/#43/#55.
+
+
+## Issue #13 — continuação do contrato e reset — 25/11/2026
+
+- Bruno confirmou: Daniel entrega os modelos/serviços; não criar persistência paralela na #13. Primeiro marco é carga e APIs; as demais integrações seguem progressivamente.
+- Reset com backup anterior, reconstrução/validação em temporário e substituição atômica; aplicação parada e confirmação explícita obrigatórias. Cópias locais não são apagadas automaticamente.
+- Implementado mecanismo independente dos modelos e ligação automática à fábrica proposta `app.services.demo_seed.criar_adaptador()`. O adaptador requer verificar/gravar/preparar_banco/validar. A interface concreta precisa ser alinhada aos modelos entregues por Daniel.
+- Os modelos necessários continuam ausentes na base consultada. Adaptador real, carga pela API e validação do reset com a rede real permanecem pendentes; testes de infraestrutura não comprovam essas entregas.
+
 ## Perfil — conciliação com a identidade aprovada (25/11/2026)
 
 - As telas de perfil passaram a usar o visual e a sessão central do PR #27. Os componentes do tema escuro (`feat/telas-auth`) foram removidos.
@@ -251,6 +269,56 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 - Conflito em DECISIONS.md resolvido preservando o registro de dados e os registros recentes da main sobre perfil e página inicial. Sem merge do PR nem reescrita do histórico.
 
 
+## Revisão da integração — atualização da base do #59 — 25/11/2026
+
+- Incorporada a base atualizada do #32 com `capa_url` opcional e a main já conciliada. Resolvido conflito em DECISIONS.md preservando decisões de seed, catálogo, capas, perfil e página inicial. Sem incorporar a branch de backend do #60.
+- A revisão combinada encontrou falha de `None` versus `NOT NULL` na reimportação do catálogo do #60, capaz de impedir a segunda inicialização. Correção implementada no #60: normalizar ausência/null para texto vazio no importador; modelo/schema alinhados a 2048 caracteres.
+- Evidências e causa documentadas no #60 em `docs/revisao-integracao-capas.md`; testes de reinício, reimportação, URL longa e remoção de capa adicionados lá. Nenhum aviso, comentário ou menção ao time foi enviado nesta correção.
+- A atualização não conclui o adaptador do seed: origens/follows/likes e validação integrada continuam dependências da #13.
+
+## Estrutura e percursos de árvores — issue #41 — 25/11/2026
+
+- Entrega exclusivamente de dados em `app/core/arvores.py`, sem banco/FastAPI.
+  Classe instanciável e singleton para futura integração da #10; não altera
+  endpoints, modelos, startup, seed ou interface. Troca de origem fica na #49.
+- Floresta indexada por ID, filhos por pai e raízes por música. Nó imutável:
+  IDs de review/música/autor, origem opcional e marca de apagada, sem conteúdo.
+  IDs int/string sem coerção; mesma música significa mesma identidade interna,
+  não igualdade de título. Várias raízes por música são válidas.
+- Reconstrução aceita registros fora de ordem, exige referências completas e
+  rejeita integralmente duplicata, pai ausente, outra música e ciclo, preservando
+  o estado anterior. Referência apagada existente é válida e conserva autoria.
+- Inserção incremental exige ID novo e pai ativo da mesma música. Exclusão
+  estrutural idempotente apenas marca apagada; descendentes, distância e raiz
+  permanecem. Unicidade de review ativa, texto, permissões e transações são do
+  backend. Curtidas, comentários e reescutas não alimentam a floresta.
+- BFS e DFS pré-ordem iterativos; ancestrais do pai à raiz; nó inicial excluído.
+  Referências apagadas aparecem como nós sem conteúdo e contam como nível.
+  Irmãos/raízes seguem inserção; backend deve fornecer carga ordenada e estável.
+- Percursos paginados: offset não negativo, limit padrão 50/máximo 200,
+  profundidade opcional sem corte padrão; zero retorna vazio. Profundidade
+  aplicada antes da paginação. Retorno imutável com itens, distância e tem_mais,
+  sem total. Mudanças entre consultas podem alterar páginas.
+- Custos reais: reconstrução O(n) esperado com detecção de ciclos linear,
+  memória O(n); inserção/consulta/pai/exclusão O(1) esperado/amortizado;
+  raiz O(h); listar raízes O(r). Percursos custam o trabalho examinado,
+  incluindo offset e um item extra. Descendentes também pagam pelas ligações
+  enfileiradas, com fronteira O(n) no pior caso mesmo com página pequena.
+  Contrato e exemplos completos em `backend/app/core/README.md`.
+- Testes puros em `backend/tests_dados/test_arvores.py`, incluindo corrente
+  profunda, ramificação, raízes independentes, apagadas, carga inválida atômica,
+  paginação e cenário da #13. Isso não comprova integração com API/banco.
+
+### Revisão ampliada da #41 — 25/11/2026
+
+- Corrigida a descoberta de testes: o pytest padrão (e `make test`) agora inclui
+  `tests_dados` além de `tests`. Antes, uma execução padrão podia passar sem
+  validar árvores, catálogo e seed. O isolamento por diretório foi preservado.
+- Ampliada a validação com comparação dos percursos/páginas a um modelo
+  independente em 12 florestas determinísticas, árvore larga com 501 filhos,
+  tipos inválidos em todos os identificadores e falhas de entrada sem mutação.
+  A revisão não encontrou defeito funcional nos algoritmos de árvore.
+
 ## Integração de capas — erro encontrado e corrigido — 25/11/2026
 
 - Revisão adicional de Codex, autorizada por Bruno, encontrou incompatibilidade entre `None` do catálogo e coluna `NOT NULL` do backend. Reproduzida falha na reimportação e segunda inicialização com o mesmo banco.
@@ -263,3 +331,9 @@ Inspirado no Letterboxd, o post da rede **é uma review de uma música do catál
 Bruno confirmou feed cronológico dos seguidos, pesquisa e ranking de músicas por quantidade de reviews, e republicação como criação de review derivada. Aprovou o rascunho gerado por IA como referência visual e autorizou sua publicação e organização no GitHub. Descobrir personalizado permanece separado.
 
 Padrões adotados neste plano: ranking de reviews públicas ativas em todo o período, desempate por ID, layout de três colunas a partir de 1024 px e navegação compacta abaixo disso. Não são afirmações extraídas dos áudios, que não foram transcritos. Detalhes, contratos, critérios e uso de IA: [feed e descoberta](docs/feed-e-descoberta.md). Backend de populares: #65; frontend: #66; demais tarefas preservam issues e responsáveis existentes. Imagem e documentação não significam funcionalidades prontas.
+
+## Revisão integral e integração autorizada dos PRs #32/#60/#59 — 25/11/2026
+
+- Bruno autorizou revisar integralmente e mesclar os três PRs, corrigindo falhas antes da integração. #32 e #60 entram primeiro; #59 passa a ter main como base para não ser mesclado apenas numa branch de funcionalidade.
+- Revisão do #59 incluiu massa, contrato, rollback/preservação, reset/backup, catálogo, estrutura de árvores e testes. Corrigidos fechamento explícito das conexões SQLite do backup e ausência de nota nos cenários; reforçada rejeição de identidades duplicadas. Evidências em docs/demo-issue-13.md.
+- Integração não conclui a #13: seed real depende de adaptador e persistência dos requisitos restantes. Sem comentários, menções ou mensagens ao time nesta etapa.
