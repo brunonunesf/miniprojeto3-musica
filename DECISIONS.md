@@ -594,6 +594,20 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - No ensaio, edição/exclusão/descurtida/unfollow foram preservados na reexecução. Reset recompôs a massa inicial e o backup recuperou o estado anterior; nenhum banco pessoal foi alterado. Não houve aviso, comentário ou menção ao time nesta etapa.
 - Reputação histórica após exclusão, correção/recálculo, reescutas/bibliotecas e Descobrir permanecem nas issues próprias. Reescuta não foi apresentada como validada sem serviço integrado. Instruções institucionais foram conferidas no material versionado, sem afirmar envio ou acesso ao Classroom.
 
+## Issue #39 — catálogo e identidade musical — 26/11/2026
+
+- Bruno aprovou concluir o escopo de dados reaproveitando a entrega do #32 e a integração do #60. As referências históricas à #9 acima descrevem o estado daquela entrega; a integração já existe e o aceite atual é da #39.
+- Preservadas seis fictícias para homônimos/versões e 20 reais para demo, sem expansão ou alteração de chaves. Gêneros/tags continuam listas abertas; normalização existente e revisão de consistência sem vocabulário fechado.
+- Chave curada estável e opaca identifica a entrada; ID interno é atribuído pelo banco e preservado na reimportação. Entrada manual é curadoria do arquivo, sem cadastro pela interface. Metadados iguais não autorizam fusão; original/remix/ao vivo/remaster são distintos.
+- Referências Spotify existentes não provam equivalência entre serviços. Vínculo futuro exige confirmação manual da gravação/edição, com fontes, responsável e justificativa registrados; sem confirmação, manter entradas separadas. Sem OAuth, matching ou schema novo nesta entrega.
+- Codex atualizou documentação e acrescentou teste de navegador sem mocks para o aceite. Dados/API: 217 testes aprovados; validadores: 6 e 20 entradas; build/typecheck aprovados; Chrome desktop: cenário técnico e real aprovados, com duas contas, publicação, perfil e feed.
+- Evidências e reprodução: `docs/evidencias/issue39/README.md`. Sem mudanças de contrato público, migração ou implementação de outra área. PR com `Closes #39`, sujeito à revisão de outra pessoa antes do merge.
+
+### Revisão do PR #83 — 26/11/2026
+
+- Atendidas as três sugestões publicadas por Bruno: corrigida frase histórica de catálogo real; teste agora identifica cada cartão de perfil/feed por link da review e exige quantidade, artista e versão; criada rotina única para executar os dois catálogos em bancos separados, interrompendo em erro.
+- Seleção do cenário resolve caminho relativo/absoluto como o carregador, evitando depender da grafia literal da variável. Dados e contratos preservados. Nova revisão estática do diff e validações registradas nas evidências da #39; Bruno autorizou publicação e merge após as correções e a nova revisão.
+
 ## Review repetida leva à existente — issue #33 (26/11/2026)
 
 - Quando o servidor recusa uma segunda review da mesma gravação, o formulário oferece abrir a review que já existe. Nada é duplicado e a origem dela não muda.

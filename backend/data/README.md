@@ -1,6 +1,6 @@
-# Catálogo musical — dados da issue #9
+# Catálogo e identidade musical — issue #39
 
-Este catálogo contém **seis faixas e artistas fictícios de demonstração**. Não representa músicas reais nem comprova equivalência com gravações de serviços externos. Esta entrega é de dados: não popula banco, não cria API e não integra formulários ou reviews.
+`musicas.json` contém **seis faixas e artistas fictícios**, usados para testar homônimos e versões. `musicas_demo.json` contém **20 gravações reais** para demonstração. Ambos seguem o mesmo contrato. O módulo de dados não abre banco nem integra formulários; a aplicação já importa o catálogo e vincula reviews por ID interno.
 
 ## Validar sem iniciar a aplicação
 
@@ -39,9 +39,9 @@ A normalização produz novos registros em memória. O arquivo de origem e suas 
 4. Para corrigir grafia, descrição, gênero ou tags da mesma entrada, mantenha a chave. Não reutilize uma chave antiga para outra gravação e não renomeie chaves para acompanhar mudanças de título.
 5. Valide o conjunto inteiro antes de entregar. Se qualquer entrada falhar, o carregador lança erro e não retorna uma lista parcial.
 
-Os exemplos cobrem uma original com remix, ao vivo e remaster, outro artista com o mesmo título e uma faixa adicional. O cadastro de músicas reais, expansão do catálogo e matching externo ficam para outra entrega combinada.
+Os exemplos cobrem uma original com remix, ao vivo e remaster, outro artista com o mesmo título e uma faixa adicional. A expansão adicional do catálogo real e o matching externo ficam para outra entrega combinada.
 
-## Reutilização pelo backend (integração futura)
+## Consumo pelo backend e seed
 
 A partir de `backend/`:
 
@@ -54,17 +54,23 @@ registros = carregar_catalogo()  # list[dict], todos validados e normalizados
 
 `validar_catalogo(conteudo)` também aceita o array já lido. Falhas levantam `ErroCatalogo` (subclasse de `ValueError`). As funções não importam `app`, não abrem banco e não fazem chamadas externas.
 
-A `chave_catalogo` identifica a entrada curada; o **ID interno do banco será atribuído e preservado pelo backend**, que deve integrar a importação sem duplicar identidades. Os registros desta entrega não incluem `id` de banco. Spotify/Deezer só poderão ser associados ao mesmo item após confirmar a gravação; título/artista ou serviço diferente não bastam. Esta entrega não adiciona IDs externos, autenticação com provedores ou matching.
+A `chave_catalogo` identifica a entrada curada; o **ID interno do banco é atribuído e preservado pelo backend**, cuja importação idempotente reutiliza a mesma chave sem duplicar identidades. Os registros desta entrega não incluem `id` de banco. Spotify/Deezer só poderão ser associados ao mesmo item após confirmar a gravação; título/artista ou serviço diferente não bastam. Esta entrega não adiciona IDs externos, autenticação com provedores ou matching.
 
-## Limites e trabalho restante
+## Responsabilidades e integração atual
 
-- **Bruno (dados):** catálogo, gêneros, tags e consistência das identidades/versões, entregues aqui.
-- **Daniel (backend):** persistência/importação, consultas, vínculo review/música e validações, incluindo uma review ativa por pessoa/item musical e proteção contra envios simultâneos.
-- **Cecília (frontend):** seleção e apresentação musical nas reviews, tratamento de referência inválida e opções ao tentar criar outra review da mesma versão.
+- **Dados (#39):** contrato, curadoria, gêneros, tags e consistência das identidades/versões.
+- **Backend (#3):** importação e persistência, consulta e vínculo review/música; já há rotas e validações de identidade compartilhada e review única por pessoa/versão.
+- **Frontend (#33):** seleção do catálogo e apresentação em detalhe/feed/perfil; já há integração com a API.
 
-Requisitos futuros confirmados neste chat: uma review ativa por pessoa/versão; editar texto preserva a identidade musical; republicar reutiliza a review, com comentário opcional e intervalo de 24h; edição real volta a destacar o mesmo cartão, sem criar avisos por edição e sem consumir esse intervalo. Esses comportamentos **não estão implementados nesta entrega** e dependem das issues e áreas correspondentes. Trocar a música de uma review continua pendente.
+A antiga #9 foi reorganizada; seu encerramento não comprova a implementação de todas as áreas. O aceite de dados é acompanhado na #39 e suas evidências em `docs/evidencias/issue39/README.md`. Troca de música em review existente e funcionalidades de reescuta não fazem parte desta entrega.
 
-A issue #9 permanece aberta para integração e validação conjunta. As branches dos PRs #28–#31 preservam referências anteriores, sem autorização implícita para integrar código de outras áreas. O PR de dados substitui o #28; #29–#31 continuam fechados.
+## Entrada manual e correspondência entre serviços
+
+Entrada manual significa adicionar uma entrada curada ao arquivo, com chave própria estável; não existe cadastro livre de músicas pela interface/API. A chave é interna ao catálogo, mesmo quando sua grafia inclui `spotify-`; o consumidor deve tratá-la como opaca. O ID numérico do banco não é um ID de provedor.
+
+`referencias_spotify_demo.json` relaciona as 20 chaves da demo aos IDs e URLs Spotify de origem. Não comprova equivalência com Deezer ou outro serviço e não é um mecanismo de matching.
+
+Antes de associar serviços à mesma entrada, o curador precisa confirmar a gravação e edição específicas, conferindo versão, créditos e identificação da fonte; título/artista iguais ou duração semelhante, isoladamente, não bastam. Registre fontes, responsável e justificativa da confirmação nas decisões da entrega que introduzir o vínculo. Sem confirmação, mantenha entradas separadas e não migre reviews. Esta entrega não introduz pares entre serviços, schema de equivalências, OAuth ou chamadas externas.
 
 ## Capas — ajuste da revisão do PR #32
 
