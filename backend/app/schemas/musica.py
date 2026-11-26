@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class MusicaOut(BaseModel):
@@ -12,7 +12,7 @@ class MusicaOut(BaseModel):
     descricao_versao: str
     generos: list[str]
     tags: list[str]
-    capa_url: str
+    capa_url: str = Field(max_length=2048)
 
 
 class MusicaPage(BaseModel):

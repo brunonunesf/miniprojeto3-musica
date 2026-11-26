@@ -18,5 +18,5 @@ class Musica(Base):
     descricao_versao: Mapped[str] = mapped_column(String(200), default="")
     generos: Mapped[list[str]] = mapped_column(JSON)
     tags: Mapped[list[str]] = mapped_column(JSON)
-    # o catálogo ainda não traz capa; fica opcional até a coluna entrar nos dados
-    capa_url: Mapped[str] = mapped_column(String(300), default="")
+    # Sem capa usa texto vazio; mesmo limite de 2048 caracteres do catálogo.
+    capa_url: Mapped[str] = mapped_column(String(2048), default="")
