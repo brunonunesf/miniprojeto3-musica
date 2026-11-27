@@ -622,3 +622,11 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - "Apagar" aparece só nos próprios comentários e pede confirmação. Comentário já apagado em outro lugar sai da lista; em servidor sem a rota, ele permanece e a tela avisa.
 - Dependem do backend dos PRs #86 e #87. A correção de origem (#42) continua pendente.
 - Claude Code fez as telas e os testes. Por decisão do time, não houve revisão por outra pessoa.
+
+## Correção de origem, reputação e Descobrir no front — #42 e #56 (26/11/2026)
+
+- A reputação é buscada de novo depois de curtir ou descurtir no perfil; a tela não calcula pontos e explica a fórmula 4/2/1.
+- Correção de origem e Descobrir foram feitas sobre contratos propostos pelo front, testados com respostas simuladas: `PATCH /posts/{id}/origem` e `GET /descobrir`. As rotas ainda não existem no backend (#10, #23); as telas não comprovam integração.
+- "Corrigir origem" aparece só para quem escreveu uma review derivada e quando o servidor publica a rota. Pede confirmação e não converte raiz nem remove origem.
+- Sem a rota de Descobrir, a página continua avisando que as sugestões estão em preparação.
+- Claude Code fez as telas e os testes.

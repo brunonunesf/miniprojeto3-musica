@@ -4,6 +4,9 @@ import { EXEMPLOS_DO_FEED } from "@/lib/feedExemplos";
 /** Contadores e reputação são opcionais: um servidor mais antigo não os envia. */
 export type Perfil = User & { seguidores?: number; seguindo?: number; eu_sigo?: boolean; reputacao?: number };
 
+/** Avisa quem mostra reputação de que uma ação pode tê-la mudado. */
+export const REPUTACAO_MUDOU = "reputacao-mudou";
+
 // Ligado só em desenvolvimento, enquanto o backend não tem follow nem posts por usuário.
 export const PERFIL_SIMULADO = process.env.NEXT_PUBLIC_PERFIL_SIMULADO === "true";
 const TAMANHO_PAGINA = 10;
