@@ -6,6 +6,10 @@ A proposta é descobrir e divulgar músicas pelas recomendações de outras pess
 
 A rede se chama **scuta**. MeetMusic foi apenas o nome provisório do começo do projeto.
 
+## Vídeo
+
+[▶ Assista à demonstração do scuta](https://www.youtube.com/watch?v=amKUq18zHKE) (1 min 29 s, no YouTube). Mostra o site com dados de demonstração.
+
 ## Ideias discutidas
 
 - **Feed de reviews de músicas**, com curtidas e comentários.
