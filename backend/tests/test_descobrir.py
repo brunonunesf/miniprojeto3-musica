@@ -293,3 +293,59 @@ def test_curtidas_e_comentarios_nas_sugestoes_sao_vistos_por_quem_pede(client, l
 
     assert (da_ana["curtidas"], da_ana["curtido_por_mim"], da_ana["comentarios"]) == (1, True, 1)
     assert (do_caio["curtidas"], do_caio["curtido_por_mim"]) == (1, False)
+
+
+# ---------- revisão do #95: bordas ----------
+
+
+def test_quem_ja_avaliou_todas_as_musicas_continua_personalizado_com_a_lista_vazia(client, logar, id_da_musica):
+    ana = logar("ana")
+    for chave in (ORIGINAL, REMASTER, VIVO, REMIX, FORRO, MPB):
+        review(client, ana, id_da_musica, chave)
+
+    pagina = sugestoes(client, ana)
+
+    # a conta tem sinais de sobra: só não resta nada para sugerir
+    assert pagina["items"] == [] and pagina["total"] == 0 and pagina["personalizada"] is True
+
+
+def test_personalizada_vem_dos_sinais_da_conta_e_nao_do_ranking(client, logar, id_da_musica):
+    bia, ids = comunidade(client, logar, id_da_musica)
+    ana = logar("ana")
+    assert sugestoes(client, ana)["personalizada"] is False  # nada avaliado, nada curtido
+
+    client.post(f"/posts/{ids[MPB]}/curtir", headers=ana)
+    assert sugestoes(client, ana)["personalizada"] is True  # uma curtida basta
+
+    client.delete(f"/posts/{ids[MPB]}/curtir", headers=ana)
+    review(client, ana, id_da_musica, ORIGINAL)
+    assert sugestoes(client, ana)["personalizada"] is True  # ou uma review própria
+
+
+def test_se_o_recomendador_recusar_a_entrada_a_resposta_e_503_com_mensagem_simples(client, logar, monkeypatch):
+    from app.core.recomendador import EntradaInvalida
+    from app.services import descobrir as servico
+
+    class Recusa:
+        def recomendar(self, *args, **kwargs):
+            raise EntradaInvalida("snapshot inconsistente")
+
+    monkeypatch.setattr(servico, "_indice_do_catalogo", lambda musicas: (Recusa(), {}))
+    ana = logar("ana")
+
+    r = client.get("/descobrir", headers=ana)
+
+    assert r.status_code == 503
+    assert r.json() == {"detail": "não foi possível gerar sugestões agora"}  # sem expor o erro interno
+
+
+def test_a_explicacao_usa_a_grafia_do_catalogo_e_nao_a_normalizada(client, logar, id_da_musica):
+    comunidade(client, logar, id_da_musica)
+    ana = logar("ana")
+    review(client, ana, id_da_musica, ORIGINAL)
+
+    vivo = next(i for i in sugestoes(client, ana)["items"] if i["review"]["musica"]["chave_catalogo"] == VIVO)
+
+    # o recomendador compara "artista:aurora do vale"; quem lê vê "Aurora do Vale"
+    assert "artista Aurora do Vale" in vivo["explicacao"]
+    assert "aurora do vale" not in vivo["explicacao"]

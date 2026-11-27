@@ -34,19 +34,34 @@ log = logging.getLogger("uvicorn.error")
 # O índice depende só do catálogo. Ele é refeito quando o catálogo muda (a assinatura abaixo muda),
 # nunca editado no lugar: uma consulta em andamento continua com o índice que pegou.
 _TRAVA = threading.Lock()
-_indice: tuple[tuple, Recomendador] | None = None
+_indice: tuple[tuple, Recomendador, dict[str, str]] | None = None
 
 _ROTULO_DO_TERMO = {"artista": "artista", "genero": "gênero", "tag": "tag"}
 
 
-def _recomendador(musicas: list[Musica]) -> Recomendador:
+def _normalizar(valor: str) -> str:
+    """Do mesmo jeito que o recomendador normaliza os termos (espaços e caixa)."""
+    return " ".join(valor.split()).casefold()
+
+
+def _grafias(musicas: list[Musica]) -> dict[str, str]:
+    """O termo normalizado ("artista:luan santana") para a grafia do catálogo ("Luan Santana")."""
+    grafias: dict[str, str] = {}
+    for m in musicas:
+        for campo, valores in (("artista", [m.artista]), ("genero", m.generos), ("tag", m.tags)):
+            for valor in valores:
+                grafias.setdefault(f"{campo}:{_normalizar(valor)}", " ".join(valor.split()))
+    return grafias
+
+
+def _indice_do_catalogo(musicas: list[Musica]) -> tuple[Recomendador, dict[str, str]]:
     global _indice
     assinatura = tuple((m.chave_catalogo, m.artista, tuple(m.generos), tuple(m.tags)) for m in musicas)
     with _TRAVA:
         if _indice is None or _indice[0] != assinatura:
             catalogo = [MusicaRec(m.chave_catalogo, m.artista, tuple(m.generos), tuple(m.tags)) for m in musicas]
-            _indice = (assinatura, Recomendador(catalogo))
-        return _indice[1]
+            _indice = (assinatura, Recomendador(catalogo), _grafias(musicas))
+        return _indice[1], _indice[2]
 
 
 def _com_fuso(momento: datetime) -> datetime:
@@ -75,17 +90,17 @@ def _snapshot(db: Session, chaves: dict[int, str]) -> tuple[list[ReviewRec], lis
     return reviews, curtidas
 
 
-def _termo_legivel(termo: str) -> str:
+def _termo_legivel(termo: str, grafias: dict[str, str]) -> str:
     campo, _, valor = termo.partition(":")
-    return f"{_ROTULO_DO_TERMO.get(campo, campo)} {valor}"
+    return f"{_ROTULO_DO_TERMO.get(campo, campo)} {grafias.get(termo, valor)}"
 
 
-def explicar(sugestao: Sugestao) -> str:
+def explicar(sugestao: Sugestao, grafias: dict[str, str]) -> str:
     """O motivo da sugestão. Só fala do que o algoritmo sabe: termos em comum, nunca acústica."""
     if sugestao.motivo == "afinidade":
         if not sugestao.caracteristicas:
             return "Combina com o que você avaliou ou curtiu."
-        em_comum = ", ".join(_termo_legivel(t) for t in sugestao.caracteristicas)
+        em_comum = ", ".join(_termo_legivel(t, grafias) for t in sugestao.caracteristicas)
         return f"Combina com o que você avaliou ou curtiu. Em comum: {em_comum}."
     if sugestao.motivo == "sem_afinidade":
         return "Não tem nada em comum com o que você avaliou ou curtiu, mas pode ser uma boa novidade."
@@ -95,7 +110,7 @@ def explicar(sugestao: Sugestao) -> str:
 def listar(db: Session, user: User, offset: int, limit: int) -> tuple[list[SugestaoOut], int, bool]:
     """Uma página de sugestões para quem está logado, o total do ranking e se ele é personalizado."""
     musicas = list(db.scalars(select(Musica).order_by(Musica.chave_catalogo)))
-    recomendador = _recomendador(musicas)
+    recomendador, grafias = _indice_do_catalogo(musicas)
     reviews, curtidas = _snapshot(db, {m.id: m.chave_catalogo for m in musicas})
     try:
         ranking = recomendador.recomendar(user.id, reviews, curtidas)
@@ -114,9 +129,19 @@ def listar(db: Session, user: User, offset: int, limit: int) -> tuple[list[Suges
         )
     }
     # uma review apagada entre o snapshot e esta leitura simplesmente não aparece
-    itens = [(carregadas[s.review_id], explicar(s)) for s in pagina if s.review_id in carregadas]
+    itens = [(carregadas[s.review_id], explicar(s, grafias)) for s in pagina if s.review_id in carregadas]
     posts.anotar_interacoes(db, user, [p for p, _ in itens])
     sugestoes = [SugestaoOut(review=PostOut.model_validate(p), explicacao=texto) for p, texto in itens]
-    # sem sinais, todas as sugestões têm o motivo `sem_sinais`; com sinais, nenhuma tem
-    personalizada = any(s.motivo != "sem_sinais" for s in ranking)
-    return sugestoes, len(ranking), personalizada
+    return sugestoes, len(ranking), _tem_sinais(user.id, reviews, curtidas)
+
+
+def _tem_sinais(usuario_id: int, reviews: list[ReviewRec], curtidas: list[CurtidaRec]) -> bool:
+    """A conta tem review própria ou curtiu a review de outra pessoa (a auto-curtida não conta).
+
+    Vem dos sinais da conta, e não do ranking: quem já avaliou todo o catálogo continua personalizado,
+    mesmo com a lista de sugestões vazia.
+    """
+    autor_da = {r.id: r.autor for r in reviews}
+    return any(r.autor == usuario_id for r in reviews) or any(
+        c.usuario == usuario_id and autor_da[c.review] != usuario_id for c in curtidas
+    )
