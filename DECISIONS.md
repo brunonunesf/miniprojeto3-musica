@@ -734,6 +734,7 @@ Liga o recomendador TF-IDF do Bruno (`core/recomendador.py`, #55) à API, no con
 - **Testes:** `test_descobrir.py` (25 casos): login, formato, ausência de score e perfil, conta sem sinais, afinidade e explicação (com a grafia do catálogo), curtir e descurtir como sinal, apagar a própria review, review apagada de outra pessoa, uma review por música, isolamento entre contas, paginação estável, parâmetros inválidos, feed intacto, quem avaliou tudo continua personalizado e o `503` quando o recomendador recusa a entrada.
 - Claude Code implementou a API e os testes. O código ainda precisa ser revisado por outra pessoa do time.
 
+
 ## Troca estrutural de origem — #49 (26/11/2026)
 
 - Implementação pura em `FlorestaReviews`, em duas etapas: preparar sem mutação
@@ -754,6 +755,7 @@ Liga o recomendador TF-IDF do Bruno (`core/recomendador.py`, #55) à API, no con
 - Banco/API/recuperação permanecem na #10; recálculo na #51 e interface na #42.
   Esta implementação não comprova integração dessas entregas.
 
+
 ## Corrigir a origem de uma review — issue #10 — 27/11/2026
 
 Liga a troca estrutural do Bruno (`FlorestaReviews.preparar_troca_origem` e `aplicar_troca_origem`, #49) ao banco, à árvore em memória e à reputação, no contrato que a tela da Cecília (#42) já usa.
@@ -768,3 +770,16 @@ Liga a troca estrutural do Bruno (`FlorestaReviews.preparar_troca_origem` e `apl
 - **Recuperação:** o banco é a fonte de verdade. O motor troca os totais só se a carga inteira for válida. Se o recálculo falhar, a árvore é refeita a partir do banco e ele tenta de novo; se ainda falhar, fica o aviso no log e o **reinício refaz os totais corretos**. Uma queda entre a gravação e o recálculo também se resolve no reinício. Não há transação única entre banco e memória.
 - **Testes:** `test_trocar_origem.py` (17 casos): troca e resposta, subárvore que acompanha, árvore antiga sem o ramo, idempotência, pontos que acompanham a corrente e voltam ao desfazer, nenhum evento novo, reinício com o mesmo resultado, origem apagada corrigida, feed com a origem nova, `403`/`401`/`404`/`422`/ciclo, documentação da API e trocas simultâneas sem `500` e com banco, memória e pontos coerentes. Verificado também no navegador, com a demo e a tela da Cecília: mover a review do Daniel da Cecília para o Gustavo tirou 4 pontos da Cecília e 2 do Bruno e deu 4 ao Gustavo.
 - Claude Code implementou a rota e os testes sobre o #96 do Bruno. O código ainda precisa ser revisado por outra pessoa do time.
+
+- **Rota:** `GET /descobrir?offset&limit` (login obrigatório; `limit` de 1 a 100, padrão 10; `offset` até 2^63-1, senão `422`). **Separada de `/feed`**: o feed continua só com quem a pessoa segue, em ordem cronológica, e não mudou.
+- **Resposta:** `{items: [{review, explicacao}], total, offset, limit, personalizada}`. A `review` tem o mesmo formato do feed (música, nota, curtidas vistas por quem pede, comentários, autor). `personalizada` é falso enquanto a conta **não tem reviews nem curtidas**: nesse caso a lista é só uma amostra de reviews recentes da comunidade, não um ranking de afinidade. Ele vem **dos sinais da própria conta** (review própria, ou curtida na review de outra pessoa; auto-curtida não conta) e não do ranking: quem já avaliou todo o catálogo continua personalizado, com a lista vazia ("Nenhuma sugestão por enquanto" na tela).
+- **O que entra:** uma review por gravação ainda **não avaliada** pela pessoa (a mais curtida, depois a mais recente), em ordem de afinidade; sem afinidade ela vem depois, com diversidade por artista. Quem já avaliou uma música não a recebe de volta; curtir a review de outra pessoa **não** impede sugerir essa música.
+- **Sinais (já decididos com o Bruno):** só as interações **de quem pede** formam o perfil (review própria pesa 3, curtida em review alheia pesa 1, auto-curtida não conta). Curtir, descurtir, avaliar e apagar a própria review mudam o resultado **na próxima chamada**: não há cache de perfil, o ranking é refeito a cada consulta.
+- **Privacidade:** a resposta traz só a explicação em texto e a review pública. **Nunca** score, termos ou perfil de gosto de outra conta. As curtidas dos outros entram apenas na contagem que escolhe a review mais curtida de cada música. Não há bibliotecas privadas no produto, então nada disso entra.
+- **Explicação:** em português, a partir do motivo do recomendador: "Combina com o que você avaliou ou curtiu. Em comum: gênero indie, tag guitarra." (até 3 termos, só artista, gênero e tag, **com a grafia do catálogo**, e não a normalizada que o recomendador compara; nada de característica acústica), "Não tem nada em comum…" ou, sem sinais, "Você ainda não avaliou nem curtiu nada, então esta é uma review recente da comunidade.".
+- **Paginação depois do ranking:** o `total` é o do ranking inteiro e a ordem é determinística (mesmas entradas, mesma ordem). Se alguém curtir ou avaliar entre duas páginas, itens podem mudar de lugar, como o recomendador já avisa.
+- **Snapshot:** todas as reviews (só existem as ativas, apagar remove a linha) e as curtidas **dessas reviews**, filtradas em conjunto: uma review criada ou apagada entre as duas leituras não derruba a rota. Se o recomendador recusar a entrada, a rota responde `503` com mensagem simples e deixa um aviso no log.
+- **Índice:** depende só do catálogo e é **refeito quando o catálogo muda** (comparação do conteúdo a cada chamada, barata), nunca editado no lugar.
+- **Limites:** o custo por chamada é o do recomendador, **O(reviews + curtidas)**, aceitável para o tamanho da demo e não para uma rede grande; é um processo só, sem cache entre processos.
+- **Testes:** `test_descobrir.py` (25 casos): login, formato, ausência de score e perfil, conta sem sinais, afinidade e explicação (com a grafia do catálogo), curtir e descurtir como sinal, apagar a própria review, review apagada de outra pessoa, uma review por música, isolamento entre contas, paginação estável, parâmetros inválidos, feed intacto, quem avaliou tudo continua personalizado e o `503` quando o recomendador recusa a entrada.
+- Claude Code implementou a API e os testes. O código ainda precisa ser revisado por outra pessoa do time.
