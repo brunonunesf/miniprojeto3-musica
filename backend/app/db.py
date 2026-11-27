@@ -43,6 +43,18 @@ def atualizar_esquema_antigo() -> None:
     with engine.begin() as conexao:
         # A checagem e o ALTER usam a mesma conexão, para não depender de outra conexão do pool
         # que possa estar com o esquema desatualizado.
+        musicas = {linha[1] for linha in conexao.execute(text("PRAGMA table_info(musicas)"))}
+        for nome, ddl_coluna in {
+            "curadoria_estado": "VARCHAR(20) NOT NULL DEFAULT 'curado'",
+            "curadoria_protegida": "BOOLEAN NOT NULL DEFAULT 0",
+            "incorporada_em": "INTEGER REFERENCES musicas(id)",
+        }.items():
+            if musicas and nome not in musicas:
+                try:
+                    conexao.execute(text(f"ALTER TABLE musicas ADD COLUMN {nome} {ddl_coluna}"))
+                except OperationalError as erro:
+                    if "duplicate column" not in str(erro):
+                        raise
         colunas = {linha[1] for linha in conexao.execute(text("PRAGMA table_info(posts)"))}
         if not colunas:  # banco novo: o create_all acabou de criar tudo do jeito certo
             return

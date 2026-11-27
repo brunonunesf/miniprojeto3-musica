@@ -16,29 +16,38 @@ from app.services import arvores, users
 
 
 def criar(db: Session, autor: User, dados: PostCreate) -> Post:
-    musica = db.get(Musica, dados.musica_id)
-    if not musica:
-        raise HTTPException(status_code=422, detail="música não encontrada no catálogo")
+    from app.services import catalogo_externo, selecao_musical
 
-    if dados.origem_id is not None:
-        # A origem vem do banco (a fonte da verdade): precisa existir, estar ativa e ser da mesma música.
-        origem = db.get(Post, dados.origem_id)
-        if origem is None:
-            raise HTTPException(status_code=422, detail="review de origem não encontrada ou apagada")
-        if origem.musica_id != musica.id:
-            raise HTTPException(status_code=422, detail="a origem deve ser uma review da mesma música")
-
-    post = Post(
-        texto=dados.texto, nota=dados.nota, autor_id=autor.id, musica_id=musica.id, origem_id=dados.origem_id
-    )
-    db.add(post)
+    faixas = selecao_musical.verificar(dados.selecao_externa, autor.id) if dados.selecao_externa else None
     try:
+        if faixas:
+            catalogo_externo.travar_escrita(db)
+            musica = catalogo_externo.resolver(db, faixas)
+        else:
+            from app.services.musicas import consultar
+            musica = consultar(db, dados.musica_id)
+        if dados.origem_id is not None:
+            origem = db.get(Post, dados.origem_id)
+            if origem is None:
+                raise HTTPException(422, "review de origem não encontrada ou apagada")
+            if origem.musica_id != musica.id:
+                raise HTTPException(422, "a origem deve ser uma review da mesma música")
+        post = Post(texto=dados.texto, nota=dados.nota, autor_id=autor.id,
+                    musica_id=musica.id, origem_id=dados.origem_id)
+        db.add(post)
         db.commit()
+        db.refresh(post)
     except IntegrityError:
-        # a restrição única (autor, música) do banco decide, inclusive em envios simultâneos
         db.rollback()
         raise HTTPException(status_code=409, detail="você já fez uma review desta música")
-    db.refresh(post)
+    except HTTPException as erro:
+        db.rollback()
+        if erro.status_code == 404:
+            raise HTTPException(422, "música não encontrada no catálogo")
+        raise
+    except Exception:
+        db.rollback()
+        raise
 
     # A floresta em memória só muda depois da gravação confirmada.
     with arvores.TRAVA:

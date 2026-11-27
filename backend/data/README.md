@@ -83,3 +83,16 @@ A validação é estrutural e não testa existência, disponibilidade, formato d
 `carregar_catalogo()` e o startup do backend usam `CATALOGO_MUSICAL_PATH` quando definida. Caminho relativo é resolvido a partir de `backend/`, independentemente do diretório de execução. Exemplo: `CATALOGO_MUSICAL_PATH=data/musicas_demo.json`. Um argumento explícito a `carregar_catalogo(caminho)` tem precedência; sem variável, o padrão continua `data/musicas.json` (seis fictícias). Configuração vazia/inválida falha, sem retornar silenciosamente ao padrão.
 
 O validador de linha de comando também usa a configuração quando não recebe arquivo explícito. Essa seleção não baixa músicas nem altera IDs. Na demonstração, iniciar seed e aplicação com a mesma variável para não importar outro catálogo ao reiniciar.
+
+## Evolução: busca externa e curadoria
+
+O contrato de músicas externas, critérios de correspondência automática, fila de
+inclusão e comandos administrativos estão em
+[Busca musical, identidade e curadoria](../../docs/catalogo/contrato-busca-e-curadoria.md).
+O catálogo curado desta entrega mantém suas chaves e formatos. A busca externa não
+é uma importação em massa: uma faixa externa entra no banco junto com a primeira
+review publicada; resultados de busca não são persistidos.
+
+`exemplos_correspondencia.json` contém uma matriz fictícia e validada de contratos
+entre serviços (mesma gravação, homônimo, remix, ao vivo, remaster e campos ausentes).
+É material de teste, separado do catálogo e do seed; não comprova acesso às APIs.

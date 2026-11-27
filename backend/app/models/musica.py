@@ -1,4 +1,4 @@
-from sqlalchemy import JSON, String
+from sqlalchemy import JSON, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db import Base
@@ -20,3 +20,7 @@ class Musica(Base):
     tags: Mapped[list[str]] = mapped_column(JSON)
     # Sem capa usa texto vazio; mesmo limite de 2048 caracteres do catálogo.
     capa_url: Mapped[str] = mapped_column(String(2048), default="")
+
+    curadoria_estado: Mapped[str] = mapped_column(String(20), default="curado", server_default="curado")
+    curadoria_protegida: Mapped[bool] = mapped_column(default=False, server_default="0")
+    incorporada_em: Mapped[int | None] = mapped_column(ForeignKey("musicas.id"), default=None)

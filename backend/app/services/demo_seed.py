@@ -109,7 +109,7 @@ class AdaptadorBackend:
             origem_id = posts[registro['origem']].id if registro['origem'] else None
             dados = PostCreate(musica_id=musicas[registro['musica']].id,
                                nota=registro['nota'], texto=registro['texto'], origem_id=origem_id)
-            post = Post(**dados.model_dump(), autor_id=usuarios[registro['autor']].id,
+            post = Post(**dados.model_dump(exclude={"selecao_externa"}), autor_id=usuarios[registro['autor']].id,
                         created_at=datetime.fromisoformat(registro['created_at']))
             db.add(post)
             db.flush()  # ID real disponível antes de inserir descendentes

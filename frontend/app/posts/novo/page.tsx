@@ -10,6 +10,7 @@ import { MensagemErro } from "@/components/MensagemErro";
 import { ReviewExistente } from "@/components/ReviewExistente";
 import { SeletorDeMusica } from "@/components/SeletorDeMusica";
 import { ApiError, apiGet, apiPost, type Musica, type Post } from "@/lib/api";
+import { escolhaLocal, type EscolhaMusical } from "@/lib/catalogoExterno";
 import { nomeDaVersao } from "@/lib/musica";
 
 export default function NovaReviewPage() {
@@ -22,9 +23,11 @@ export default function NovaReviewPage() {
 }
 
 function NovaReview() {
-  const origemId = useSearchParams().get("origem");
+  const params = useSearchParams();
+  const origemId = params.get("origem");
+  const musicaId = params.get("musica");
   // A key recria o formulário quando a origem muda.
-  return origemId ? <ReviewDerivada key={origemId} origemId={origemId} /> : <Formulario origem={null} />;
+  return origemId ? <ReviewDerivada key={origemId} origemId={origemId} /> : <Formulario key={musicaId ?? "nova"} origem={null} musicaId={musicaId} />;
 }
 
 function ReviewDerivada({ origemId }: { origemId: string }) {
@@ -61,16 +64,26 @@ function ReviewDerivada({ origemId }: { origemId: string }) {
 }
 
 /** Sem origem, a pessoa escolhe a música; com origem, música e origem já vêm preenchidas. */
-function Formulario({ origem }: { origem: Post | null }) {
+function Formulario({ origem, musicaId }: { origem: Post | null; musicaId?: string | null }) {
   const router = useRouter();
   const { usuario } = useSessao();
-  const [musica, setMusica] = useState<Musica | null>(origem?.musica ?? null);
+  const [musica, setMusica] = useState<EscolhaMusical | null>(origem ? escolhaLocal(origem.musica) : null);
   const [nota, setNota] = useState("");
   const [texto, setTexto] = useState("");
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   // Música que já tinha review desta pessoa, quando o servidor recusa a repetição.
   const [repetida, setRepetida] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!musicaId || origem) return;
+    let ativa = true;
+    apiGet<Musica>(`/musicas/${encodeURIComponent(musicaId)}`).then(
+      (m) => { if (ativa) setMusica(escolhaLocal(m)); },
+      (e: Error) => { if (ativa) setErro(e.message); },
+    );
+    return () => { ativa = false; };
+  }, [musicaId, origem]);
 
   async function publicar(evento: FormEvent) {
     evento.preventDefault();
@@ -86,12 +99,13 @@ function Formulario({ origem }: { origem: Post | null }) {
     setErro("");
     setRepetida(null);
     try {
-      const dados = { musica_id: musica.id, nota: Number(nota), texto };
+      const selecao = musica.selecao_externa ? { selecao_externa: musica.selecao_externa } : { musica_id: musica.musica_id };
+      const dados = { ...selecao, nota: Number(nota), texto };
       const post = await apiPost<Post>("/posts", origem ? { ...dados, origem_id: origem.id } : dados);
       router.push(`/posts/${post.id}`);
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível publicar.");
-      setRepetida(falha instanceof ApiError && falha.status === 409 ? musica.id : null);
+      setRepetida(falha instanceof ApiError && falha.status === 409 ? musica.musica_id : null);
       setSalvando(false);
     }
   }

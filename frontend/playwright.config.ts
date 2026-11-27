@@ -19,7 +19,7 @@ export default defineConfig({
     {
       command: "../backend/.venv/bin/python -m uvicorn app.main:app --app-dir ../backend --port 8000",
       url: "http://localhost:8000/docs",
-      env: { DATABASE_URL: `sqlite:///${banco}`, DEBUG: "false" },
+      env: { DATABASE_URL: `sqlite:///${banco}`, DEBUG: "false", MUSICA_SELECTION_SECRET: "chave-exclusiva-dos-testes-playwright-32", SPOTIFY_BUSCA_VALIDADA: "false", DEEZER_BUSCA_VALIDADA: "false" },
       reuseExistingServer: false,
     },
     {

@@ -10,7 +10,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+async function request<T>(method: string, path: string, body?: unknown, signal?: AbortSignal): Promise<T> {
   const publicAuth = path === "/auth/login" || path === "/auth/registro";
   const token = typeof window !== "undefined" && !publicAuth ? localStorage.getItem("token") : null;
   const headers: Record<string, string> = { "Content-Type": "application/json" };
@@ -18,7 +18,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   let res: Response;
   try {
     res = await fetch(`${BASE}${path}`, {
-      method, headers,
+      method, headers, signal,
       body: body === undefined ? undefined : JSON.stringify(body),
       cache: "no-store",
     });
@@ -48,8 +48,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return res.json();
 }
 
-export function apiGet<T>(path: string): Promise<T> {
-  return request<T>("GET", path);
+export function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+  return request<T>("GET", path, undefined, signal);
 }
 
 export function apiPost<T>(path: string, body?: unknown): Promise<T> {
@@ -80,7 +80,7 @@ export type Musica = {
   chave_catalogo: string;
   titulo: string;
   artista: string;
-  tipo_versao: "original" | "remix" | "ao_vivo" | "remaster";
+  tipo_versao: "original" | "remix" | "ao_vivo" | "remaster" | "desconhecida";
   descricao_versao: string;
   generos: string[];
   tags: string[];

@@ -1,0 +1,209 @@
+{
+  "aviso": "Dados fictícios para validar o contrato; URLs e IDs não comprovam músicas reais e não devem ser importados.",
+  "casos": [
+    {
+      "nome": "mesma-gravacao",
+      "a": {
+        "servico": "spotify",
+        "id_externo": "exemploA",
+        "url": "https://open.spotify.com/track/exemploA",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "b": {
+        "servico": "deezer",
+        "id_externo": "101",
+        "url": "https://www.deezer.com/track/101",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "mesma_gravacao": true
+    },
+    {
+      "nome": "homonimo",
+      "a": {
+        "servico": "spotify",
+        "id_externo": "exemploA",
+        "url": "https://open.spotify.com/track/exemploA",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "b": {
+        "servico": "deezer",
+        "id_externo": "101",
+        "url": "https://www.deezer.com/track/101",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Outro Artista"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "mesma_gravacao": false
+    },
+    {
+      "nome": "remix",
+      "a": {
+        "servico": "spotify",
+        "id_externo": "exemploA",
+        "url": "https://open.spotify.com/track/exemploA",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "b": {
+        "servico": "deezer",
+        "id_externo": "101",
+        "url": "https://www.deezer.com/track/101",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "remix",
+        "descricao_versao": "DJ Remix",
+        "capa_url": null
+      },
+      "mesma_gravacao": false
+    },
+    {
+      "nome": "ao-vivo",
+      "a": {
+        "servico": "spotify",
+        "id_externo": "exemploA",
+        "url": "https://open.spotify.com/track/exemploA",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "b": {
+        "servico": "deezer",
+        "id_externo": "101",
+        "url": "https://www.deezer.com/track/101",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "ao_vivo",
+        "descricao_versao": "Show 2026",
+        "capa_url": null
+      },
+      "mesma_gravacao": false
+    },
+    {
+      "nome": "remaster",
+      "a": {
+        "servico": "spotify",
+        "id_externo": "exemploA",
+        "url": "https://open.spotify.com/track/exemploA",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "b": {
+        "servico": "deezer",
+        "id_externo": "101",
+        "url": "https://www.deezer.com/track/101",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "remaster",
+        "descricao_versao": "2026 Remaster",
+        "capa_url": null
+      },
+      "mesma_gravacao": false
+    },
+    {
+      "nome": "metadados-incompletos",
+      "a": {
+        "servico": "spotify",
+        "id_externo": "exemploA",
+        "url": "https://open.spotify.com/track/exemploA",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": 180000,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "original",
+        "descricao_versao": "Original Version",
+        "capa_url": null
+      },
+      "b": {
+        "servico": "deezer",
+        "id_externo": "101",
+        "url": "https://www.deezer.com/track/101",
+        "titulo": "Horizonte - Original Version",
+        "artistas": [
+          "Artista Fictício"
+        ],
+        "album": "",
+        "duracao_ms": null,
+        "isrc": "BRABC2600001",
+        "tipo_versao": "desconhecida",
+        "descricao_versao": "",
+        "capa_url": null
+      },
+      "mesma_gravacao": false
+    }
+  ]
+}

@@ -13,7 +13,8 @@ Nota = Annotated[int, Field(ge=0, le=10)]
 
 
 class PostCreate(BaseModel):
-    musica_id: int = Field(ge=1, le=ID_MAXIMO)  # escolhida no catálogo (GET /musicas)
+    musica_id: int | None = Field(default=None, ge=1, le=ID_MAXIMO)
+    selecao_externa: str | None = Field(default=None, min_length=1, max_length=65536)
     nota: Nota
     texto: Texto = ""
     # Review de onde esta partiu: faz desta uma review derivada. Precisa ser da mesma música.
@@ -21,6 +22,8 @@ class PostCreate(BaseModel):
 
     @model_validator(mode="after")
     def derivada_exige_texto(self) -> Self:
+        if (self.musica_id is None) == (self.selecao_externa is None):
+            raise ValueError("informe musica_id ou selecao_externa, exclusivamente")
         if self.origem_id is not None and not self.texto:
             raise ValueError("a review derivada precisa de texto próprio")
         return self

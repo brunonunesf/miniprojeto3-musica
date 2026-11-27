@@ -138,3 +138,11 @@ quanto no backend. O adaptador incorpora as origens oficiais do #78 e permite a 
 com corrente, ramo e raiz independente. O encerramento da entrega de dados não
 declara Descobrir ou reputação pelo perfil/API concluídos; veja os limites e o
 roteiro na [documentação da demonstração](docs/demo-issue-13.md).
+
+### Busca conjunta e pedidos de inclusão
+
+A criação de reviews usa a busca local e as fontes externas habilitadas. Uma música
+externa só é cadastrada junto com a publicação da review. Pedidos de inclusão ficam
+em `/musicas/solicitacoes`; classificação e análise são feitas por comandos locais.
+Consulte o [contrato e guia de operação](docs/catalogo/contrato-busca-e-curadoria.md)
+para migração, variáveis do servidor e validação real dos provedores.

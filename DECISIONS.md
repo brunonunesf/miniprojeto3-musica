@@ -628,3 +628,22 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - Esboços e comparação em [docs/funcionalidades-opcionais.md](docs/funcionalidades-opcionais.md). É proposta de Cecília, redigida com Claude Code; a priorização continua sendo do trio.
 - Recomendação para 27/11: não implementar grupos, mensagens diretas nem integrações com streaming. O diferencial a demonstrar é a corrente de descobertas. Depois da entrega, avaliar primeiro os grupos, que reaproveitam os cartões do feed.
 - Spotify: pela documentação oficial, o modo de desenvolvimento exige dono com Premium e aceita até 5 usuários; o modo estendido só aceita organizações. Deezer: viabilidade não comprovada. Nenhuma integração foi entregue nem testada.
+
+## Busca musical e continuação da #39 — 26/11/2026
+
+- Bruno aprovou busca conjunta no catálogo local, Spotify e Deezer. Uma faixa externa
+  só é persistida na publicação da review, na mesma transação; seleção/abandono não
+  cadastram música. Falha de fonte mantém disponíveis as demais.
+- Vínculos novos entre serviços exigem ISRC e metadados compatíveis; gravação/versão
+  incerta continua separada e segue para revisão. Sem rótulo explícito, a versão é
+  desconhecida. ISRC sozinho e título/artista iguais não unem identidades.
+- Inclusão manual ocorre por pedido privado: Bruno aprova/recusa por comandos e
+  arquivos; o usuário publica depois, sem rascunho ou publicação automática.
+- Gêneros/tags podem ser preenchidos depois por Bruno, sem bloquear reviews. Campos
+  corrigidos pela curadoria ficam protegidos contra reimportação do catálogo.
+- Fusões preservam IDs e árvores e bloqueiam conflitos de reviews próprias. Aplicar
+  fusão exige API parada e reinício para reconstruir a floresta em memória.
+- Contrato, exemplos, migração, comandos e validação de provedores:
+  [documentação](docs/catalogo/contrato-busca-e-curadoria.md). Adaptadores simulados
+  não comprovam acesso real. Provedores permanecem desligados por padrão até Daniel
+  validar acesso oficial. Não altera o fluxo opcional de histórico/reescuta.

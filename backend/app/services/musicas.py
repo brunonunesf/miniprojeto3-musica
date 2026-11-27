@@ -25,7 +25,7 @@ def importar_catalogo(db: Session) -> int:
         if musica is None:
             db.add(Musica(**registro))
             novas += 1
-        else:
+        elif not musica.curadoria_protegida and musica.incorporada_em is None:
             for campo, valor in registro.items():
                 setattr(musica, campo, valor)
     db.commit()
@@ -44,7 +44,7 @@ def listar(db: Session, q: str, offset: int, limit: int) -> tuple[list[Musica], 
     # Comparação em Python: o SQLite não ignora maiúsculas e acentos de forma Unicode.
     # Custo O(n) por busca, aceitável para um catálogo curado pequeno.
     termos = _para_busca(q).split()
-    musicas = list(db.scalars(select(Musica)))
+    musicas = list(db.scalars(select(Musica).where(Musica.incorporada_em.is_(None))))
     achadas = [m for m in musicas if all(t in _para_busca(f"{m.titulo} {m.artista}") for t in termos)]
     achadas.sort(key=lambda m: (m.titulo.casefold(), m.artista.casefold(), m.id))
     return achadas[offset : offset + limit], len(achadas)
@@ -81,4 +81,6 @@ def consultar(db: Session, musica_id: int) -> Musica:
     musica = db.get(Musica, musica_id)
     if not musica:
         raise HTTPException(status_code=404, detail="música não encontrada")
+    if musica.incorporada_em is not None:
+        return consultar(db, musica.incorporada_em)
     return musica

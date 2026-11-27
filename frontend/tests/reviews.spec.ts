@@ -102,7 +102,7 @@ test("busca sem resultado e catálogo indisponível", async ({ page }) => {
   const busca = page.getByLabel("Buscar música por título ou artista");
   await busca.fill("nada parecido");
   await expect(page.getByText("Nenhuma música encontrada no catálogo.")).toBeVisible();
-  const ehCatalogo = (url: URL) => url.port === "8000" && url.pathname === "/musicas";
+  const ehCatalogo = (url: URL) => url.port === "8000" && url.pathname === "/musicas/busca";
   await page.route(ehCatalogo, (route) => route.abort());
   await busca.fill("horizonte");
   await expect(page.getByText("Não foi possível conectar.", { exact: false })).toBeVisible();
