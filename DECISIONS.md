@@ -733,3 +733,23 @@ Liga o recomendador TF-IDF do Bruno (`core/recomendador.py`, #55) à API, no con
 - **Limites:** o custo por chamada é o do recomendador, **O(reviews + curtidas)**, aceitável para o tamanho da demo e não para uma rede grande; é um processo só, sem cache entre processos.
 - **Testes:** `test_descobrir.py` (25 casos): login, formato, ausência de score e perfil, conta sem sinais, afinidade e explicação (com a grafia do catálogo), curtir e descurtir como sinal, apagar a própria review, review apagada de outra pessoa, uma review por música, isolamento entre contas, paginação estável, parâmetros inválidos, feed intacto, quem avaliou tudo continua personalizado e o `503` quando o recomendador recusa a entrada.
 - Claude Code implementou a API e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Troca estrutural de origem — #49 (26/11/2026)
+
+- Implementação pura em `FlorestaReviews`, em duas etapas: preparar sem mutação
+  e aplicar plano imutável. Retorna subárvore BFS completa e caminhos anterior/novo
+  para consumo futuro da #51; não calcula reputação nem cria eventos.
+- Somente review ativa derivada pode mudar para destino ativo da mesma música.
+  Impede próprio nó e descendentes, inclusive através de referências apagadas.
+  Origem anterior apagada pode ser corrigida. Não converte raiz nem remove origem.
+- Origem atual ativa é sucesso sem alteração: afetados vazios e caminhos iguais.
+  Mutação efetiva ou reconstrução invalida planos; falhas/no-ops não invalidam.
+  Planos copiados, de outra instância ou antigos são rejeitados antes da escrita.
+- A revisão é global à instância: até alterações em outro ramo invalidam planos,
+  favorecendo segurança e simplicidade. Referências fracas evitam reter planos.
+- Movimento acrescenta a review ao fim dos filhos do destino e conserva a ordem
+  dos demais nós; reconstruções seguem a ordem dos registros carregados.
+- Preparo O(S + H), aplicação O(D) por cópias das listas dos pais; não é O(1)
+  global. Contrato completo e integração de sincronização estão no README do core.
+- Banco/API/recuperação permanecem na #10; recálculo na #51 e interface na #42.
+  Esta implementação não comprova integração dessas entregas.
