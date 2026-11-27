@@ -622,3 +622,9 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - "Apagar" aparece só nos próprios comentários e pede confirmação. Comentário já apagado em outro lugar sai da lista; em servidor sem a rota, ele permanece e a tela avisa.
 - Dependem do backend dos PRs #86 e #87. A correção de origem (#42) continua pendente.
 - Claude Code fez as telas e os testes. Por decisão do time, não houve revisão por outra pessoa.
+
+## Parecer sobre as funcionalidades opcionais — issue #53 (26/11/2026)
+
+- Esboços e comparação em [docs/funcionalidades-opcionais.md](docs/funcionalidades-opcionais.md). É proposta de Cecília, redigida com Claude Code; a priorização continua sendo do trio.
+- Recomendação para 27/11: não implementar grupos, mensagens diretas nem integrações com streaming. O diferencial a demonstrar é a corrente de descobertas. Depois da entrega, avaliar primeiro os grupos, que reaproveitam os cartões do feed.
+- Spotify: pela documentação oficial, o modo de desenvolvimento exige dono com Premium e aceita até 5 usuários; o modo estendido só aceita organizações. Deezer: viabilidade não comprovada. Nenhuma integração foi entregue nem testada.
