@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Avatar } from "@/components/Avatar";
+import { Marca } from "@/components/Marca";
 import { PautaDecorativa } from "@/components/PautaDecorativa";
 import type { User } from "@/lib/api";
 
@@ -24,9 +25,8 @@ export function Navbar({ usuario, visitante, pathname, aoSair }: Props) {
   return (
     <header className="border-b border-orange-100 bg-[#fffaf4]">
       <nav aria-label="Navegação principal" className="mx-auto flex min-h-[69px] max-w-[1400px] flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="flex items-center gap-2 text-lg font-bold tracking-tight">
-          <span aria-hidden="true" className="text-2xl text-brand-500">♫</span>
-          Descoberta musical
+        <Link href="/" className="flex items-center">
+          <Marca />
         </Link>
         <PautaDecorativa />
         {usuario && (
