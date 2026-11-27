@@ -856,3 +856,45 @@ Completa a #12 no backend (as bibliotecas já estão na `main`). **A integraçã
 - A tela usa as rotas do backend das reescutas (#12): `POST /posts/{id}/reescutas` e `GET /feed/reescutas`. O servidor não informa se a review foi editada depois do aviso, então a tela não indica isso.
 - Spotify e Deezer não fazem parte.
 - Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.
+
+## Parecer técnico do backend: grupos, mensagens diretas, Spotify e Deezer — issue #21 — 27/11/2026
+
+É um **parecer, não uma implementação**: nada aqui foi construído, nada aprova um recurso, e a escolha de implementar continua sendo do trio. Ele completa o parecer de experiência da Cecília (#53, `docs/funcionalidades-opcionais.md`) com o que a #21 pede do backend: contratos, modelos, permissões, dependências e estimativa. As issues #14, #15 e #22 foram absorvidas pela #21, e o encerramento delas foi reorganização, não implementação. O `CONTRATO.md` traz contratos-modelo de grupos e de mensagens, mas é sugestão ("não é obrigatório"); onde divergem do produto, vale o que está aqui.
+
+**Recomendação de prioridade (a mesma do parecer da Cecília):** nenhuma das quatro entra em 27/11, porque o diferencial a mostrar é a corrente de descobertas. Depois da entrega: 1º **grupos**, 2º **mensagens diretas** (só com bloqueio e denúncia antes), 3º **Spotify** como teste restrito, 4º **Deezer** só com acesso oficial confirmado.
+
+| Item | Esforço no backend | Principal bloqueio |
+|---|---|---|
+| Grupos e semana musical | Médio a grande (3 tabelas, 7 rotas, ~30 testes) | Nenhum técnico; falta decisão de produto |
+| Mensagens diretas | Grande (4 tabelas, 8 rotas, ~40 testes, moderação) | A rede não tem bloqueio nem denúncia |
+| Spotify | Médio, com limite de acesso | Acesso oficial não comprovado (Premium, 5 usuários) |
+| Deezer | Não estimado | Viabilidade não comprovada |
+
+### Grupos de amigos e semana musical
+- **Contrato proposto:** `POST /grupos` (nome; quem cria vira administrador), `GET /grupos` (só os de que a pessoa participa; **sem busca pública** na primeira versão), `POST /grupos/{id}/convites` (a administração gera um código com validade), `POST /grupos/entrar` (com o código; idempotente), `DELETE /grupos/{id}/membros/eu` (sair), `GET /grupos/{id}/membros` e `GET /grupos/{id}/semana?inicio=&offset&limit` (as reviews dos membros publicadas de segunda a domingo, no formato do feed). **Diverge do `CONTRATO.md`**: o grupo não tem posts próprios; o conteúdo são as reviews que os membros já publicam, como propõe a Cecília.
+- **Modelos (tabelas novas, criadas sozinhas na subida, sem migração):** `Grupo` (nome, criação), `Membro` (grupo, pessoa, papel, entrada; chave composta) e `Convite` (grupo, código único, validade, revogado).
+- **Permissões:** só membros veem membros e a semana, e quem não é membro recebe `404` (não `403`, para não revelar que o grupo existe); só a administração gera ou revoga convite; se a administradora sai, o papel passa ao membro mais antigo; se o último sai, o grupo deixa de existir e **as reviews não são apagadas**.
+- **Alternativas de visibilidade:** (a) **privado por convite**, recomendada; (b) público e listável, que exige busca, moderação e denúncia, e fica para depois; (c) público por link, que na prática é (a) com convite sem validade. A semana **reaproveita** `listar_reviews` (autor entre os membros e data no intervalo), então o feed pessoal **não muda**.
+- **Publicação não é escuta:** a semana musical mostra reviews **publicadas**, e não o que a pessoa ouviu; a tela não deve dizer "ouviu". Uma "escuta verificada" só existiria com um serviço conectado (abaixo) e seria um tipo de evidência à parte, nunca misturada com a review nem com o aviso manual "ouvi novamente".
+- **A decidir:** o fuso das fronteiras da semana (o banco guarda UTC, e uma semana de Brasília começa 3 horas depois) e o tamanho máximo do grupo.
+- **Dependências já atendidas:** autenticação, reviews e `listar_reviews`.
+
+### Mensagens diretas
+- **Contrato proposto:** `POST /mensagens/{username}` (`{"texto", "review_id"?}`), `GET /conversas` (da mais recente, com contagem de não lidas), `GET /conversas/{username}?antes=&limit` (**cursor** pelo id, e não por `offset`, porque numa conversa viva um `offset` repete ou pula mensagens) e `POST /conversas/{username}/lidas`. A regra da Cecília vale: **só quem se segue mutuamente inicia conversa**; deixar de seguir impede novas mensagens e mantém o histórico para as duas. Mensagem para si mesmo dá `422`.
+- **Modelos:** `Conversa` (o par ordenado de pessoas, único), `Mensagem` (conversa, autor, texto de até 2.000 caracteres, `review_id` opcional, chave de envio, data), `LeituraConversa` (até onde cada pessoa leu) e `Bloqueio`, que **a rede ainda não tem**.
+- **Permissões (o ponto de segurança):** toda consulta filtra pela pessoa logada ser participante, e **terceiro tentando ler conversa alheia recebe `404`**, igual a uma conversa que não existe; a regra de seguir mutuamente é conferida **no envio**. O anexo guarda só o `review_id`: se a review for apagada, o cartão mostra "review apagada", sem o conteúdo. Receber mensagem **não cria origem nem pontua**.
+- **Envio duplicado:** uma chave enviada pela tela, única por conversa e autor; repetir o envio devolve a mesma mensagem, sem duplicar.
+- **Ordem e paginação:** estável por data e id. **Sem tempo real**: a conversa atualiza ao abrir; WebSocket fica fora.
+- **Pré-requisitos que não existem:** bloqueio, denúncia e uma política de retenção e exclusão de mensagens (são dados pessoais privados). Sem isso, **não recomendo lançar**.
+
+### Spotify e Deezer
+- **Estado: acesso oficial NÃO comprovado, integração pendente, nada entregue nem testado com conta ou chave reais.** Pela regra da issue, o desfecho é este bloqueio documentado. A consulta às páginas oficiais foi feita em 26/11/2026, e deve ser refeita antes de qualquer decisão, porque essas regras mudam.
+- **Bloqueios concretos:** (1) o time **não tem aplicativo registrado nem credenciais**; (2) **Spotify**: em modo de desenvolvimento o dono precisa de Premium e só 5 pessoas usam a integração, e o modo estendido só aceita organizações (com pelo menos 250 mil usuários ativos por mês), então **não atende o público da rede**; a leitura das músicas tocadas recentemente exige a permissão `user-read-recently-played`; (3) **Deezer**: as páginas pedem login e não informam se há criação de novos aplicativos, e a viabilidade é **não comprovada**.
+- **Para destravar, a evidência necessária:** criar um aplicativo no painel de cada serviço com uma conta de verdade (no Spotify, com Premium), cadastrar contas de teste, executar o fluxo real de autorização e registrar data e captura. É uma ação de uma pessoa do time, e **não dá para fazer só com código**.
+- **Desenho técnico, se destravar:** autorização OAuth 2.0 com as permissões mínimas e tela de consentimento; tabela `conexoes_musicais` (pessoa, serviço, tokens **cifrados em repouso** com chave em variável de ambiente, nunca em log, validade, permissões); renovação, expiração, **revogação** (a pessoa desconecta, e o `401` do serviço também desconecta) e desconexão que apaga os tokens; a consulta é oficial e sob demanda, **sem scraping**; as sugestões ficam numa fila privada (pessoa, música, data da reprodução, id do evento **único**, para um evento repetido não duplicar) e **nunca se tornam públicas**.
+- **Ligação com o catálogo:** uma faixa só vira sugestão se **casar com uma música do catálogo e a pessoa já tiver review dela**; faixa desconhecida é ignorada (o catálogo é curado, e ninguém adiciona música), e o histórico vazio não atrapalha o fluxo manual. **Achado importante:** as chaves do catálogo guardam o ID do Spotify **em minúsculas** (`spotify-4ra6zuylxk69bf3dpvpggo`), mas os IDs do serviço diferenciam maiúsculas (`4ra6zuyLXk69bF3dPVpGGO`), então **a chave não serve para consultar a API**. É preciso um campo próprio de ID externo, na grafia original (`servico` e `id_externo`), preenchido para as 20 músicas a partir da tabela de links do `docs/demo-issue-13.md`. Equivalência **entre** serviços continua exigindo confirmação manual, como já decidido; o código ISRC, que os serviços costumam expor, serviria como evidência a confirmar, nunca como prova.
+- **O destino da confirmação já existe:** a pessoa confirma e a tela chama `POST /posts/{id}/reescutas` (#105), com o limite de 24 horas e sem criar review, nó nem pontos. **Nada é publicado sozinho.** Se for implementado, a validação exigida é: consentimento negado, token expirado ou revogado, desconexão, evento repetido e ausência de publicação automática.
+
+**O que já está pronto para receber qualquer um deles:** autenticação, `listar_reviews`, a tabela de seguidores, as bibliotecas (#100), as reescutas (#105) e a criação automática de tabelas novas sem migração.
+
+Claude Code redigiu este parecer; a revisão por outra pessoa do time continua pendente.
