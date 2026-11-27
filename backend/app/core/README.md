@@ -100,8 +100,8 @@ Texto próprio, permissão, existência de usuário/música e unicidade de revie
 um registro apagado e inserir uma nova raiz com mesmo autor/música. O backend
 apaga o conteúdo e os avisos; não deve apagar o registro estrutural.
 
-A #49 implementará troca de origem e movimentação de subárvore. A #41 não
-permite editar o pai de um registro existente. Reputação é calculada por outra
+A #49 acrescenta preparo e aplicação de troca de origem e movimentação de
+subárvore, descritos abaixo. `inserir` não edita o pai de registros existentes. Reputação é calculada por outra
 estrutura; os percursos preservam os ancestrais apagados para esse consumo.
 
 ### Custos e testes
@@ -265,3 +265,50 @@ Reprodução (sem banco):
 uv run pytest tests_dados/test_recomendador.py -q
 uv run python scripts/demo_recomendador.py
 ```
+
+## Troca de origem — #49
+
+`preparar_troca_origem(review_id, nova_origem_id)` produz um
+`PlanoTrocaOrigem` imutável sem alterar a floresta. Exige review ativa derivada,
+destino ativo da mesma gravação e ausência de ciclo. Não converte raiz nem
+remove origem. Origem anterior apagada é permitida; referências apagadas são
+percorridas normalmente. IDs seguem as validações existentes, sem coerção.
+
+O plano contém `review_id`, `origem_anterior_id`, `nova_origem_id`,
+`subarvore_ids` (BFS incluindo a review inicial), `caminho_anterior` e
+`caminho_novo` (IDs do pai até a raiz), e `alterou`. Nenhum percurso é truncado
+pela paginação de exibição. Os caminhos são relativos à review movida; a #51
+seleciona os eventos da subárvore e calcula os créditos. Não há conteúdo textual.
+Destino igual ao pai atual produz `alterou=False`, subárvore vazia e caminhos
+iguais, mas continua exigindo destino ativo e review ativa derivada.
+
+`aplicar_troca_origem(plano)` retorna o próprio plano após aplicação. Mantém
+IDs, autores, músicas, referências apagadas e vínculos internos da subárvore.
+Remove a review dos filhos antigos e a acrescenta ao fim dos filhos novos;
+irmãos restantes preservam a ordem. Essa posição não é uma garantia de ordem
+após reconstrução: nesse caso vale a ordem de entrada dos registros.
+
+Planos são internos ao processo, vinculados à instância e revisão, sem contrato
+JSON/serialização. Somente objetos emitidos pelo preparo são aceitos; cópias
+com `dataclasses.replace` não são planos emitidos. A floresta guarda referências
+fracas aos planos, sem reter os descartados. Reconstrução bem-sucedida (mesmo
+com registros iguais), inserção, primeira marcação como apagada e troca efetiva
+avançam a revisão e invalidam todos os planos anteriores. Falhas e operações
+sem alteração não avançam a revisão. Reaplicar um movimento efetivo levanta
+`PlanoTrocaInvalido(ErroArvore)`; preparar novamente o mesmo pedido produz
+sucesso sem alteração. Aplicações sem alteração podem ser repetidas enquanto
+a revisão continuar válida. Plano estranho, antigo ou malformado não muda estado.
+
+O core não implementa locks/transações. A #10 deve manter sincronização durante
+preparo, persistência e aplicação, controlar concorrência e recuperar banco/memória
+em caso de falha. Separar as etapas não garante atomicidade com o banco; não
+confirmar correção com créditos antigos. A #51 implementa o recálculo, e a #10
+coordena sua persistência. Esta entrega não cria eventos, rotas ou créditos.
+
+Com S nós na subárvore, H ancestrais examinados nos dois caminhos e D filhos
+somados dos pais antigo/novo: preparo O(S + H) em tempo/memória; em no-op,
+O(H). Aplicação efetiva O(D) em tempo/memória por copiar listas de irmãos;
+validação de identidade/revisão e aplicação sem alteração O(1) esperado.
+Não há reconstrução global por troca, recursão ou cache de planos permanente.
+
+Validação: `uv run python -m pytest tests_dados/test_troca_origem.py -q`.
