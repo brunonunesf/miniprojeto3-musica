@@ -7,7 +7,7 @@ from sqlalchemy import select
 from app.core.contadores import contador_iniciais
 from app.db import Base, SessionLocal, atualizar_esquema_antigo, engine
 from app.models.user import User
-from app.routers import arvores, auth, comentarios, curtidas, feed, follows, musicas, posts, users
+from app.routers import arvores, auth, comentarios, curtidas, descobrir, feed, follows, musicas, posts, users
 from app.services import arvores as servico_arvores
 from app.services import musicas as servico_musicas
 from app.services import reputacao as servico_reputacao
@@ -44,6 +44,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(follows.router)
 app.include_router(feed.router)
+app.include_router(descobrir.router)
 app.include_router(musicas.router)
 app.include_router(posts.router)
 app.include_router(curtidas.router)
