@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useEffect, useState, type FormEvent } from "react";
 
@@ -129,6 +130,9 @@ function PerfilDe({ username }: { username: string }) {
               </p>
             </div>
           )}
+          <Link href={`/usuarios/${perfil.username}/biblioteca`} className="inline-block text-sm font-semibold text-brand-700">
+            Ver biblioteca
+          </Link>
           <p className="text-sm text-zinc-500">Na rede desde {membroDesde(perfil.created_at)}</p>
         </div>
         {usuario?.id !== perfil.id && perfil.eu_sigo !== undefined && (

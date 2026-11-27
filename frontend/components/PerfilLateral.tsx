@@ -24,7 +24,7 @@ export function PerfilLateral() {
       </div>
       <ul className="space-y-1 border-y border-zinc-200 py-4 text-sm">
         <li><Link href="/feed" aria-current="page" className="item-lateral bg-orange-50"><Icone>⌂</Icone>Meu feed</Link></li>
-        <li><span className="item-lateral text-zinc-400"><Icone>▤</Icone>Minha biblioteca <small>(em breve)</small></span></li>
+        <li><Link href={`${perfil}/biblioteca`} className="item-lateral"><Icone>▤</Icone>Minha biblioteca</Link></li>
         <li><Link href={perfil} className="item-lateral"><Icone>✎</Icone>Minhas reviews</Link></li>
       </ul>
       <Link href="/posts/novo" className="btn-primary w-full">+ Escrever review</Link>

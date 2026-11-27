@@ -796,3 +796,11 @@ Liga a troca estrutural do Bruno (`FlorestaReviews.preparar_troca_origem` e `apl
 - Mantidos banco como fonte de verdade, ausência de transação única banco/memória e funcionamento em um processo. Outras instâncias não compartilham a trava nem o estado de disponibilidade. O aviso de indisponibilidade é global ao acumulador, pois ainda não há isolamento por autor.
 - Aceite: testes com banco descartável comparam totais e contribuições por evento com oráculo independente dos registros do banco: troca entre árvores, ancestrais compartilhados, autor repetido, auto-curtida, descendente apagado com curtida preservada, descurtida, repetição, retorno e reinício. Injeção de falhas cobre cálculo, árvore, SQL, startup, recuperação transitória e interações durante pendência. Testes focados de interface verificam aviso da troca salva, ocultação e botão de recuperação em desktop e 360 px, com respostas simuladas; não equivalem a navegador com backend real para os caminhos de falha.
 - Revisão independente permanece pendente; validação automatizada não é revisão de outra pessoa. Não há migração ou alteração de dados existentes.
+
+## Telas das bibliotecas — #45 (27/11/2026)
+
+- `/usuarios/{username}/biblioteca` mostra Descobertas e Recomendações, com o cartão de review do feed. O acesso fica no perfil e em "Minha biblioteca".
+- Só a dona vê o controle de visibilidade, por lista; a tela muda depois da confirmação do servidor. Lista restrita mostra acesso restrito, sem itens, contagem ou origem.
+- Depende do backend do PR #100. Sem ele, a página avisa que as bibliotecas não estão disponíveis.
+- "Ouvi novamente" e os avisos no feed continuam fora: não há backend. A #45 permanece aberta.
+- Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.
