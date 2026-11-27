@@ -84,6 +84,22 @@ def tentar_reconstruir(db: Session) -> bool:
         return False
 
 
+def recalcular(db: Session) -> None:
+    """Refaz os totais depois que a origem de uma review mudou (issue #10).
+
+    Cada evento (uma curtida ou uma review derivada) é uma linha guardada, e os créditos dele dependem
+    da corrente atual da árvore. Refazer tudo a partir dos eventos e da árvore nova tira os créditos
+    antigos e dá os novos, sem criar evento (mover a origem não é curtida nem recomendação) e inclui as
+    reviews apagadas, que continuam na árvore. O motor troca os totais só se a carga inteira for válida;
+    se falhar, a árvore é refeita a partir do banco e a reputação tenta de novo. Se ainda assim falhar,
+    o aviso fica no log e o reinício do backend refaz os totais, porque a fonte de verdade é o banco.
+    Custo: O(eventos), por troca.
+    """
+    if not tentar_reconstruir(db):
+        arvores.tentar_reconstruir(db)
+        tentar_reconstruir(db)
+
+
 def aplicar_curtida(db: Session, usuario_id: int, review_id: int) -> None:
     _aplicar(db, EventoCurtida(review_id, usuario_id))
 

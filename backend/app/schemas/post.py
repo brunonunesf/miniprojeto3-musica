@@ -26,6 +26,12 @@ class PostCreate(BaseModel):
         return self
 
 
+class OrigemUpdate(BaseModel):
+    """Corrigir de onde uma review derivada partiu: só troca uma origem por outra."""
+
+    origem_id: int = Field(ge=1, le=ID_MAXIMO)
+
+
 class PostUpdate(BaseModel):
     # a música não muda na edição: trocá-la é decisão pendente (issue #9)
     nota: Nota | None = None
