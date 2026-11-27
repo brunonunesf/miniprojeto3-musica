@@ -158,6 +158,8 @@ test("sem a rota no servidor, a correção de origem não aparece", async ({ pag
     if (route.request().resourceType() !== "fetch") return route.fallback();
     return route.fulfill({ json: { ...review(7, eu), origem_id: 3, origem: null } });
   });
+  // O servidor real já tem a rota: a falta dela é simulada.
+  await page.route(naApi("/openapi.json"), (route) => route.fulfill({ json: { paths: {} } }));
   const esquema = page.waitForResponse((resposta) => resposta.url().endsWith("/openapi.json"));
   await page.goto("/posts/7");
   await esquema;
@@ -167,6 +169,11 @@ test("sem a rota no servidor, a correção de origem não aparece", async ({ pag
 
 test("Descobrir avisa quando o servidor ainda não tem sugestões", async ({ page }) => {
   await entrar(page);
+  // O servidor real já tem a rota: o 404 é simulado.
+  await page.route(naApi("/descobrir"), (route) => {
+    if (route.request().resourceType() !== "fetch") return route.fallback();
+    return route.fulfill({ status: 404, json: { detail: "Not Found" } });
+  });
   await page.getByRole("link", { name: "Descobrir", exact: true }).click();
   await expect(page.getByText("ainda estão em preparação", { exact: false })).toBeVisible();
   await expect(page.getByRole("link", { name: "Pesquisar músicas" })).toBeVisible();

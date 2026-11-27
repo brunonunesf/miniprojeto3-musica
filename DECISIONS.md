@@ -811,3 +811,10 @@ Entrega só a **API das bibliotecas**. **Reescutas** (aviso "Ouvi novamente", li
 - **Limites:** sem duplicação por escuta porque **reescuta não existe ainda**; sem janela de 24 horas; uma biblioteca é só das reviews publicadas, não um histórico de escuta (a rede não tem histórico e a tela não deve sugerir que tem).
 - **Testes:** `test_biblioteca.py` (23 casos): padrões, as duas listas, formato do item, uma música uma vez e ordem, curtir/comentar/visitar sem efeito, pessoa sem músicas, terceiro com lista pública e privada sem vazamento (inclusive lista vazia), as **quatro combinações** de visibilidade, reviews públicas no perfil, independência entre pessoas, mudança parcial e idempotente, login e valores inválidos, linha só depois da primeira mudança, concorrência, exclusão, origem apagada, correção de origem, nova derivada, `404`, `401`, paginação e curtidas vistas por quem pede. Verificado também com a demo do Bruno.
 - Claude Code implementou a API e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Ajustes finais do front (27/11/2026)
+
+- A página Pessoas passou a usar o visual da rede, com paginação. Saiu o formulário do modelo inicial que criava usuário sem senha; contas são criadas em `/registro`. As rotas do backend não mudaram.
+- No celular, o título e o artista da review deixam de se espremer ao lado da capa.
+- Testes que supunham a falta de Descobrir e da correção de origem agora simulam essa falta.
+- Claude Code fez os ajustes e os testes. Não houve revisão por outra pessoa.
