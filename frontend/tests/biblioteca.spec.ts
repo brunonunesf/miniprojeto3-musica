@@ -65,6 +65,14 @@ test("a dona muda a visibilidade só com a confirmação do servidor e pagina a 
 
   await page.getByRole("button", { name: "Recomendações (0)" }).click();
   await expect(page.getByText("Nenhuma recomendação própria ainda.")).toBeVisible();
+  // Alternar as listas não pode repetir o controle nem as reviews da lista anterior.
+  for (let vez = 0; vez < 2; vez++) {
+    await page.getByRole("button", { name: "Descobertas (2)" }).click();
+    await expect(page.getByRole("article")).toHaveCount(1);
+    await page.getByRole("button", { name: "Recomendações (0)" }).click();
+    await expect(page.getByRole("article")).toHaveCount(0);
+  }
+  await expect(page.getByRole("group", { name: "Quem pode ver esta lista" })).toHaveCount(1);
   expect(await semEstouro(page)).toBe(true);
 });
 
