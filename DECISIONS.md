@@ -818,3 +818,11 @@ Entrega só a **API das bibliotecas**. **Reescutas** (aviso "Ouvi novamente", li
 - No celular, o título e o artista da review deixam de se espremer ao lado da capa.
 - Testes que supunham a falta de Descobrir e da correção de origem agora simulam essa falta.
 - Claude Code fez os ajustes e os testes. Não houve revisão por outra pessoa.
+
+## Telas das bibliotecas — #45 (27/11/2026)
+
+- `/usuarios/{username}/biblioteca` mostra Descobertas e Recomendações, com o cartão de review do feed. O acesso fica no perfil e em "Minha biblioteca".
+- Só a dona vê o controle de visibilidade, por lista; a tela muda depois da confirmação do servidor. Lista restrita mostra acesso restrito, sem itens, contagem ou origem.
+- Depende do backend do PR #100. Sem ele, a página avisa que as bibliotecas não estão disponíveis.
+- "Ouvi novamente" e os avisos no feed continuam fora: não há backend. A #45 permanece aberta.
+- Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.
