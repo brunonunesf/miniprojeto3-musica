@@ -9,6 +9,7 @@ from app.models.comentario import Comentario
 from app.models.curtida import Curtida
 from app.models.musica import Musica
 from app.models.post import Post
+from app.models.reescuta import Reescuta
 from app.models.review_apagada import ReviewApagada
 from app.models.user import User
 from app.schemas.post import PostCreate, PostUpdate
@@ -215,6 +216,7 @@ def excluir(db: Session, post_id: int, user: User) -> None:
     # sem isto, curtidas e comentários ficariam órfãos e poderiam grudar numa review nova que reuse o id
     db.execute(delete(Curtida).where(Curtida.post_id == post.id))
     db.execute(delete(Comentario).where(Comentario.post_id == post.id))
+    db.execute(delete(Reescuta).where(Reescuta.post_id == post.id))  # os avisos "ouvi novamente" saem com a review
     # O conteúdo some, mas o lugar na árvore fica (com o mesmo id): as derivadas continuam ligadas a ele.
     # `merge` (e não `add`) porque, num banco criado antes do AUTOINCREMENT, o id de uma review apagada
     # pode ter sido reaproveitado e já existir aqui: nesse caso o registro é substituído, em vez de dar 500.

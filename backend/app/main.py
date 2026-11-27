@@ -18,6 +18,7 @@ from app.routers import (
     follows,
     musicas,
     posts,
+    reescutas,
     users,
 )
 from app.services import arvores as servico_arvores
@@ -62,4 +63,5 @@ app.include_router(musicas.router)
 app.include_router(posts.router)
 app.include_router(curtidas.router)
 app.include_router(comentarios.router)
+app.include_router(reescutas.router)
 app.include_router(arvores.router)

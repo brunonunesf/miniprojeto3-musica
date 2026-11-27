@@ -5,6 +5,7 @@ from app.models.evento_reputacao import EventoReputacao  # noqa: F401
 from app.models.follow import Follow  # noqa: F401
 from app.models.musica import Musica  # noqa: F401
 from app.models.post import Post  # noqa: F401
+from app.models.reescuta import Reescuta  # noqa: F401
 from app.models.review_apagada import ReviewApagada  # noqa: F401
 from app.models.session import Session  # noqa: F401
 from app.models.user import User  # noqa: F401
