@@ -8,6 +8,7 @@ ação que o causou (mesmo commit) e só depois aplicado na memória, sob a trav
 import logging
 
 from sqlalchemy import delete, select
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.arvores import ErroArvore
@@ -19,6 +20,21 @@ from app.models.post import Post
 from app.services import arvores
 
 log = logging.getLogger("uvicorn.error")
+
+# Protegido por arvores.TRAVA; o banco continua sendo a fonte de verdade.
+_disponivel = False
+
+
+def disponivel() -> bool:
+    with arvores.TRAVA:
+        return _disponivel
+
+
+def invalidar() -> None:
+    """Oculta o snapshot antes de sincronizar uma alteração de origem confirmada."""
+    global _disponivel
+    with arvores.TRAVA:
+        _disponivel = False
 
 
 def _chave_curtida(usuario_id: int, review_id: int) -> str:
@@ -44,7 +60,9 @@ def evento_derivada(review_id: int) -> EventoReputacao:
 def _evento_do_motor(linha: EventoReputacao):
     if linha.tipo == "curtida":
         return EventoCurtida(linha.review_id, linha.usuario_id)
-    return EventoDerivada(linha.review_id)
+    if linha.tipo == "derivada":
+        return EventoDerivada(linha.review_id)
+    raise ErroReputacao("tipo de evento desconhecido")
 
 
 def sincronizar_eventos(db: Session) -> int:
@@ -69,9 +87,12 @@ def sincronizar_eventos(db: Session) -> int:
 
 def reconstruir(db: Session) -> None:
     """Refaz os totais a partir dos eventos e da árvore. Levanta erro se algo estiver inconsistente."""
+    global _disponivel
     with arvores.TRAVA:
+        _disponivel = False
         linhas = db.scalars(select(EventoReputacao).order_by(EventoReputacao.id)).all()
         reputacao_reviews.reconstruir(floresta, [_evento_do_motor(linha) for linha in linhas])
+        _disponivel = True
 
 
 def tentar_reconstruir(db: Session) -> bool:
@@ -79,25 +100,37 @@ def tentar_reconstruir(db: Session) -> bool:
     try:
         reconstruir(db)
         return True
-    except (ErroArvore, ErroReputacao) as erro:
+    except (ErroArvore, ErroReputacao, SQLAlchemyError) as erro:
+        db.rollback()
         log.warning("reputação não foi reconstruída: %s", erro)
         return False
 
 
-def recalcular(db: Session) -> None:
-    """Refaz os totais depois que a origem de uma review mudou (issue #10).
+def recalcular(db: Session) -> bool:
+    """Reconstrói árvore e créditos do banco; falha deixa os totais indisponíveis.
 
-    Cada evento (uma curtida ou uma review derivada) é uma linha guardada, e os créditos dele dependem
-    da corrente atual da árvore. Refazer tudo a partir dos eventos e da árvore nova tira os créditos
-    antigos e dá os novos, sem criar evento (mover a origem não é curtida nem recomendação) e inclui as
-    reviews apagadas, que continuam na árvore. O motor troca os totais só se a carga inteira for válida;
-    se falhar, a árvore é refeita a partir do banco e a reputação tenta de novo. Se ainda assim falhar,
-    o aviso fica no log e o reinício do backend refaz os totais, porque a fonte de verdade é o banco.
-    Custo: O(eventos), por troca.
+    O(E) para os eventos e O(N) mais a ordenação da reconstrução da floresta.
+    Não cria eventos. Nunca usa a floresta antiga se sua reconstrução falhar.
     """
-    if not tentar_reconstruir(db):
-        arvores.tentar_reconstruir(db)
-        tentar_reconstruir(db)
+    global _disponivel
+    with arvores.TRAVA:
+        _disponivel = False
+        try:
+            for _ in range(2):
+                if not arvores.tentar_reconstruir(db):
+                    return False
+                if tentar_reconstruir(db):
+                    return True
+            return False
+        except (ErroArvore, ErroReputacao, SQLAlchemyError) as erro:
+            db.rollback()
+            log.warning("reputação indisponível: %s", erro)
+            return False
+
+
+def garantir_disponibilidade(db: Session) -> bool:
+    with arvores.TRAVA:
+        return _disponivel or recalcular(db)
 
 
 def aplicar_curtida(db: Session, usuario_id: int, review_id: int) -> None:
@@ -111,16 +144,21 @@ def aplicar_derivada(db: Session, review_id: int) -> None:
 def _aplicar(db: Session, evento) -> None:
     """Põe o evento (já gravado) nos totais. Se a árvore em memória estava atrás do banco, refaz tudo."""
     with arvores.TRAVA:
+        if not _disponivel:
+            recalcular(db)  # inclui o evento já confirmado; não aplicar duas vezes
+            return
         try:
             reputacao_reviews.aplicar(floresta, evento)
         except (ErroArvore, ErroReputacao):
-            arvores.tentar_reconstruir(db)
-            tentar_reconstruir(db)
+            recalcular(db)
 
 
-def remover_curtida(usuario_id: int, review_id: int) -> None:
+def remover_curtida(db: Session, usuario_id: int, review_id: int) -> None:
     """Desfaz exatamente os pontos que a curtida concedeu (descurtir)."""
     with arvores.TRAVA:
+        if not _disponivel:
+            recalcular(db)
+            return
         reputacao_reviews.remover(EventoCurtida(review_id, usuario_id))
 
 
@@ -128,7 +166,9 @@ def apagar_evento_de_curtida(db: Session, usuario_id: int, review_id: int) -> No
     db.execute(delete(EventoReputacao).where(EventoReputacao.chave == _chave_curtida(usuario_id, review_id)))
 
 
-def total(autor_id: int) -> int:
+def total(db: Session, autor_id: int) -> int | None:
     """Os pontos de reputação de uma pessoa."""
     with arvores.TRAVA:
+        if not garantir_disponibilidade(db):
+            return None
         return reputacao_reviews.total(autor_id)

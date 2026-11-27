@@ -61,7 +61,7 @@ def ver_perfil(
     return PerfilOut(
         **UserOut.model_validate(perfil).model_dump(),
         **follows.estatisticas(db, user, perfil),
-        reputacao=reputacao.total(perfil.id),
+        reputacao=reputacao.total(db, perfil.id),
     )
 
 

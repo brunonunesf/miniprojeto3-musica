@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
         usernames = list(db.scalars(select(User.username)))
         servico_arvores.tentar_reconstruir(db)  # floresta de reviews; dado inconsistente não impede a subida
         servico_reputacao.sincronizar_eventos(db)  # curtidas e derivadas que já existem (seed, banco antigo)
-        servico_reputacao.tentar_reconstruir(db)  # totais de reputação, a partir dos eventos e da árvore
+        servico_reputacao.recalcular(db)  # só libera totais após reconstruir árvore e eventos
     contador_iniciais.reconstruir(usernames)
     yield
 

@@ -2,7 +2,7 @@ import { ApiError, apiDelete, apiGet, apiPost, type Page, type Post, type User }
 import { EXEMPLOS_DO_FEED } from "@/lib/feedExemplos";
 
 /** Contadores e reputação são opcionais: um servidor mais antigo não os envia. */
-export type Perfil = User & { seguidores?: number; seguindo?: number; eu_sigo?: boolean; reputacao?: number };
+export type Perfil = User & { seguidores?: number; seguindo?: number; eu_sigo?: boolean; reputacao?: number | null };
 
 /** Avisa quem mostra reputação de que uma ação pode tê-la mudado. */
 export const REPUTACAO_MUDOU = "reputacao-mudou";

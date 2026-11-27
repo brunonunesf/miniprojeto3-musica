@@ -1,11 +1,9 @@
 import { apiGet, apiPatch, type Post } from "@/lib/api";
 
-/**
- * Contrato proposto pelo front (a rota ainda não existe no backend):
- * PATCH /posts/{id}/origem com { origem_id } devolve a review atualizada.
- */
-export function trocarOrigem(postId: number, origemId: number): Promise<Post> {
-  return apiPatch<Post>(`/posts/${postId}/origem`, { origem_id: origemId });
+/** Resposta da correção: a origem pode estar salva com reputação indisponível. */
+export type OrigemCorrigida = Post & { reputacao_disponivel?: boolean };
+export function trocarOrigem(postId: number, origemId: number): Promise<OrigemCorrigida> {
+  return apiPatch<OrigemCorrigida>(`/posts/${postId}/origem`, { origem_id: origemId });
 }
 
 /** A ação só aparece se o servidor publicar a rota, para não oferecer o que falharia. */
