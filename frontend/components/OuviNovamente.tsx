@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from "react";
 
 import { MensagemErro } from "@/components/MensagemErro";
-import { ApiError } from "@/lib/api";
 import { COMENTARIO_MAXIMO, publicarReescuta, servidorAceitaReescuta } from "@/lib/reescuta";
 import { useDisponivel } from "@/lib/useDisponivel";
 
@@ -28,12 +27,8 @@ export function OuviNovamente({ postId }: { postId: number }) {
       setAberto(false);
       setPublicado(true);
     } catch (erro) {
-      // O comentário digitado continua no campo.
-      setFalha(
-        erro instanceof ApiError && erro.status === 429
-          ? "Você já avisou sobre esta música nas últimas 24 horas."
-          : erro instanceof Error ? erro.message : "Não foi possível publicar o aviso.",
-      );
+      // O comentário digitado continua no campo. No bloqueio de 24 horas, o servidor diz quanto falta.
+      setFalha(erro instanceof Error ? erro.message : "Não foi possível publicar o aviso.");
     } finally {
       setEnviando(false);
     }

@@ -1,10 +1,10 @@
-# Rede social de descoberta musical
+# scuta — rede social de descoberta musical
 
 Mini-projeto 3 do TRILHA, desenvolvido por **Bruno Nunes (@brunonunesf), Cecília Candeia (@cec1l14) e Daniel Dantas (@dnieldantas)**.
 
 A proposta é descobrir e divulgar músicas pelas recomendações de outras pessoas, registrar como essas descobertas se espalham e reconhecer quem contribui para elas. Isso pode dar visibilidade a artistas pequenos e independentes.
 
-**MeetMusic é apenas o nome provisório citado na conversa**; o grupo comentou que ele já é usado por outro site. O nome definitivo está em aberto.
+A rede se chama **scuta**. MeetMusic foi apenas o nome provisório do começo do projeto.
 
 ## Ideias discutidas
 

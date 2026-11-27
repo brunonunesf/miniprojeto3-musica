@@ -11,7 +11,7 @@ Documento inicial baseado nas mensagens de texto da conversa de WhatsApp. Ideias
 - **Como a rede resolve:** conectar reviews derivadas às suas origens e tornar visível a contribuição das pessoas por meio de árvores de recomendações e reputação.
 - **Impacto pretendido:** incentivar a descoberta e a divulgação de artistas com menor visibilidade, como Daniel destacou na conversa.
 - **Sinal de sucesso proposto, a validar:** pessoas descobrem uma música por outra pessoa e publicam uma review ligada à recomendação original.
-- **Pendente de reunião (Etapa 1):** recorte específico do público (a rubrica valoriza algo como "estudantes da UFPB que querem descobrir artistas independentes locais" mais que "gente que gosta de música") e nome definitivo da rede. Enquanto isso, seed e interface usam o recorte provisório acima.
+- **Pendente de reunião (Etapa 1):** recorte específico do público (a rubrica valoriza algo como "estudantes da UFPB que querem descobrir artistas independentes locais" mais que "gente que gosta de música") Enquanto isso, seed e interface usam o recorte provisório acima. O nome da rede foi definido em 27/11: **scuta**.
 
 ## Direções de produto registradas
 
@@ -827,10 +827,32 @@ Entrega só a **API das bibliotecas**. **Reescutas** (aviso "Ouvi novamente", li
 - "Ouvi novamente" e os avisos no feed continuam fora: não há backend. A #45 permanece aberta.
 - Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.
 
+## Reescutas — issue #12 (parte das reescutas) — 27/11/2026
+
+Completa a #12 no backend (as bibliotecas já estão na `main`). **A integração com Spotify e Deezer (#21 e #22) continua fora**: o aviso é sempre manual, sem sugestão externa.
+
+- **O que é:** o aviso "ouvi novamente" de uma pessoa sobre uma música que ela já avaliou, com comentário opcional. **Não é review: não cria review, nó da árvore, música nem pontos**, e não conta nas "mais avaliadas". A curtida continua sendo uma só, na review original, e as ações dos avisos apontam para ela.
+- **Quem e quando:** só o **autor da review** avisa (`403` para outra pessoa, inclusive quem a segue; `404` se a review não existe). O comentário é opcional, de até **500 caracteres** (`422` acima disso; só espaços valem como vazio). Qualquer review do autor serve, raiz ou derivada.
+- **Limite de 24 horas:** no máximo **um aviso por pessoa e música a cada 24 horas**, em **janela móvel contada do aviso mais recente**. Um segundo antes de completar 24 horas ainda é bloqueado; **exatamente 24 horas depois libera**. O bloqueio responde `429` com o cabeçalho `Retry-After` (segundos) e uma mensagem com o tempo que falta ("tente de novo em 12 h e 30 min"). Um aviso recusado não grava nada nem gasta a janela. O limite é por pessoa **e** por música: outra música da mesma pessoa, ou a mesma música de outra pessoa, não é afetada.
+- **Concorrência:** a checagem e a gravação são **um único comando do banco** (`INSERT ... SELECT ... WHERE NOT EXISTS`), que o SQLite executa de uma vez; assim duas requisições simultâneas **não passam as duas**. Verificado com 16 requisições ao mesmo tempo: exatamente uma `201`, as outras `429`, nunca `500`. Num banco com leitura concorrente (como o Postgres) seria preciso uma trava ou isolamento serializável.
+- **Edição e exclusão:** editar a review depois **não muda a data nem o comentário do aviso**, e a `review` que o aviso traz é a de agora; editar também não reabre a janela. **Apagar a review apaga os avisos dela**; se a pessoa publicar de novo a mesma música, a janela recomeça (limite conhecido, a decisão aprovada é que a exclusão remove os avisos).
+- **Rotas (todas com login):** `POST /posts/{id}/reescutas` (`{"comentario": "..."}`, opcional), `GET /posts/{id}/reescutas?offset&limit` (os avisos de uma review) e `GET /feed/reescutas?offset&limit` (os avisos de **quem a pessoa segue**, sem os próprios, do mais novo para o mais antigo). Cada item traz `id`, `comentario`, `created_at` (os do aviso) e a `review` no formato do feed, vista por quem pede. `limit` de 1 a 100 e `offset` até 2^63-1, senão `422`.
+- **Os avisos ficam numa rota própria, e não dentro de `/feed`,** de propósito: o contrato do feed cronológico (só reviews, só de quem se segue) **não mudou**, e a tela o intercala pela data (`created_at` do aviso e `created_at` da review). Para a Cecília: mostrar o aviso como um cartão separado ("Ouvi novamente", com o comentário e a data do aviso) apontando para a review atual, e tratar o `429` mostrando o tempo que falta.
+- **Persistência:** tabela nova `reescutas` (autor, música, review, comentário, data), com índice por autor, música e data para a janela. Como é tabela nova, **bancos antigos a ganham sozinhos** na subida, sem migração.
+- **Testes:** `test_reescutas.py` (19 casos), com um relógio controlado para testar **antes e exatamente depois de 24 horas**, janela móvel, bloqueio com `Retry-After`, independência por pessoa e música, recusa que não gasta a janela, **concorrência**, review alheia, edição posterior, exclusão, nenhuma review, nó, evento de reputação nem mudança em árvore, ranking e feed, curtida única, leitura paginada, só os seguidos no feed e login.
+- Claude Code implementou a API e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Nome e marca: scuta (27/11/2026)
+
+- Cecília informou que a rede se chama **scuta** e forneceu o kit de logo. Substitui “MeetMusic” (provisório) e o título “Descoberta musical”.
+- O ícone (balão de conversa com uma nota) aparece na barra, na página inicial e como ícone da aba; o nome usa a Merriweather já adotada.
+- A disponibilidade do nome e do domínio não foi verificada.
+- Claude Code aplicou a marca no site.
+
 ## Ouvi novamente e avisos no feed — #45 (27/11/2026)
 
-- "Ouvi novamente" aparece na própria review e quando o servidor recusa uma segunda review da mesma gravação, ao lado do acesso para editar. O comentário é opcional e fica no campo em caso de falha ou bloqueio de 24 horas.
-- Os avisos ficam em um bloco separado no feed, com data e comentário próprios, indicando se a review atual foi editada; curtir e derivar continuam na review original.
-- Contratos propostos pelo front, ainda sem backend (#12): `POST /posts/{id}/reescutas` (429 no bloqueio) e `GET /feed/reescutas`. Testado com respostas simuladas; não comprova integração. Sem as rotas, nada aparece.
-- O encerramento da #45 vale só para o front. Spotify e Deezer não fazem parte.
+- "Ouvi novamente" aparece na própria review e quando o servidor recusa uma segunda review da mesma gravação, ao lado do acesso para editar. O comentário é opcional, até 500 caracteres, e fica no campo em caso de falha; no bloqueio de 24 horas a tela mostra o tempo informado pelo servidor.
+- Os avisos ficam em um bloco separado no alto do feed, com data e comentário próprios; não são intercalados com as reviews por data. Curtir e derivar continuam na review original.
+- A tela usa as rotas do backend das reescutas (#12): `POST /posts/{id}/reescutas` e `GET /feed/reescutas`. O servidor não informa se a review foi editada depois do aviso, então a tela não indica isso.
+- Spotify e Deezer não fazem parte.
 - Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.

@@ -28,7 +28,7 @@ function Avisos() {
           </p>
           {aviso.comentario && <p className="whitespace-pre-wrap break-words">{aviso.comentario}</p>}
           <Link href={`/posts/${aviso.review.id}`} className="inline-block text-sm font-semibold text-brand-700">
-            {aviso.editada ? "Abrir a review atual (editada depois do aviso)" : "Abrir a review atual"}
+            Abrir a review atual
           </Link>
           <ReviewCard post={aviso.review} />
         </div>

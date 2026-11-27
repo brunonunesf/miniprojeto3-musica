@@ -37,21 +37,23 @@ test("publicar reescuta preserva o comentário no bloqueio e em falha", async ({
     route.request().resourceType() !== "fetch" ? route.fallback() : route.fulfill({ json: review(7, eu) }),
   );
   let status = 429;
+  const bloqueio = "você já avisou desta música; tente de novo em 12 h e 30 min";
   const corpos: unknown[] = [];
   await page.route(naApi("/posts/7/reescutas"), (route) => {
     if (route.request().method() !== "POST") return route.fallback();
     corpos.push(route.request().postDataJSON());
     return status === 201
-      ? route.fulfill({ status, json: { id: 1, comentario: "De novo!", created_at: bia.created_at, editada: false, review: review(7, eu) } })
-      : route.fulfill({ status, json: {} });
+      ? route.fulfill({ status, json: { id: 1, comentario: "De novo!", created_at: bia.created_at, review: review(7, eu) } })
+      : route.fulfill({ status, json: status === 429 ? { detail: bloqueio } : {} });
   });
 
   await page.goto("/posts/7");
   await page.getByRole("button", { name: "Ouvi novamente" }).click();
   const campo = page.getByLabel("Comentário da reescuta (opcional)");
+  await expect(campo).toHaveAttribute("maxlength", "500");
   await campo.fill("  De novo!  ");
   await page.getByRole("button", { name: "Publicar aviso" }).click();
-  await expect(page.getByText("nas últimas 24 horas", { exact: false })).toBeVisible();
+  await expect(page.getByText("tente de novo em 12 h e 30 min", { exact: false })).toBeVisible();
   await expect(campo).toHaveValue("  De novo!  ");
   status = 500;
   await page.getByRole("button", { name: "Publicar aviso" }).click();
@@ -95,7 +97,7 @@ test("o feed mostra avisos separados, aponta para a review atual e não bloqueia
   await page.route(naApi("/feed/reescutas"), (route) => {
     if (falhar) return route.fulfill({ status: 500, json: {} });
     const offset = Number(new URL(route.request().url()).searchParams.get("offset"));
-    const aviso = { id: offset + 1, comentario: `Escuta ${offset + 1}`, created_at: bia.created_at, editada: offset === 0, review: review(7) };
+    const aviso = { id: offset + 1, comentario: `Escuta ${offset + 1}`, created_at: bia.created_at, review: review(7) };
     return route.fulfill({ json: { items: [aviso], total: 2, offset, limit: 5 } });
   });
 
@@ -105,10 +107,10 @@ test("o feed mostra avisos separados, aponta para a review atual e não bloqueia
   falhar = false;
   await page.getByRole("button", { name: "Recarregar avisos" }).click();
   await expect(page.getByText("Escuta 1")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Abrir a review atual (editada depois do aviso)" })).toHaveAttribute("href", "/posts/7");
+  await expect(page.getByRole("link", { name: "Abrir a review atual" })).toHaveAttribute("href", "/posts/7");
   await page.getByRole("button", { name: "Mais avisos" }).click();
   await expect(page.getByText("Escuta 2")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Abrir a review atual", exact: true })).toHaveCount(1);
+  await expect(page.getByRole("link", { name: "Abrir a review atual" })).toHaveCount(2);
   await page.getByRole("button", { name: "Atualizar" }).click();
   await expect(page.getByText("Escuta 2")).toHaveCount(0);
   await expect(page.getByText("Escuta 1")).toBeVisible();
