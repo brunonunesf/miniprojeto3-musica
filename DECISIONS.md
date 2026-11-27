@@ -11,7 +11,7 @@ Documento inicial baseado nas mensagens de texto da conversa de WhatsApp. Ideias
 - **Como a rede resolve:** conectar reviews derivadas às suas origens e tornar visível a contribuição das pessoas por meio de árvores de recomendações e reputação.
 - **Impacto pretendido:** incentivar a descoberta e a divulgação de artistas com menor visibilidade, como Daniel destacou na conversa.
 - **Sinal de sucesso proposto, a validar:** pessoas descobrem uma música por outra pessoa e publicam uma review ligada à recomendação original.
-- **Pendente de reunião (Etapa 1):** recorte específico do público (a rubrica valoriza algo como "estudantes da UFPB que querem descobrir artistas independentes locais" mais que "gente que gosta de música") e nome definitivo da rede. Enquanto isso, seed e interface usam o recorte provisório acima.
+- **Pendente de reunião (Etapa 1):** recorte específico do público (a rubrica valoriza algo como "estudantes da UFPB que querem descobrir artistas independentes locais" mais que "gente que gosta de música") Enquanto isso, seed e interface usam o recorte provisório acima. O nome da rede foi definido em 27/11: **scuta**.
 
 ## Direções de produto registradas
 
@@ -841,3 +841,10 @@ Completa a #12 no backend (as bibliotecas já estão na `main`). **A integraçã
 - **Persistência:** tabela nova `reescutas` (autor, música, review, comentário, data), com índice por autor, música e data para a janela. Como é tabela nova, **bancos antigos a ganham sozinhos** na subida, sem migração.
 - **Testes:** `test_reescutas.py` (19 casos), com um relógio controlado para testar **antes e exatamente depois de 24 horas**, janela móvel, bloqueio com `Retry-After`, independência por pessoa e música, recusa que não gasta a janela, **concorrência**, review alheia, edição posterior, exclusão, nenhuma review, nó, evento de reputação nem mudança em árvore, ranking e feed, curtida única, leitura paginada, só os seguidos no feed e login.
 - Claude Code implementou a API e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Nome e marca: scuta (27/11/2026)
+
+- Cecília informou que a rede se chama **scuta** e forneceu o kit de logo. Substitui “MeetMusic” (provisório) e o título “Descoberta musical”.
+- O ícone (balão de conversa com uma nota) aparece na barra, na página inicial e como ícone da aba; o nome usa a Merriweather já adotada.
+- A disponibilidade do nome e do domínio não foi verificada.
+- Claude Code aplicou a marca no site.
