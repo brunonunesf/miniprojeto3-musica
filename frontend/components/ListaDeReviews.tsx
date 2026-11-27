@@ -1,20 +1,27 @@
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import { MensagemErro } from "@/components/MensagemErro";
 import { ReviewCard } from "@/components/ReviewCard";
 import type { Post } from "@/lib/api";
 import type { usePaginacao } from "@/lib/usePaginacao";
 
-type Props = Omit<ReturnType<typeof usePaginacao<Post>>, "acrescentar"> & {
+type Props<T extends Post> = Pick<ReturnType<typeof usePaginacao<T>>, "lista" | "carregando" | "erro" | "carregar"> & {
   exemplo: boolean;
+  /** Algo a mostrar acima de um cartão, como o motivo de uma sugestão. */
+  antes?: (post: T) => ReactNode;
   /** O que mostrar quando não há nenhuma review. */
   vazio: ReactNode;
 };
 
-export function ListaDeReviews({ lista, carregando, erro, carregar, exemplo, vazio }: Props) {
+export function ListaDeReviews<T extends Post>({ lista, carregando, erro, carregar, exemplo, vazio, antes }: Props<T>) {
   return (
     <div className="space-y-5">
-      {lista?.items.map((post) => <ReviewCard key={post.id} post={post} exemplo={exemplo} />)}
+      {lista?.items.map((post) => (
+        <Fragment key={post.id}>
+          {antes?.(post)}
+          <ReviewCard post={post} exemplo={exemplo} />
+        </Fragment>
+      ))}
 
       {lista && lista.items.length === 0 && !carregando && !erro && vazio}
 

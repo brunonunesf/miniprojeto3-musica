@@ -62,6 +62,8 @@ test("review repetida preserva o formulário e outra pessoa não edita", async (
   await expect(page.getByText("você já fez uma review desta música")).toBeVisible();
   await expect(page.getByLabel("Sua análise (opcional)")).toHaveValue("Linda demais.");
   await expect(page.getByRole("radio", { name: /Lua de Barro/ })).toBeChecked();
+  await page.getByRole("link", { name: "Abrir a sua review desta música" }).click();
+  await expect(page).toHaveURL(endereco);
 
   await page.getByRole("button", { name: "Sair", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);

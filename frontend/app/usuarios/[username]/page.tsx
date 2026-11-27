@@ -8,7 +8,7 @@ import { Avatar } from "@/components/Avatar";
 import { BotaoSeguir } from "@/components/BotaoSeguir";
 import { ReviewsDoPerfil } from "@/components/ReviewsDoPerfil";
 import { apiPatch, type User } from "@/lib/api";
-import { buscarPerfil, PERFIL_SIMULADO, type Perfil } from "@/lib/perfil";
+import { buscarPerfil, PERFIL_SIMULADO, REPUTACAO_MUDOU, type Perfil } from "@/lib/perfil";
 
 function membroDesde(dataIso: string): string {
   return new Date(dataIso).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
@@ -44,6 +44,32 @@ function PerfilDe({ username }: { username: string }) {
     };
   }, [username, tentativa]);
 
+  const [falhaDaReputacao, setFalhaDaReputacao] = useState(false);
+
+  useEffect(() => {
+    let ativa = true;
+    // Só a resposta do pedido mais recente vale.
+    let pedido = 0;
+    function atualizar() {
+      const atual = ++pedido;
+      setFalhaDaReputacao(false);
+      // O total vem sempre do servidor; em falha, o perfil continua na tela.
+      buscarPerfil(username).then(
+        (resposta) => {
+          if (ativa && atual === pedido) setPerfil(resposta);
+        },
+        () => {
+          if (ativa && atual === pedido) setFalhaDaReputacao(true);
+        },
+      );
+    }
+    window.addEventListener(REPUTACAO_MUDOU, atualizar);
+    return () => {
+      ativa = false;
+      window.removeEventListener(REPUTACAO_MUDOU, atualizar);
+    };
+  }, [username]);
+
   function aoSalvar(novo: User) {
     // A resposta da edição não traz contadores: mantém os que já vieram.
     setPerfil((atual) => ({ ...atual, ...novo }));
@@ -67,7 +93,7 @@ function PerfilDe({ username }: { username: string }) {
     <div className="space-y-6">
       <section className="flex flex-wrap items-center gap-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <Avatar user={perfil} tamanho="xl" />
-        <div className="min-w-0 flex-1 space-y-2">
+        <div className="min-w-0 flex-1 basis-60 space-y-2">
           <h1 className="break-words text-3xl font-bold tracking-tight">{perfil.name}</h1>
           <p className="break-words text-brand-700">@{perfil.username}</p>
           {perfil.bio && <p className="whitespace-pre-wrap break-words">{perfil.bio}</p>}
@@ -76,6 +102,15 @@ function PerfilDe({ username }: { username: string }) {
               <span><strong>{perfil.seguidores}</strong> {perfil.seguidores === 1 ? "seguidor" : "seguidores"}</span>
               <span><strong>{perfil.seguindo}</strong> seguindo</span>
             </p>
+          )}
+          {perfil.reputacao !== undefined && (
+            <div className="text-sm">
+              <p><strong>{perfil.reputacao}</strong> de reputação</p>
+              <p className="text-zinc-500">
+                Uma curtida de outra pessoa dá 4 pontos a quem escreveu, 2 a quem indicou e 1 a quem veio antes. Uma review derivada pontua da mesma forma as anteriores na corrente. Curtir a própria review vale 1.
+              </p>
+              {falhaDaReputacao && <p role="alert" className="text-red-800">Não foi possível atualizar a reputação. Recarregue a página.</p>}
+            </div>
           )}
           <p className="text-sm text-zinc-500">Na rede desde {membroDesde(perfil.created_at)}</p>
         </div>

@@ -88,3 +88,92 @@ test("servidor sem review derivada não oferece nem publica a ligação", async 
   await expect(page.getByText("Este servidor ainda não aceita review derivada.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Publicar review" })).toHaveCount(0);
 });
+
+test("derivada repetida leva à review existente, sem trocar a origem", async ({ page }) => {
+  const publicar = async () => {
+    await page.getByLabel("Nota (0 a 10)").selectOption("8");
+    await page.getByLabel(/Sua análise/).fill("Minha opinião.");
+    await page.getByRole("button", { name: "Publicar review" }).click();
+  };
+  await entrar(page);
+  await page.goto("/posts/novo");
+  await page.getByRole("radio", { name: /Trio Ventania/ }).check();
+  await publicar();
+  await expect(page).toHaveURL(/\/posts\/\d+$/);
+  const origem = page.url();
+
+  await page.getByRole("button", { name: "Sair", exact: true }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await entrar(page);
+  await page.goto("/posts/novo");
+  await page.getByRole("radio", { name: /Trio Ventania/ }).check();
+  await publicar();
+  await expect(page).toHaveURL(/\/posts\/\d+$/);
+  const independente = page.url();
+
+  await page.goto(origem);
+  await page.getByRole("link", { name: "Escrever review a partir desta" }).click();
+  await publicar();
+  await expect(page.getByText("você já fez uma review desta música")).toBeVisible();
+  await page.getByRole("link", { name: "Abrir a sua review desta música" }).click();
+  await expect(page).toHaveURL(independente);
+  await expect(page.getByText("A partir da review de", { exact: false })).toHaveCount(0);
+});
+
+test("apagar só o próprio comentário, com confirmação e sem sumir em falha", async ({ page }) => {
+  await entrar(page);
+  const eu = await page.evaluate(async () =>
+    (await fetch("http://localhost:8000/auth/eu", { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })).json(),
+  );
+  await comReview(page, { comentarios: 3 });
+  const meus = [{ ...comentario(2, "Meu primeiro"), autor: eu }, { ...comentario(3, "Meu segundo"), autor: eu }];
+  await page.route(naApi("/posts/7/comentarios"), (route) =>
+    route.fulfill({ json: { items: [comentario(1, "De outra pessoa"), ...meus], total: 3, offset: 0, limit: 20 } }),
+  );
+  let resposta: { status: number; detail?: string } = { status: 404, detail: "Not Found" };
+  const apagados: string[] = [];
+  await page.route(
+    (url) => url.port === "8000" && /^\/posts\/7\/comentarios\/\d+$/.test(url.pathname),
+    (route) => {
+      if (route.request().method() !== "DELETE") return route.fallback();
+      apagados.push(new URL(route.request().url()).pathname);
+      return resposta.status === 204
+        ? route.fulfill({ status: 204 })
+        : route.fulfill({ status: resposta.status, json: { detail: resposta.detail } });
+    },
+  );
+
+  await page.goto("/posts/7");
+  const itens = page.getByRole("list", { name: "Conversa" }).getByRole("listitem");
+  await expect(itens).toHaveCount(3);
+  await expect(itens.filter({ hasText: "De outra pessoa" }).getByRole("button", { name: "Apagar" })).toHaveCount(0);
+
+  const primeiro = itens.filter({ hasText: "Meu primeiro" });
+  await primeiro.getByRole("button", { name: "Apagar" }).click();
+  await primeiro.getByRole("button", { name: "Cancelar" }).click();
+  expect(apagados).toHaveLength(0);
+
+  // Servidor sem a rota: o comentário continua na tela.
+  await primeiro.getByRole("button", { name: "Apagar" }).click();
+  await primeiro.getByRole("button", { name: "Confirmar" }).click();
+  await expect(primeiro.getByText("Este servidor ainda não permite apagar comentários.")).toBeVisible();
+  await expect(itens).toHaveCount(3);
+
+  resposta = { status: 403, detail: "só o autor pode apagar o comentário" };
+  await primeiro.getByRole("button", { name: "Confirmar" }).click();
+  await expect(primeiro.getByText("só o autor pode apagar o comentário")).toBeVisible();
+  await expect(itens).toHaveCount(3);
+
+  resposta = { status: 204 };
+  await primeiro.getByRole("button", { name: "Confirmar" }).click();
+  await expect(itens).toHaveCount(2);
+
+  // Já apagado em outro lugar: sai da lista sem erro.
+  resposta = { status: 404, detail: "comentário não encontrado" };
+  const segundo = itens.filter({ hasText: "Meu segundo" });
+  await segundo.getByRole("button", { name: "Apagar" }).click();
+  await segundo.getByRole("button", { name: "Confirmar" }).click();
+  await expect(itens).toHaveCount(1);
+  expect(apagados).toEqual(["/posts/7/comentarios/2", "/posts/7/comentarios/2", "/posts/7/comentarios/2", "/posts/7/comentarios/3"]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});

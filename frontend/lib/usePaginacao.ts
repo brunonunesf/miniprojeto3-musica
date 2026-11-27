@@ -58,5 +58,13 @@ export function usePaginacao<T extends Item = Post>(buscar: (offset: number) => 
     );
   }, []);
 
-  return { lista, carregando, erro, carregar, acrescentar };
+  /** Tira um item apagado; o offset recua junto para a próxima página não pular ninguém. */
+  const remover = useCallback((id: number) => {
+    setLista((atual) => {
+      if (!atual || !atual.items.some((item) => item.id === id)) return atual;
+      return { ...atual, items: atual.items.filter((item) => item.id !== id), proximo: atual.proximo - 1 };
+    });
+  }, []);
+
+  return { lista, carregando, erro, carregar, acrescentar, remover };
 }

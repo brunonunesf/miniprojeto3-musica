@@ -215,3 +215,53 @@ uv run python -m pytest tests_dados/test_reputacao.py -q
 uv run python -m pytest tests_dados -q
 uv run python -m pytest -q
 ```
+
+## Recomendador de conteúdo — #55
+
+`recomendador.py` fornece `Recomendador(catalogo)` e
+`recomendar(usuario, reviews, curtidas) -> tuple[Sugestao, ...]`. Registros
+`Musica`, `Review`, `Curtida` e `Sugestao` são dataclasses congeladas. IDs de
+usuário/review são inteiros positivos (sem bool); música usa chave de catálogo.
+Datas exigem fuso; adapter deve converter datas UTC ingênuas do SQLite para UTC
+explicitamente, sem usar o fuso local. Não passar modelos ORM diretamente.
+
+O backend fornece catálogo completo, reviews públicas/ativas e reviews do próprio
+usuário (incluindo apagadas/privadas, se conservadas), além das curtidas atuais
+necessárias às contagens globais. Referências de curtidas devem estar presentes
+no snapshot; filtrar ambos os conjuntos conjuntamente. Reviews inelegíveis são
+ignoradas como candidatas e sinais externos. Reviews próprias ativas continuam
+sendo sinal e exclusão. Não enviar conteúdo textual, nota ou biblioteca privada.
+A autorização e consistência transacional do snapshot são responsabilidade #23.
+
+Duplicatas idênticas de reviews e curtidas são deduplicadas. Reviews conflitantes,
+IDs inválidos, datas sem fuso e referências ausentes levantam `EntradaInvalida`.
+Catálogo sem termos e catálogo vazio funcionam sem erro de vocabulário vazio.
+
+Perfil reconstruído em toda consulta: própria ativa vale 3 por gravação;
+curtidas externas em reviews elegíveis valem 1 por gravação quando não há própria.
+Exclusão e descurtida operam pela remoção/alteração da entrada no próximo snapshot.
+O índice só muda criando outra instância; a #23 deve construir e então substituir
+no startup/alteração do catálogo, em todos os processos. Não há cache de perfis,
+eventos, singleton obrigatório ou persistência neste módulo.
+
+A saída completa contém chave, review representante, cosseno, motivo
+(`afinidade`, `sem_sinais`, `sem_afinidade`) e até 3 termos prefixados de maior
+contribuição. A API pagina **depois** do ranking e pode mapear termos a rótulos;
+não deve expor snapshots ou contagens internas. O cosseno é afinidade vetorial,
+sem interpretação probabilística. A escolha da review mais curtida não participa
+do score. Mesmas entradas dão mesma ordem; mudanças entre páginas podem mover itens.
+
+Custos: com T ocorrências de termos, Z entradas não nulas do índice, V termos,
+R reviews, L curtidas deduplicadas, S gravações sinalizadas e C candidatas:
+construção O(T + V log V + M log M), além da ordenação dos termos por documento;
+memória O(Z + V + M). Por consulta, implementação conservadora custa
+O(R + L log L + S(V + Z) + C V log V + C log C); matrizes esparsas evitam matriz
+densa M×M, mas somas sucessivas do perfil e ordenação das contribuições não são
+O(1). Memória adicional O(R + L + C + V). Não há atualização incremental.
+
+Reprodução (sem banco):
+
+```sh
+uv run pytest tests_dados/test_recomendador.py -q
+uv run python scripts/demo_recomendador.py
+```

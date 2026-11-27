@@ -77,3 +77,27 @@ test("reviews do perfil paginadas", async ({ page }) => {
   await expect(page.getByText("seguidores")).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
+
+test("reputação aparece quando o servidor a envia, inclusive zero", async ({ page }) => {
+  await entrar(page);
+  let extra: object = { reputacao: 18 };
+  await page.route(rotaPerfil, (route) => {
+    if (route.request().resourceType() !== "fetch") return route.fallback();
+    return route.fulfill({ json: { ...bia, eu_sigo: false, seguidores: 1, seguindo: 2, ...extra } });
+  });
+  await page.route(rotaPosts, (route) => route.fulfill({ json: { items: [], total: 0, offset: 0, limit: 10 } }));
+
+  await page.goto("/usuarios/bia_exemplo");
+  await expect(page.getByText("18 de reputação")).toBeVisible();
+  await expect(page.getByText("Uma curtida de outra pessoa", { exact: false })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+
+  extra = { reputacao: 0 };
+  await page.reload();
+  await expect(page.getByText("0 de reputação")).toBeVisible();
+
+  extra = {};
+  await page.reload();
+  await expect(page.getByText("1 seguidor")).toBeVisible();
+  await expect(page.getByText("de reputação")).toHaveCount(0);
+});

@@ -618,3 +618,101 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - **Efeito:** o contador `comentarios` das reviews diminui. Comentários não pontuam reputação, então nada mais muda.
 - **Falta (Cecília):** o botão "apagar" ao lado dos comentários próprios na tela da review.
 - **Testes:** `test_comentarios_apagar.py` (6 casos). Claude Code implementou; o código ainda precisa ser revisado por outra pessoa do time.
+
+## Reputação ligada à API — issues #10 e #11 — 26/11/2026
+
+Liga o motor de reputação de `core/reputacao.py` (Bruno, #43) ao banco e ao perfil. **Correção de origem (#19) e recálculo (#20) não fazem parte desta entrega.**
+
+- **Fórmula (já aprovada, não mudou):** curtida de outra pessoa dá **4** ao autor da review, **2** ao autor da origem imediata e **1** ao ancestral seguinte; publicar uma review derivada dá 4, 2 e 1 aos três autores anteriores da corrente, e **o autor da nova não ganha**; curtida própria dá **1** só ao autor, sem propagar; se o mesmo autor aparece em mais de um nível do mesmo evento, fica a maior parcela. Publicar uma raiz, comentar, seguir e editar **não pontuam**. Os pontos são inteiros.
+- **Onde aparece:** `GET /usuarios/{username}` passou a devolver `reputacao` (um número inteiro), visível a qualquer pessoa logada. Não é a contagem de curtidas nem a popularidade da música.
+- **Fonte de verdade: eventos guardados no banco**, na tabela `eventos_reputacao` (uma linha por fato: `curtida:{usuario}:{review}` ou `derivada:{review}`, com chave única, então **nenhum fato conta duas vezes**). Ela é separada da tabela de curtidas de propósito: apagar uma review apaga as curtidas dela, mas os créditos já concedidos **são conservados**. Os totais não são guardados: são **refeitos a partir dos eventos e da árvore quando o backend sobe**, em O(eventos), o que também reproduz o mesmo resultado depois de reiniciar.
+- **Atomicidade:** o evento é gravado no **mesmo commit** da curtida ou da review derivada, e só depois aplicado nos totais em memória, sob a mesma trava da árvore. Uma curtida repetida não grava evento nem pontua de novo. **Descurtir remove o evento e retira exatamente os pontos que ele concedeu**; curtir de novo concede uma vez só.
+- **Exclusão:** apagar uma review conserva os créditos que ela já gerou e os que ela deu à corrente, e **interações futuras continuam percorrendo o registro apagado** na árvore: uma curtida nova numa review descendente ainda credita quem apagou a de origem. Isso usa `reviews_apagadas`, que guarda autor e origem.
+- **Dados gravados por fora da API** (um seed, um banco antigo): na subida, `sincronizar_eventos` cria os eventos que faltam para curtidas e derivadas que já existem. Só acrescenta (nunca remove, para não perder créditos de reviews apagadas) e repetir é seguro.
+- **Inconsistência não derruba o sistema:** se os eventos não baterem com a árvore, a reconstrução vira um aviso no log e o resto da rede continua funcionando; os totais ficam como estavam.
+- **Ponto em aberto do time:** pela fórmula, quem está na corrente também ganha pontos ao **curtir uma review descendente** (a Ana, curtindo a da Júlia, recebe 2). O `DECISIONS.md` diz que a prevenção de abuso segue em discussão; esta entrega **não** muda a regra aprovada.
+- **Fora desta entrega:** ranking global, e a tela do número no perfil (Cecília).
+- **Testes:** `test_reputacao_api.py` cobre a corrente Ana → Júlia → Pedro, o quarto nível sem pontos, raiz isolada, curtida própria, repetição, descurtir e recurtir, o que não pontua, exclusão (meio, folha e a review curtida), curtida futura creditando o registro apagado, reinício com os mesmos totais, dados de fora e dado inconsistente.
+- Claude Code implementou a ligação e os testes. O código ainda precisa ser revisado por outra pessoa do time.
+
+## Review repetida leva à existente — issue #33 (26/11/2026)
+
+- Quando o servidor recusa uma segunda review da mesma gravação, o formulário oferece abrir a review que já existe. Nada é duplicado e a origem dela não muda.
+- O 409 não informa o id: a tela o procura nas reviews da própria pessoa e, se não achar, leva ao perfil.
+- Claude Code fez o ajuste e os testes. Por decisão do time, não houve revisão por outra pessoa.
+
+## Reputação no perfil e apagar comentário — telas de #42 e do PR #87 (26/11/2026)
+
+- O perfil mostra o número de reputação que o servidor envia, inclusive zero, com uma frase de explicação. Sem o campo, nada aparece. A tela não recalcula pontos.
+- "Apagar" aparece só nos próprios comentários e pede confirmação. Comentário já apagado em outro lugar sai da lista; em servidor sem a rota, ele permanece e a tela avisa.
+- Dependem do backend dos PRs #86 e #87. A correção de origem (#42) continua pendente.
+- Claude Code fez as telas e os testes. Por decisão do time, não houve revisão por outra pessoa.
+
+## Recomendador puro TF-IDF — #55 — 26/11/2026
+
+Regras fechadas com Bruno: qualquer nota gera peso 3 por gravação com review
+própria ativa; uma ou várias curtidas externas elegíveis geram peso 1 por
+gravação, sem somar à própria. Auto-curtida não aumenta o perfil. Nota e texto
+não entram no contrato. Apagar a própria review remove sinal e exclusão;
+curtida externa remanescente pode assumir peso 1. Versões são identidades
+separadas; curtida externa não impede sugestão. Biblioteca privada não participa.
+
+Escolhida biblioteca de ML: scikit-learn 1.9.1 no lockfile. TF-IDF binário,
+IDF suavizado `log((1+N)/(1+df))+1`, normalização L2, sem TF sublinear; fit sobre
+todo catálogo. Artista, gênero e tag têm multiplicador igual, com prefixos de
+campo e valores inteiros normalizados por casefold/espaços; sem sinônimos ou
+remoção de acentos. Vetores por gravação são somados com pesos 3/1 e o perfil
+é normalizado novamente a cada consulta. Sem cache de perfil. Novo catálogo
+exige novo índice, construído antes de substituir o anterior.
+
+Afinidade positiva primeiro: cosseno decrescente, data da representante
+decrescente, chave crescente. Uma review por gravação, escolhida por curtidas
+atuais decrescentes, data decrescente e ID decrescente. Isso seleciona a review,
+sem somar popularidade à afinidade. Curtidas para contagem são pares únicos.
+Candidatas precisam de review pública ativa; review própria ativa exclui.
+
+Completar com fallback de score zero: ordenar por data decrescente/chave crescente,
+agrupar por artista e emitir um item por grupo a cada rodada, preservando a
+ordem da primeira candidata dos grupos. Diversidade só no fallback. Sem perfil
+utilizável, motivo sem_sinais; com perfil sem termos comuns, sem_afinidade.
+Explicação personalizada usa até três termos comuns de maior contribuição ao
+produto escalar (empate lexical). Nenhuma característica acústica é inferida.
+
+Motor sem banco/FastAPI em core, com registros imutáveis e erros de domínio;
+contrato, custos conservadores e recálculo em core/README.md. API/paginação,
+autorização e snapshot consistente são #23; tela é #56. Feed e ranking de
+quantidade de reviews não são alterados. Sem migração de banco.
+
+Trata-se de recomendação baseada em conteúdo com representação estatística,
+sem treinamento supervisionado. A escolha de biblioteca não comprova obrigação
+de ML pela rubrica. Reviews negativas também sinalizam interesse; termos raros,
+inclusive artista, podem dominar. Catálogo curado limita cobertura. Score não é
+probabilidade; sugestão não comprova escuta/descoberta. Testes sintéticos não
+comprovam satisfação real de usuários. Aceite escolhido: testes e relatório
+local, sem avaliação humana ou métrica offline obrigatória.
+
+Código, testes e documentação elaborados com Codex. Bruno autorizou publicar
+e integrar esta entrega sem aguardar revisão independente; não há alegação de
+aprovação de outra pessoa. Esta entrega não declara API integrada.
+
+Validação local: suíte completa com 400 aprovados; após adicionar dois cenários
+finais, suíte de dados com 208 aprovados e recomendador com 19 aprovados.
+Aviso preexistente TestClient/HTTPX. Instalação congelada, consistência do lock,
+compilação, demonstração e diff aprovados. Evidências e reprodução em
+`docs/evidencias/issue55/README.md` e `demo.json`. Banco de testes temporário;
+nenhum banco pessoal alterado.
+
+## Parecer sobre as funcionalidades opcionais — issue #53 (26/11/2026)
+
+- Esboços e comparação em [docs/funcionalidades-opcionais.md](docs/funcionalidades-opcionais.md). É proposta de Cecília, redigida com Claude Code; a priorização continua sendo do trio.
+- Recomendação para 27/11: não implementar grupos, mensagens diretas nem integrações com streaming. O diferencial a demonstrar é a corrente de descobertas. Depois da entrega, avaliar primeiro os grupos, que reaproveitam os cartões do feed.
+- Spotify: pela documentação oficial, o modo de desenvolvimento exige dono com Premium e aceita até 5 usuários; o modo estendido só aceita organizações. Deezer: viabilidade não comprovada. Nenhuma integração foi entregue nem testada.
+
+## Correção de origem, reputação e Descobrir no front — #42 e #56 (26/11/2026)
+
+- A reputação é buscada de novo depois de curtir ou descurtir no perfil; a tela não calcula pontos e explica a fórmula 4/2/1.
+- Correção de origem e Descobrir foram feitas sobre contratos propostos pelo front, testados com respostas simuladas: `PATCH /posts/{id}/origem` e `GET /descobrir`. As rotas ainda não existem no backend (#10, #23); as telas não comprovam integração.
+- "Corrigir origem" aparece só para quem escreveu uma review derivada e quando o servidor publica a rota. Pede confirmação e não converte raiz nem remove origem.
+- Sem a rota de Descobrir, a página continua avisando que as sugestões estão em preparação.
+- O PR #89 propõe encerrar a #42 e a #56 apenas quanto ao front, validado com respostas simuladas, como o texto das issues permite. O funcionamento com o servidor continua pendente na #10 e na #23. As issues pedem revisão de outra pessoa; o time havia decidido não revisar PRs.
+- Claude Code fez as telas e os testes.
