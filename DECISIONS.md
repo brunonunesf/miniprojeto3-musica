@@ -848,3 +848,11 @@ Completa a #12 no backend (as bibliotecas já estão na `main`). **A integraçã
 - O ícone (balão de conversa com uma nota) aparece na barra, na página inicial e como ícone da aba; o nome usa a Merriweather já adotada.
 - A disponibilidade do nome e do domínio não foi verificada.
 - Claude Code aplicou a marca no site.
+
+## Ouvi novamente e avisos no feed — #45 (27/11/2026)
+
+- "Ouvi novamente" aparece na própria review e quando o servidor recusa uma segunda review da mesma gravação, ao lado do acesso para editar. O comentário é opcional, até 500 caracteres, e fica no campo em caso de falha; no bloqueio de 24 horas a tela mostra o tempo informado pelo servidor.
+- Os avisos ficam em um bloco separado no alto do feed, com data e comentário próprios; não são intercalados com as reviews por data. Curtir e derivar continuam na review original.
+- A tela usa as rotas do backend das reescutas (#12): `POST /posts/{id}/reescutas` e `GET /feed/reescutas`. O servidor não informa se a review foi editada depois do aviso, então a tela não indica isso.
+- Spotify e Deezer não fazem parte.
+- Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.

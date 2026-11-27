@@ -12,6 +12,7 @@ import { Capa } from "@/components/Capa";
 import { Comentarios } from "@/components/Comentarios";
 import { CorrigirOrigem } from "@/components/CorrigirOrigem";
 import { MensagemErro } from "@/components/MensagemErro";
+import { OuviNovamente } from "@/components/OuviNovamente";
 import { SeloDeOrigem } from "@/components/SeloDeOrigem";
 import { apiDelete, apiGet, apiPatch, type Post } from "@/lib/api";
 import { nomeDaVersao } from "@/lib/musica";
@@ -98,6 +99,8 @@ function Review({ id }: { id: string }) {
       ) : (
         <AcoesDoAutor postId={post.id} aoEditar={() => setEditando(true)} />
       ))}
+
+      {minha && <OuviNovamente postId={post.id} />}
 
       {minha && <CorrigirOrigem post={post} aoCorrigir={setPost} />}
 

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { OuviNovamente } from "@/components/OuviNovamente";
 import { buscarReviewDaMusica } from "@/lib/reviewDaMusica";
 
 type Props = { username: string; musicaId: number };
@@ -30,11 +31,14 @@ export function ReviewExistente({ username, musicaId }: Props) {
   if (reviewId === undefined) return <p role="status" className="text-sm text-zinc-600">Procurando a sua review…</p>;
 
   return (
-    <Link
-      href={reviewId === null ? `/usuarios/${username}` : `/posts/${reviewId}`}
-      className="inline-block font-semibold text-brand-700"
-    >
-      {reviewId === null ? "Ver minhas reviews" : "Abrir a sua review desta música"}
-    </Link>
+    <div className="space-y-3">
+      <Link
+        href={reviewId === null ? `/usuarios/${username}` : `/posts/${reviewId}`}
+        className="inline-block font-semibold text-brand-700"
+      >
+        {reviewId === null ? "Ver minhas reviews" : "Abrir a sua review desta música"}
+      </Link>
+      {reviewId !== null && <OuviNovamente postId={reviewId} />}
+    </div>
   );
 }
