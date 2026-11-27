@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { MensagemErro } from "@/components/MensagemErro";
 import { apiDelete, apiPost, type EstadoCurtida, type Post } from "@/lib/api";
+import { REPUTACAO_MUDOU } from "@/lib/perfil";
 
 type Props = { post: Post; somenteLeitura?: boolean };
 
@@ -28,6 +29,7 @@ export function BotaoCurtir({ post, somenteLeitura = false }: Props) {
       // O estado e a contagem vêm do servidor, nunca de uma conta feita aqui.
       const novo = await (estado.curtido_por_mim ? apiDelete<EstadoCurtida>(rota) : apiPost<EstadoCurtida>(rota));
       setResposta({ de: post, estado: novo });
+      window.dispatchEvent(new Event(REPUTACAO_MUDOU));
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : "Não foi possível concluir.");
     } finally {

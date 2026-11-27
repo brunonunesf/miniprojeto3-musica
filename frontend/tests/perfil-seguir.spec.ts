@@ -89,7 +89,7 @@ test("reputação aparece quando o servidor a envia, inclusive zero", async ({ p
 
   await page.goto("/usuarios/bia_exemplo");
   await expect(page.getByText("18 de reputação")).toBeVisible();
-  await expect(page.getByText("Pontos por curtidas", { exact: false })).toBeVisible();
+  await expect(page.getByText("Uma curtida de outra pessoa", { exact: false })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 
   extra = { reputacao: 0 };

@@ -10,6 +10,7 @@ import { BotaoCurtir } from "@/components/BotaoCurtir";
 import { CamposReview } from "@/components/CamposReview";
 import { Capa } from "@/components/Capa";
 import { Comentarios } from "@/components/Comentarios";
+import { CorrigirOrigem } from "@/components/CorrigirOrigem";
 import { MensagemErro } from "@/components/MensagemErro";
 import { SeloDeOrigem } from "@/components/SeloDeOrigem";
 import { apiDelete, apiGet, apiPatch, type Post } from "@/lib/api";
@@ -97,6 +98,8 @@ function Review({ id }: { id: string }) {
       ) : (
         <AcoesDoAutor postId={post.id} aoEditar={() => setEditando(true)} />
       ))}
+
+      {minha && <CorrigirOrigem post={post} aoCorrigir={setPost} />}
 
       {post.comentarios !== undefined && <Comentarios postId={post.id} />}
     </div>
