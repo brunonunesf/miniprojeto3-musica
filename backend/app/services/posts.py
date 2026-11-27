@@ -1,9 +1,9 @@
 from fastapi import HTTPException
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.core.arvores import ErroArvore, RegistroReview
+from app.core.arvores import ErroArvore, EstruturaInvalida, NoInexistente, RegistroReview
 from app.core.floresta import floresta
 from app.models.comentario import Comentario
 from app.models.curtida import Curtida
@@ -148,6 +148,62 @@ def atualizar(db: Session, post_id: int, user: User, dados: PostUpdate) -> Post:
     db.refresh(post)
     anotar_interacoes(db, user, [post])
     return post
+
+
+def trocar_origem(db: Session, post_id: int, user: User, nova_origem_id: int) -> Post:
+    """Corrige de onde uma review derivada partiu, levando junto os seus descendentes (issue #10).
+
+    Só o autor troca, e só uma origem por outra: não vira raiz nem perde a origem. A nova origem precisa
+    ser uma review ativa da mesma música e não pode ser a própria review nem uma que veio dela (ciclo).
+    Ordem: valida (banco e floresta, sem mudar nada), grava no banco, e só então muda a floresta em
+    memória e refaz a reputação, tudo sob a trava da árvore. Os pontos já concedidos acompanham a
+    corrente nova: os créditos antigos saem e os novos entram. Trocar para a origem atual não muda nada.
+    """
+    post = _buscar_do_autor(db, post_id, user)
+    origem_atual = post.origem_id
+    if origem_atual is None:
+        raise HTTPException(status_code=422, detail="só uma review derivada pode ter a origem corrigida")
+    if nova_origem_id == post.id:
+        raise HTTPException(status_code=422, detail="uma review não pode ser a origem de si mesma")
+    destino = db.get(Post, nova_origem_id)
+    if destino is None:
+        raise HTTPException(status_code=422, detail="review de origem não encontrada ou apagada")
+    if destino.musica_id != post.musica_id:
+        raise HTTPException(status_code=422, detail="a origem deve ser uma review da mesma música")
+
+    with arvores.TRAVA:
+        plano = _preparar_troca(db, post.id, nova_origem_id)
+        if plano.alterou:
+            # Gravação condicional: se a review foi apagada ou mudou de origem no meio, nada é gravado.
+            gravadas = db.execute(
+                update(Post).where(Post.id == post.id, Post.origem_id == origem_atual).values(origem_id=nova_origem_id)
+            ).rowcount
+            if not gravadas:
+                db.rollback()
+                raise HTTPException(status_code=409, detail="a review mudou enquanto a origem era trocada; tente de novo")
+            db.commit()
+            # só depois da gravação confirmada: a floresta e os pontos seguem o banco
+            try:
+                floresta.aplicar_troca_origem(plano)
+            except ErroArvore:
+                arvores.tentar_reconstruir(db)  # saiu de sincronia: refaz a partir do banco, que já tem a troca
+            reputacao.recalcular(db)
+    db.refresh(post)
+    anotar_interacoes(db, user, [post])
+    return post
+
+
+def _preparar_troca(db: Session, post_id: int, nova_origem_id: int):
+    """O plano de troca da floresta, que valida sem mudar nada. Se a floresta estava atrás do banco, refaz."""
+    for tentativa in (1, 2):
+        try:
+            return floresta.preparar_troca_origem(post_id, nova_origem_id)
+        except NoInexistente:
+            # dados gravados por fora da API (um seed): a floresta é refeita a partir do banco, uma vez
+            if tentativa == 2 or not arvores.tentar_reconstruir(db):
+                raise HTTPException(status_code=503, detail="a árvore de reviews está indisponível agora")
+        except EstruturaInvalida:
+            raise HTTPException(status_code=422, detail="a nova origem não pode ser uma review que veio desta")
 
 
 def excluir(db: Session, post_id: int, user: User) -> None:
