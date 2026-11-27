@@ -88,11 +88,11 @@ function BibliotecaDe({ username }: { username: string }) {
           </div>
 
           {minha && (
-            <ControleDeVisibilidade key={aberta} lista={aberta} atual={resumo.visibilidade} aoMudar={setBiblioteca} />
+            <ControleDeVisibilidade key={`controle-${aberta}`} lista={aberta} atual={resumo.visibilidade} aoMudar={setBiblioteca} />
           )}
 
           {resumo.acessivel ? (
-            <ItensDaLista key={aberta} username={username} lista={aberta} />
+            <ItensDaLista key={`itens-${aberta}`} username={username} lista={aberta} />
           ) : (
             <p className="painel">Acesso restrito: esta lista é privada.</p>
           )}
