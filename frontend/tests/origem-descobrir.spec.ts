@@ -22,7 +22,7 @@ async function entrar(page: Page) {
   await expect(page.getByRole("button", { name: "Sair", exact: true })).toBeVisible();
 }
 
-test("reputação é buscada de novo depois de curtir, sem sumir em falha", async ({ page }) => {
+test("reputação é buscada de novo depois de curtir e ocultada em falha", async ({ page }) => {
   await entrar(page);
   let reputacao = 4;
   let falhar = false;
@@ -49,8 +49,11 @@ test("reputação é buscada de novo depois de curtir, sem sumir em falha", asyn
 
   falhar = true;
   await page.getByRole("button", { name: "Descurtir" }).click();
-  await expect(page.getByText("Não foi possível atualizar a reputação.", { exact: false })).toBeVisible();
-  await expect(page.getByText("8 de reputação")).toBeVisible();
+  await expect(page.getByText("Reputação temporariamente indisponível.", { exact: true })).toBeVisible();
+  await expect(page.getByText("8 de reputação")).toHaveCount(0);
+  falhar = false;
+  await page.getByRole("button", { name: "Tentar atualizar reputação" }).click();
+  await expect(page.getByText("4 de reputação")).toBeVisible();
 });
 
 test("autora corrige a origem com confirmação e sem falso sucesso", async ({ page }) => {
@@ -72,7 +75,7 @@ test("autora corrige a origem com confirmação e sem falso sucesso", async ({ p
     corpos.push(route.request().postDataJSON());
     return falhar
       ? route.fulfill({ status: 422, json: { detail: "a origem escolhida criaria um ciclo" } })
-      : route.fulfill({ json: { ...minha, origem_id: 4, origem: { id: 4, autor: { name: "Caio" } } } });
+      : route.fulfill({ json: { ...minha, origem_id: 4, origem: { id: 4, autor: { name: "Caio" } }, reputacao_disponivel: false } });
   });
 
   await page.goto("/posts/7");
@@ -95,7 +98,7 @@ test("autora corrige a origem com confirmação e sem falso sucesso", async ({ p
   falhar = false;
   await page.getByRole("button", { name: "Continuar" }).click();
   await page.getByRole("button", { name: "Confirmar correção" }).click();
-  await expect(page.getByText("Origem corrigida.")).toBeVisible();
+  await expect(page.getByText("Origem corrigida. Reputação temporariamente indisponível.")).toBeVisible();
   await expect(page.getByText("Hoje: a review de Caio.")).toBeVisible();
   await expect(page.getByText("A partir da review de Caio")).toBeVisible();
   expect(corpos).toEqual([{ origem_id: 4 }, { origem_id: 4 }]);
@@ -197,4 +200,23 @@ test("Descobrir mostra motivos, pagina, trata falha e vazio", async ({ page }) =
   await page.getByRole("button", { name: "Atualizar sugestões" }).click();
   await expect(page.getByText("Nenhuma sugestão por enquanto.")).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(0);
+});
+
+
+test("perfil sem reputação mantém dados e recupera pelo botão", async ({ page }) => {
+  await entrar(page);
+  let reputacao: number | null = null;
+  await page.route(naApi("/usuarios/bia"), (route) => {
+    if (route.request().resourceType() !== "fetch") return route.fallback();
+    return route.fulfill({ json: { ...bia, seguidores: 0, seguindo: 0, eu_sigo: false, reputacao } });
+  });
+  await page.route(naApi("/usuarios/bia/posts"), (route) => route.fulfill(pagina([])));
+  await page.goto("/usuarios/bia");
+  await expect(page.getByRole("heading", { name: "Bia", exact: true })).toBeVisible();
+  await expect(page.getByText("Reputação temporariamente indisponível.")).toBeVisible();
+  await expect(page.getByText("0 de reputação")).toHaveCount(0);
+  reputacao = 0;
+  await page.getByRole("button", { name: "Tentar atualizar reputação" }).click();
+  await expect(page.getByText("0 de reputação")).toBeVisible();
+  await expect(page.getByText("Reputação temporariamente indisponível.")).toHaveCount(0);
 });

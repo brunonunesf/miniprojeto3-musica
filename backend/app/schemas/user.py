@@ -52,7 +52,7 @@ class PerfilOut(UserOut):
     eu_sigo: bool  # quem olha já segue esta pessoa (estado do botão de seguir)
     # pontos de reputação: curtidas e derivadas que vieram das reviews dela, com parcelas menores
     # conforme a distância na árvore (DECISIONS.md). Não é a contagem de curtidas.
-    reputacao: int = 0
+    reputacao: int | None = None
 
 
 class UserPage(BaseModel):

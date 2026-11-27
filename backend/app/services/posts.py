@@ -183,11 +183,15 @@ def trocar_origem(db: Session, post_id: int, user: User, nova_origem_id: int) ->
                 raise HTTPException(status_code=409, detail="a review mudou enquanto a origem era trocada; tente de novo")
             db.commit()
             # só depois da gravação confirmada: a floresta e os pontos seguem o banco
+            reputacao.invalidar()
             try:
                 floresta.aplicar_troca_origem(plano)
             except ErroArvore:
-                arvores.tentar_reconstruir(db)  # saiu de sincronia: refaz a partir do banco, que já tem a troca
+                pass  # recalcular reconstrói ambos a partir da troca já confirmada no banco
             reputacao.recalcular(db)
+        else:
+            reputacao.garantir_disponibilidade(db)
+        post.reputacao_disponivel = reputacao.disponivel()
     db.refresh(post)
     anotar_interacoes(db, user, [post])
     return post

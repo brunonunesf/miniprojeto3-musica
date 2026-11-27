@@ -195,9 +195,9 @@ históricos. Descurtida válida remove sua contribuição. A remoção genérica
 é autorização de produto para retirar crédito de derivação. Reescuta,
 comentário, follow e review raiz não produzem eventos de reputação.
 
-A #51 selecionará os eventos afetados por mudança de origem e implementará sua
-atualização retroativa. Pode reutilizar cálculo puro e contribuições; a
-reconstrução completa é referência para validar os totais. A #43 não oferece
+A #51 mantém a reconstrução completa integrada pelo #97 para atualizar
+retroativamente os eventos após mudança de origem. A comparação independente
+por evento e o tratamento de indisponibilidade estão descritos ao final. A #43 não oferece
 substituição atômica de subconjuntos. Chamadores devem garantir árvore estável
 durante operações; não há locks, transações ou sincronização entre processos.
 
@@ -277,8 +277,8 @@ percorridas normalmente. IDs seguem as validações existentes, sem coerção.
 O plano contém `review_id`, `origem_anterior_id`, `nova_origem_id`,
 `subarvore_ids` (BFS incluindo a review inicial), `caminho_anterior` e
 `caminho_novo` (IDs do pai até a raiz), e `alterou`. Nenhum percurso é truncado
-pela paginação de exibição. Os caminhos são relativos à review movida; a #51
-seleciona os eventos da subárvore e calcula os créditos. Não há conteúdo textual.
+pela paginação de exibição. Os caminhos são relativos à review movida e permitem seleção incremental.
+A estratégia adotada na #51 reconstrói todos os créditos, incluindo a subárvore. Não há conteúdo textual.
 Destino igual ao pai atual produz `alterou=False`, subárvore vazia e caminhos
 iguais, mas continua exigindo destino ativo e review ativa derivada.
 
@@ -302,8 +302,8 @@ a revisão continuar válida. Plano estranho, antigo ou malformado não muda est
 O core não implementa locks/transações. A #10 deve manter sincronização durante
 preparo, persistência e aplicação, controlar concorrência e recuperar banco/memória
 em caso de falha. Separar as etapas não garante atomicidade com o banco; não
-confirmar correção com créditos antigos. A #51 implementa o recálculo, e a #10
-coordena sua persistência. Esta entrega não cria eventos, rotas ou créditos.
+confirmar correção com créditos antigos. O recálculo completo integrado pela #10 é auditado e recuperado na #51;
+os eventos persistidos permanecem a fonte de verdade. Esta entrega não cria eventos, rotas ou créditos.
 
 Com S nós na subárvore, H ancestrais examinados nos dois caminhos e D filhos
 somados dos pais antigo/novo: preparo O(S + H) em tempo/memória; em no-op,
@@ -312,3 +312,28 @@ validação de identidade/revisão e aplicação sem alteração O(1) esperado.
 Não há reconstrução global por troca, recursão ou cache de planos permanente.
 
 Validação: `uv run python -m pytest tests_dados/test_troca_origem.py -q`.
+
+## Recálculo integrado e disponibilidade — #51
+
+O service de reputação mantém a reconstrução completa como implementação do recálculo retroativo.
+Eventos continuam sendo a fonte persistida; movimentar a origem não cria evento. O núcleo puro
+permanece independente de banco e UI. A seleção incremental por subárvore não foi necessária para
+os critérios da #51 e fica fora desta entrega.
+
+A integração em `services/reputacao.py` expõe `recalcular(db) -> bool`,
+`garantir_disponibilidade(db) -> bool` e `total(db, autor_id) -> int | None`.
+Disponibilidade é global ao acumulador e protegida pela trava reentrante da árvore.
+Reconstrução válida libera os números; falha deixa o snapshot antigo oculto. Recuperar exige
+reconstrução válida da floresta antes dos créditos. Consultar perfil ou repetir a origem atual
+recupera pendências sem criar evento. Não há worker de recuperação.
+
+A correção retorna a review com `reputacao_disponivel`; `false` significa origem salva e pontos
+indisponíveis. Perfil retorna `reputacao: null` em falha, preservando os demais dados. Um processo
+é o limite atual; não há atomicidade entre o commit e a memória. O startup reconstrói ambos.
+Custo inclui os E eventos e a reconstrução/ordenação das N referências, não apenas a subárvore.
+
+Validação de integração e comparação com oráculo independente:
+
+```sh
+uv run pytest tests/test_recalculo_reputacao.py tests/test_trocar_origem.py tests/test_reputacao_api.py -q
+```

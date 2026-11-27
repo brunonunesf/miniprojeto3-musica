@@ -78,6 +78,10 @@ class PostOut(BaseModel):
         return bool(self.texto)
 
 
+class OrigemCorrigidaOut(PostOut):
+    reputacao_disponivel: bool
+
+
 class PostPage(BaseModel):
     """Padrão de paginação do projeto, para listas de reviews."""
 

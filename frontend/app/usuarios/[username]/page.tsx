@@ -45,6 +45,7 @@ function PerfilDe({ username }: { username: string }) {
   }, [username, tentativa]);
 
   const [falhaDaReputacao, setFalhaDaReputacao] = useState(false);
+  const [atualizandoReputacao, setAtualizandoReputacao] = useState(false);
 
   useEffect(() => {
     let ativa = true;
@@ -52,14 +53,21 @@ function PerfilDe({ username }: { username: string }) {
     let pedido = 0;
     function atualizar() {
       const atual = ++pedido;
-      setFalhaDaReputacao(false);
+      setAtualizandoReputacao(true);
       // O total vem sempre do servidor; em falha, o perfil continua na tela.
       buscarPerfil(username).then(
         (resposta) => {
-          if (ativa && atual === pedido) setPerfil(resposta);
+          if (ativa && atual === pedido) {
+            setPerfil(resposta);
+            setFalhaDaReputacao(false);
+            setAtualizandoReputacao(false);
+          }
         },
         () => {
-          if (ativa && atual === pedido) setFalhaDaReputacao(true);
+          if (ativa && atual === pedido) {
+            setFalhaDaReputacao(true);
+            setAtualizandoReputacao(false);
+          }
         },
       );
     }
@@ -103,13 +111,22 @@ function PerfilDe({ username }: { username: string }) {
               <span><strong>{perfil.seguindo}</strong> seguindo</span>
             </p>
           )}
-          {perfil.reputacao !== undefined && (
+          {(perfil.reputacao !== undefined || falhaDaReputacao) && (
             <div className="text-sm">
-              <p><strong>{perfil.reputacao}</strong> de reputação</p>
+              {perfil.reputacao !== null && !falhaDaReputacao ? (
+                <p><strong>{perfil.reputacao}</strong> de reputação</p>
+              ) : (
+                <div role="status" className="space-y-2">
+                  <p>Reputação temporariamente indisponível.</p>
+                  <button type="button" className="btn-secundario" disabled={atualizandoReputacao}
+                    onClick={() => window.dispatchEvent(new Event(REPUTACAO_MUDOU))}>
+                    {atualizandoReputacao ? "Atualizando reputação…" : "Tentar atualizar reputação"}
+                  </button>
+                </div>
+              )}
               <p className="text-zinc-500">
                 Uma curtida de outra pessoa dá 4 pontos a quem escreveu, 2 a quem indicou e 1 a quem veio antes. Uma review derivada pontua da mesma forma as anteriores na corrente. Curtir a própria review vale 1.
               </p>
-              {falhaDaReputacao && <p role="alert" className="text-red-800">Não foi possível atualizar a reputação. Recarregue a página.</p>}
             </div>
           )}
           <p className="text-sm text-zinc-500">Na rede desde {membroDesde(perfil.created_at)}</p>

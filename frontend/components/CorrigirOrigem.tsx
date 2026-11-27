@@ -4,16 +4,17 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { MensagemErro } from "@/components/MensagemErro";
 import { apiGet, type Page, type Post } from "@/lib/api";
-import { servidorCorrigeOrigem, trocarOrigem } from "@/lib/origem";
+import { servidorCorrigeOrigem, trocarOrigem, type OrigemCorrigida } from "@/lib/origem";
 import { usePaginacao } from "@/lib/usePaginacao";
 
-type Props = { post: Post; aoCorrigir: (novo: Post) => void };
+type Props = { post: Post; aoCorrigir: (novo: OrigemCorrigida) => void };
 
 /** Troca a origem de uma review derivada. Não transforma raiz em derivada nem remove a origem. */
 export function CorrigirOrigem({ post, aoCorrigir }: Props) {
   const [disponivel, setDisponivel] = useState(false);
   const [aberto, setAberto] = useState(false);
   const [corrigida, setCorrigida] = useState(false);
+  const [reputacaoPendente, setReputacaoPendente] = useState(false);
 
   useEffect(() => {
     let ativa = true;
@@ -31,7 +32,7 @@ export function CorrigirOrigem({ post, aoCorrigir }: Props) {
     <section aria-labelledby="titulo-origem" className="painel space-y-4">
       <h2 id="titulo-origem" className="text-xl font-bold">Origem da review</h2>
       <p>{post.origem ? `Hoje: a review de ${post.origem.autor.name}.` : "Hoje: uma review apagada."}</p>
-      {corrigida && <p role="status" className="text-green-800">Origem corrigida.</p>}
+      {corrigida && <p role="status" className="text-green-800">Origem corrigida.{reputacaoPendente ? " Reputação temporariamente indisponível." : ""}</p>}
       {aberto ? (
         <EscolhaDeOrigem
           post={post}
@@ -39,6 +40,7 @@ export function CorrigirOrigem({ post, aoCorrigir }: Props) {
           aoCorrigir={(novo) => {
             setAberto(false);
             setCorrigida(true);
+            setReputacaoPendente(novo.reputacao_disponivel === false);
             aoCorrigir(novo);
           }}
         />

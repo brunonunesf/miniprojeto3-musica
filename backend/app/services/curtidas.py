@@ -37,7 +37,7 @@ def descurtir(db: Session, user: User, post_id: int) -> CurtidaOut:
         reputacao.apagar_evento_de_curtida(db, usuario_id, post.id)  # descurtir retira os pontos
     db.commit()
     if removida:
-        reputacao.remover_curtida(usuario_id, post.id)
+        reputacao.remover_curtida(db, usuario_id, post.id)
     return estado(db, user, post.id)
 
 
