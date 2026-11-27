@@ -623,6 +623,60 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - Dependem do backend dos PRs #86 e #87. A correção de origem (#42) continua pendente.
 - Claude Code fez as telas e os testes. Por decisão do time, não houve revisão por outra pessoa.
 
+## Recomendador puro TF-IDF — #55 — 26/11/2026
+
+Regras fechadas com Bruno: qualquer nota gera peso 3 por gravação com review
+própria ativa; uma ou várias curtidas externas elegíveis geram peso 1 por
+gravação, sem somar à própria. Auto-curtida não aumenta o perfil. Nota e texto
+não entram no contrato. Apagar a própria review remove sinal e exclusão;
+curtida externa remanescente pode assumir peso 1. Versões são identidades
+separadas; curtida externa não impede sugestão. Biblioteca privada não participa.
+
+Escolhida biblioteca de ML: scikit-learn 1.9.1 no lockfile. TF-IDF binário,
+IDF suavizado `log((1+N)/(1+df))+1`, normalização L2, sem TF sublinear; fit sobre
+todo catálogo. Artista, gênero e tag têm multiplicador igual, com prefixos de
+campo e valores inteiros normalizados por casefold/espaços; sem sinônimos ou
+remoção de acentos. Vetores por gravação são somados com pesos 3/1 e o perfil
+é normalizado novamente a cada consulta. Sem cache de perfil. Novo catálogo
+exige novo índice, construído antes de substituir o anterior.
+
+Afinidade positiva primeiro: cosseno decrescente, data da representante
+decrescente, chave crescente. Uma review por gravação, escolhida por curtidas
+atuais decrescentes, data decrescente e ID decrescente. Isso seleciona a review,
+sem somar popularidade à afinidade. Curtidas para contagem são pares únicos.
+Candidatas precisam de review pública ativa; review própria ativa exclui.
+
+Completar com fallback de score zero: ordenar por data decrescente/chave crescente,
+agrupar por artista e emitir um item por grupo a cada rodada, preservando a
+ordem da primeira candidata dos grupos. Diversidade só no fallback. Sem perfil
+utilizável, motivo sem_sinais; com perfil sem termos comuns, sem_afinidade.
+Explicação personalizada usa até três termos comuns de maior contribuição ao
+produto escalar (empate lexical). Nenhuma característica acústica é inferida.
+
+Motor sem banco/FastAPI em core, com registros imutáveis e erros de domínio;
+contrato, custos conservadores e recálculo em core/README.md. API/paginação,
+autorização e snapshot consistente são #23; tela é #56. Feed e ranking de
+quantidade de reviews não são alterados. Sem migração de banco.
+
+Trata-se de recomendação baseada em conteúdo com representação estatística,
+sem treinamento supervisionado. A escolha de biblioteca não comprova obrigação
+de ML pela rubrica. Reviews negativas também sinalizam interesse; termos raros,
+inclusive artista, podem dominar. Catálogo curado limita cobertura. Score não é
+probabilidade; sugestão não comprova escuta/descoberta. Testes sintéticos não
+comprovam satisfação real de usuários. Aceite escolhido: testes e relatório
+local, sem avaliação humana ou métrica offline obrigatória.
+
+Código, testes e documentação elaborados com Codex. Bruno autorizou publicar
+e integrar esta entrega sem aguardar revisão independente; não há alegação de
+aprovação de outra pessoa. Esta entrega não declara API integrada.
+
+Validação local: suíte completa com 400 aprovados; após adicionar dois cenários
+finais, suíte de dados com 208 aprovados e recomendador com 19 aprovados.
+Aviso preexistente TestClient/HTTPX. Instalação congelada, consistência do lock,
+compilação, demonstração e diff aprovados. Evidências e reprodução em
+`docs/evidencias/issue55/README.md` e `demo.json`. Banco de testes temporário;
+nenhum banco pessoal alterado.
+
 ## Parecer sobre as funcionalidades opcionais — issue #53 (26/11/2026)
 
 - Esboços e comparação em [docs/funcionalidades-opcionais.md](docs/funcionalidades-opcionais.md). É proposta de Cecília, redigida com Claude Code; a priorização continua sendo do trio.
