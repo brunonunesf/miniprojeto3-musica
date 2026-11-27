@@ -1,4 +1,5 @@
-from sqlalchemy import func, select
+from fastapi import HTTPException
+from sqlalchemy import delete, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
@@ -38,3 +39,15 @@ def listar(db: Session, post_id: int, offset: int, limit: int) -> tuple[list[Com
         )
     )
     return comentarios, total
+
+
+def apagar(db: Session, user: User, post_id: int, comentario_id: int) -> None:
+    """Só quem escreveu o comentário pode apagá-lo. 404 se ele não existe ou é de outra review."""
+    comentario = db.get(Comentario, comentario_id)
+    if comentario is None or comentario.post_id != post_id:
+        raise HTTPException(status_code=404, detail="comentário não encontrado")
+    if comentario.autor_id != user.id:
+        raise HTTPException(status_code=403, detail="só o autor pode apagar o comentário")
+    # DELETE direto: se outra requisição já o apagou, não dá erro de objeto removido
+    db.execute(delete(Comentario).where(Comentario.id == comentario.id))
+    db.commit()

@@ -31,3 +31,13 @@ def listar_comentarios(
 ):
     items, total = service.listar(db, post_id, offset, limit)
     return ComentarioPage(items=items, total=total, offset=offset, limit=limit)
+
+
+@router.delete("/{post_id}/comentarios/{comentario_id}", status_code=204)
+def apagar_comentario(
+    post_id: int = Path(ge=1, le=ID_MAXIMO),
+    comentario_id: int = Path(ge=1, le=ID_MAXIMO),
+    user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    service.apagar(db, user, post_id, comentario_id)
