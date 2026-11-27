@@ -290,3 +290,82 @@ def test_trocas_simultaneas_deixam_banco_memoria_e_pontos_coerentes(client, loga
     assert [forma(arvore(client, leitor, r[n]["id"])) for n in nomes] == forma_antes
     with SessionLocal() as db:
         assert db.scalar(select(func.count()).select_from(EventoReputacao)) == 4  # 3 derivadas + 1 curtida, nada a mais
+
+
+# ---------- o meio da operação: outra requisição mexe na mesma review ----------
+
+
+def _mexer_no_meio(monkeypatch, acao):
+    """Roda `acao(post_id)` no banco entre a validação da troca e a gravação, como faria outra requisição."""
+    from app.services import posts as servico_posts
+
+    original = servico_posts._preparar_troca
+
+    def preparar_e_mexer(db, post_id, nova_origem_id):
+        plano = original(db, post_id, nova_origem_id)
+        with SessionLocal() as outra:
+            acao(outra, post_id)
+            outra.commit()
+        return plano
+
+    monkeypatch.setattr(servico_posts, "_preparar_troca", preparar_e_mexer)
+
+
+def test_se_a_review_for_apagada_no_meio_da_troca_nada_e_gravado_e_a_resposta_e_409(client, logar, id_da_musica, monkeypatch):
+    from sqlalchemy import delete
+
+    from app.models.post import Post
+
+    p, r = cenario(client, logar, id_da_musica)
+    leitor = logar("leitor")
+    antes = pontos(client, leitor, "ana", "bia", "julia", "pedro", "caio")
+    _mexer_no_meio(monkeypatch, lambda db, post_id: db.execute(delete(Post).where(Post.id == post_id)))
+
+    resposta = trocar(client, p["pedro"], r["pedro"]["id"], r["bia"]["id"])
+
+    assert resposta.status_code == 409 and "tente de novo" in resposta.json()["detail"]
+    assert pontos(client, leitor, "ana", "bia", "julia", "pedro", "caio") == antes  # nada foi refeito nem trocado
+    with SessionLocal() as db:
+        assert db.scalar(select(func.count()).select_from(EventoReputacao)) == 3  # só as 3 derivadas de antes
+
+
+def test_se_a_origem_mudar_no_meio_da_troca_prevalece_a_outra_e_a_resposta_e_409(client, logar, id_da_musica, monkeypatch):
+    from sqlalchemy import update
+
+    from app.models.post import Post
+
+    p, r = cenario(client, logar, id_da_musica)
+    ana = r["ana"]["id"]
+    _mexer_no_meio(monkeypatch, lambda db, post_id: db.execute(update(Post).where(Post.id == post_id).values(origem_id=ana)))
+
+    resposta = trocar(client, p["pedro"], r["pedro"]["id"], r["bia"]["id"])
+
+    assert resposta.status_code == 409
+    with SessionLocal() as db:
+        assert db.get(Post, r["pedro"]["id"]).origem_id == ana  # a troca que chegou antes ficou, a nossa não foi gravada
+
+
+# ---------- dados gravados por fora da API (um seed) ----------
+
+
+def test_review_gravada_por_fora_e_desconhecida_da_arvore_e_refeita_a_partir_do_banco(client, logar, id_da_musica):
+    from app.models.post import Post
+
+    julia, bia, pedro = logar("julia"), logar("bia"), logar("pedro")
+    ids = {u: client.get(f"/usuarios/{u}", headers=julia).json()["id"] for u in ("julia", "bia", "pedro")}
+    musica = id_da_musica(julia, OUTRA)
+    with SessionLocal() as db:  # como um seed que gravou direto no banco com o servidor ligado
+        raiz_a = Post(texto="a", nota=7, autor_id=ids["bia"], musica_id=musica)
+        raiz_b = Post(texto="b", nota=7, autor_id=ids["pedro"], musica_id=musica)
+        db.add_all([raiz_a, raiz_b])
+        db.flush()
+        derivada = Post(texto="d", nota=7, autor_id=ids["julia"], musica_id=musica, origem_id=raiz_a.id)
+        db.add(derivada)
+        db.commit()
+        a_id, b_id, d_id = raiz_a.id, raiz_b.id, derivada.id
+
+    resposta = trocar(client, julia, d_id, b_id)  # a árvore em memória ainda não conhece nenhuma delas
+
+    assert resposta.status_code == 200, resposta.text
+    assert forma(arvore(client, julia, d_id)) == (b_id, [(d_id, [])])
+    assert forma(arvore(client, julia, a_id)) == (a_id, [])
