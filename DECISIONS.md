@@ -826,3 +826,11 @@ Entrega só a **API das bibliotecas**. **Reescutas** (aviso "Ouvi novamente", li
 - Depende do backend do PR #100. Sem ele, a página avisa que as bibliotecas não estão disponíveis.
 - "Ouvi novamente" e os avisos no feed continuam fora: não há backend. A #45 permanece aberta.
 - Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.
+
+## Ouvi novamente e avisos no feed — #45 (27/11/2026)
+
+- "Ouvi novamente" aparece na própria review e quando o servidor recusa uma segunda review da mesma gravação, ao lado do acesso para editar. O comentário é opcional e fica no campo em caso de falha ou bloqueio de 24 horas.
+- Os avisos ficam em um bloco separado no feed, com data e comentário próprios, indicando se a review atual foi editada; curtir e derivar continuam na review original.
+- Contratos propostos pelo front, ainda sem backend (#12): `POST /posts/{id}/reescutas` (429 no bloqueio) e `GET /feed/reescutas`. Testado com respostas simuladas; não comprova integração. Sem as rotas, nada aparece.
+- O encerramento da #45 vale só para o front. Spotify e Deezer não fazem parte.
+- Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.

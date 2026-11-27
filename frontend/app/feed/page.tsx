@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 
+import { AvisosDeReescuta } from "@/components/AvisosDeReescuta";
 import { ListaDeReviews } from "@/components/ListaDeReviews";
 import { PerfilLateral } from "@/components/PerfilLateral";
 import { PesquisaDeMusicas } from "@/components/PesquisaDeMusicas";
@@ -12,6 +14,8 @@ import { usePaginacao } from "@/lib/usePaginacao";
 
 export default function FeedPage() {
   const reviews = usePaginacao(buscarFeed);
+  // Atualizar o feed também busca os avisos de novo.
+  const [atualizacao, setAtualizacao] = useState(0);
 
   return (
     <div className="grid items-start gap-6 lg:grid-cols-[250px_minmax(0,1fr)_320px]">
@@ -25,7 +29,7 @@ export default function FeedPage() {
             <h1 id="titulo-feed" className="text-3xl font-bold tracking-tight">Seu feed</h1>
             <p className="text-zinc-600">Reviews de quem você segue</p>
           </div>
-          <button className="btn-secundario" disabled={reviews.carregando} onClick={() => void reviews.carregar(0)}>
+          <button className="btn-secundario" disabled={reviews.carregando} onClick={() => { setAtualizacao((n) => n + 1); void reviews.carregar(0); }}>
             <span aria-hidden="true">↻</span> Atualizar
           </button>
         </div>
@@ -47,6 +51,8 @@ export default function FeedPage() {
             Ver uma árvore de exemplo
           </Link>
         )}
+
+        <AvisosDeReescuta key={atualizacao} />
 
         <ListaDeReviews
           {...reviews}

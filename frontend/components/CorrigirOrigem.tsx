@@ -1,30 +1,21 @@
 "use client";
 
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useState, type FormEvent } from "react";
 
 import { MensagemErro } from "@/components/MensagemErro";
 import { apiGet, type Page, type Post } from "@/lib/api";
 import { servidorCorrigeOrigem, trocarOrigem, type OrigemCorrigida } from "@/lib/origem";
+import { useDisponivel } from "@/lib/useDisponivel";
 import { usePaginacao } from "@/lib/usePaginacao";
 
 type Props = { post: Post; aoCorrigir: (novo: OrigemCorrigida) => void };
 
 /** Troca a origem de uma review derivada. Não transforma raiz em derivada nem remove a origem. */
 export function CorrigirOrigem({ post, aoCorrigir }: Props) {
-  const [disponivel, setDisponivel] = useState(false);
+  const disponivel = useDisponivel(servidorCorrigeOrigem);
   const [aberto, setAberto] = useState(false);
   const [corrigida, setCorrigida] = useState(false);
   const [reputacaoPendente, setReputacaoPendente] = useState(false);
-
-  useEffect(() => {
-    let ativa = true;
-    void servidorCorrigeOrigem().then((sim) => {
-      if (ativa) setDisponivel(sim);
-    });
-    return () => {
-      ativa = false;
-    };
-  }, []);
 
   if (!disponivel || !post.origem_id) return null;
 
