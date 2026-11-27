@@ -10,8 +10,8 @@ const merriweather = Merriweather({
 });
 
 export const metadata: Metadata = {
-  title: "Descoberta musical",
-  description: "Descubra músicas pelas pessoas.",
+  title: "scuta",
+  description: "scuta: descubra músicas pelas pessoas.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

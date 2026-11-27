@@ -11,7 +11,7 @@ Documento inicial baseado nas mensagens de texto da conversa de WhatsApp. Ideias
 - **Como a rede resolve:** conectar reviews derivadas às suas origens e tornar visível a contribuição das pessoas por meio de árvores de recomendações e reputação.
 - **Impacto pretendido:** incentivar a descoberta e a divulgação de artistas com menor visibilidade, como Daniel destacou na conversa.
 - **Sinal de sucesso proposto, a validar:** pessoas descobrem uma música por outra pessoa e publicam uma review ligada à recomendação original.
-- **Pendente de reunião (Etapa 1):** recorte específico do público (a rubrica valoriza algo como "estudantes da UFPB que querem descobrir artistas independentes locais" mais que "gente que gosta de música") e nome definitivo da rede. Enquanto isso, seed e interface usam o recorte provisório acima.
+- **Pendente de reunião (Etapa 1):** recorte específico do público (a rubrica valoriza algo como "estudantes da UFPB que querem descobrir artistas independentes locais" mais que "gente que gosta de música") Enquanto isso, seed e interface usam o recorte provisório acima. O nome da rede foi definido em 27/11: **scuta**.
 
 ## Direções de produto registradas
 
@@ -826,3 +826,10 @@ Entrega só a **API das bibliotecas**. **Reescutas** (aviso "Ouvi novamente", li
 - Depende do backend do PR #100. Sem ele, a página avisa que as bibliotecas não estão disponíveis.
 - "Ouvi novamente" e os avisos no feed continuam fora: não há backend. A #45 permanece aberta.
 - Claude Code fez as telas e os testes. Não houve revisão por outra pessoa.
+
+## Nome e marca: scuta (27/11/2026)
+
+- Cecília informou que a rede se chama **scuta** e forneceu o kit de logo. Substitui “MeetMusic” (provisório) e o título “Descoberta musical”.
+- O ícone (balão de conversa com uma nota) aparece na barra, na página inicial e como ícone da aba; o nome usa a Merriweather já adotada.
+- A disponibilidade do nome e do domínio não foi verificada.
+- Claude Code aplicou a marca no site.

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Marca } from "@/components/Marca";
 import { AlbumScene } from "@/components/MusicalHeader";
 
 export function Landing() {
@@ -7,6 +8,7 @@ export function Landing() {
     <div className="album-layout">
       <AlbumScene />
       <section className="album-content text-center" aria-labelledby="chamada">
+        <p className="mb-6"><Marca grande /></p>
         <p className="mb-4 text-xs font-bold uppercase tracking-widest text-brand-700">Música conecta pessoas</p>
         <h2 id="chamada" className="mb-5 text-3xl font-bold tracking-tight sm:text-4xl">De onde veio essa música?</h2>
         <p className="mb-8 text-lg leading-relaxed text-zinc-700">
