@@ -62,7 +62,7 @@ function Review({ id }: { id: string }) {
       <article className="space-y-5 rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm">
         <header className="flex flex-wrap items-center gap-5">
           <Capa musica={post.musica} />
-          <div className="min-w-0 flex-1 space-y-1">
+          <div className="min-w-0 flex-1 basis-48 space-y-1">
             <h1 className="break-words text-3xl font-bold tracking-tight">{post.musica.titulo}</h1>
             <p className="break-words text-lg text-zinc-700">{post.musica.artista}</p>
             <p className="break-words text-sm text-zinc-500">{nomeDaVersao(post.musica)}</p>
