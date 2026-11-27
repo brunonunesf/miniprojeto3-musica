@@ -20,7 +20,7 @@ test("cadastro, Bearer, refresh, redirecionamento público e saída entre abas",
   page.on("pageerror", error => erros.push(error.message));
   await page.goto("/usuarios");
   await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole("heading", { name: "Usuários", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Pessoas", exact: true })).toHaveCount(0);
   await cadastrar(page);
   const token = await page.evaluate(() => localStorage.getItem("token"));
   expect(token).toBeTruthy();
@@ -32,7 +32,7 @@ test("cadastro, Bearer, refresh, redirecionamento público e saída entre abas",
   await expect(page).toHaveURL("http://localhost:3000/");
   const outra = await context.newPage();
   await outra.goto("/usuarios");
-  await expect(outra.getByRole("heading", { name: "Usuários", exact: true })).toBeVisible();
+  await expect(outra.getByRole("heading", { name: "Pessoas", exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Sair", exact: true }).click();
   await expect(page).toHaveURL(/\/login$/);
   await expect(outra).toHaveURL(/\/login$/);

@@ -7,7 +7,7 @@ export function UserCard({ user }: { user: User }) {
   return (
     <Link
       href={`/usuarios/${user.username}`}
-      className="flex items-center gap-3 rounded-lg border bg-white p-3 hover:border-brand-500"
+      className="flex h-full items-center gap-3 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm hover:border-brand-500"
     >
       <Avatar user={user} />
       <div className="min-w-0">
