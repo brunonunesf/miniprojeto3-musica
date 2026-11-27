@@ -101,6 +101,51 @@ test("autora corrige a origem com confirmação e sem falso sucesso", async ({ p
   expect(corpos).toEqual([{ origem_id: 4 }, { origem_id: 4 }]);
 });
 
+test("depois de corrigir a origem, reabrir perfil e review mostra os dados novos", async ({ page }) => {
+  await entrar(page);
+  const eu = await page.evaluate(async () =>
+    (await fetch("http://localhost:8000/auth/eu", { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } })).json(),
+  );
+  let corrigida = false;
+  const minha = () => ({
+    ...review(7, eu),
+    origem_id: corrigida ? 4 : 3,
+    origem: { id: corrigida ? 4 : 3, autor: { name: corrigida ? "Caio" : "Bia" } },
+  });
+  await page.route(naApi("/openapi.json"), (route) => route.fulfill({ json: { paths: { "/posts/{post_id}/origem": { patch: {} } } } }));
+  await page.route(naApi("/posts/7"), (route) => {
+    if (route.request().resourceType() !== "fetch") return route.fallback();
+    return route.fulfill({ json: minha() });
+  });
+  await page.route(naApi("/musicas/1/reviews"), (route) => route.fulfill(pagina([review(3), review(4, caio)])));
+  await page.route(naApi("/posts/7/origem"), (route) => {
+    if (route.request().method() !== "PATCH") return route.fallback();
+    corrigida = true;
+    return route.fulfill({ json: minha() });
+  });
+  // O total é o que o servidor devolve a cada abertura: antes e depois do recálculo.
+  await page.route(naApi("/usuarios/bia"), (route) => {
+    if (route.request().resourceType() !== "fetch") return route.fallback();
+    return route.fulfill({ json: { ...bia, seguidores: 0, seguindo: 0, eu_sigo: false, reputacao: corrigida ? 0 : 4 } });
+  });
+  await page.route(naApi("/usuarios/bia/posts"), (route) => route.fulfill(pagina([])));
+
+  await page.goto("/usuarios/bia");
+  await expect(page.getByText("4 de reputação")).toBeVisible();
+
+  await page.goto("/posts/7");
+  await page.getByRole("button", { name: "Corrigir origem" }).click();
+  await page.getByRole("radio", { name: /Review de Caio/ }).check();
+  await page.getByRole("button", { name: "Continuar" }).click();
+  await page.getByRole("button", { name: "Confirmar correção" }).click();
+  await expect(page.getByText("Origem corrigida.")).toBeVisible();
+
+  await page.goto("/usuarios/bia");
+  await expect(page.getByText("0 de reputação")).toBeVisible();
+  await page.goto("/posts/7");
+  await expect(page.getByText("Hoje: a review de Caio.")).toBeVisible();
+});
+
 test("sem a rota no servidor, a correção de origem não aparece", async ({ page }) => {
   await entrar(page);
   const eu = await page.evaluate(async () =>

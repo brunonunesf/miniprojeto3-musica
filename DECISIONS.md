@@ -629,4 +629,5 @@ Primeira parte da #10 (criação, leitura e exclusão). **Correção de origem (
 - Correção de origem e Descobrir foram feitas sobre contratos propostos pelo front, testados com respostas simuladas: `PATCH /posts/{id}/origem` e `GET /descobrir`. As rotas ainda não existem no backend (#10, #23); as telas não comprovam integração.
 - "Corrigir origem" aparece só para quem escreveu uma review derivada e quando o servidor publica a rota. Pede confirmação e não converte raiz nem remove origem.
 - Sem a rota de Descobrir, a página continua avisando que as sugestões estão em preparação.
+- O PR #89 propõe encerrar a #42 e a #56 apenas quanto ao front, validado com respostas simuladas, como o texto das issues permite. O funcionamento com o servidor continua pendente na #10 e na #23. As issues pedem revisão de outra pessoa; o time havia decidido não revisar PRs.
 - Claude Code fez as telas e os testes.
