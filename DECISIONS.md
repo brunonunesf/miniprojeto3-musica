@@ -666,8 +666,9 @@ probabilidade; sugestão não comprova escuta/descoberta. Testes sintéticos nã
 comprovam satisfação real de usuários. Aceite escolhido: testes e relatório
 local, sem avaliação humana ou métrica offline obrigatória.
 
-Código, testes e documentação elaborados com Codex. Revisão por outra pessoa
-continua necessária antes de merge. Esta entrega não declara API integrada.
+Código, testes e documentação elaborados com Codex. Bruno autorizou publicar
+e integrar esta entrega sem aguardar revisão independente; não há alegação de
+aprovação de outra pessoa. Esta entrega não declara API integrada.
 
 Validação local: suíte completa com 400 aprovados; após adicionar dois cenários
 finais, suíte de dados com 208 aprovados e recomendador com 19 aprovados.
@@ -675,3 +676,9 @@ Aviso preexistente TestClient/HTTPX. Instalação congelada, consistência do lo
 compilação, demonstração e diff aprovados. Evidências e reprodução em
 `docs/evidencias/issue55/README.md` e `demo.json`. Banco de testes temporário;
 nenhum banco pessoal alterado.
+
+## Parecer sobre as funcionalidades opcionais — issue #53 (26/11/2026)
+
+- Esboços e comparação em [docs/funcionalidades-opcionais.md](docs/funcionalidades-opcionais.md). É proposta de Cecília, redigida com Claude Code; a priorização continua sendo do trio.
+- Recomendação para 27/11: não implementar grupos, mensagens diretas nem integrações com streaming. O diferencial a demonstrar é a corrente de descobertas. Depois da entrega, avaliar primeiro os grupos, que reaproveitam os cartões do feed.
+- Spotify: pela documentação oficial, o modo de desenvolvimento exige dono com Premium e aceita até 5 usuários; o modo estendido só aceita organizações. Deezer: viabilidade não comprovada. Nenhuma integração foi entregue nem testada.
