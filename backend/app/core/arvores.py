@@ -2,6 +2,7 @@
 from collections import deque
 from dataclasses import dataclass, replace
 from typing import Iterable, Literal
+from weakref import WeakSet
 
 Identificador = int | str
 
@@ -16,6 +17,10 @@ class NoInexistente(ErroArvore):
 
 class EstruturaInvalida(ErroArvore):
     pass
+
+
+class PlanoTrocaInvalido(ErroArvore):
+    """Plano não emitido por esta floresta ou baseado em estado antigo."""
 
 
 class ParametroInvalido(ErroArvore):
@@ -56,8 +61,25 @@ class Pagina:
     tem_mais: bool
 
 
+@dataclass(frozen=True, slots=True, weakref_slot=True, eq=False)
+class PlanoTrocaOrigem:
+    """Snapshot interno; apenas planos emitidos pela floresta podem ser aplicados."""
+    review_id: Identificador
+    origem_anterior_id: Identificador
+    nova_origem_id: Identificador
+    subarvore_ids: tuple[Identificador, ...]
+    caminho_anterior: tuple[Identificador, ...]
+    caminho_novo: tuple[Identificador, ...]
+    alterou: bool
+    _instancia: object
+    _revisao: int
+
+
 class FlorestaReviews:
     def __init__(self) -> None:
+        self._instancia = object()
+        self._revisao = 0
+        self._planos: WeakSet[PlanoTrocaOrigem] = WeakSet()
         self._nos: dict[Identificador, RegistroReview] = {}
         self._filhos: dict[Identificador, list[Identificador]] = {}
         self._raizes: dict[Identificador, list[Identificador]] = {}
@@ -94,6 +116,7 @@ class FlorestaReviews:
                 atual = nova._nos[atual].origem_id
             concluidos.update(caminho)
         self._nos, self._filhos, self._raizes = nova._nos, nova._filhos, nova._raizes
+        self._revisao += 1
 
     def inserir(self, no: RegistroReview) -> None:
         """Insere ID novo em O(1) esperado; nunca muda o pai de um nó existente."""
@@ -111,6 +134,7 @@ class FlorestaReviews:
             self._raizes.setdefault(no.musica_id, []).append(no.review_id)
         else:
             self._filhos[no.origem_id].append(no.review_id)
+        self._revisao += 1
 
     def consultar(self, review_id: Identificador) -> RegistroReview:
         _validar_id(review_id)
@@ -121,9 +145,67 @@ class FlorestaReviews:
 
     def marcar_apagada(self, review_id: Identificador) -> RegistroReview:
         no = self.consultar(review_id)
+        if no.apagada:
+            return no
         apagada = replace(no, apagada=True)
         self._nos[review_id] = apagada
+        self._revisao += 1
         return apagada
+
+    def preparar_troca_origem(self, review_id: Identificador,
+                             nova_origem_id: Identificador) -> PlanoTrocaOrigem:
+        """Valida sem mutação; caminhos e BFS completos, sem limite de exibição."""
+        no = self.consultar(review_id)
+        destino = self.consultar(nova_origem_id)
+        if no.apagada or no.origem_id is None:
+            raise EstruturaInvalida('Somente review ativa derivada pode trocar origem')
+        if destino.apagada or destino.musica_id != no.musica_id:
+            raise EstruturaInvalida('Nova origem deve estar ativa e ser da mesma música')
+
+        def caminho(inicio):
+            ids = []
+            while inicio is not None:
+                if inicio == review_id:
+                    raise EstruturaInvalida('Troca de origem criaria ciclo')
+                ids.append(inicio)
+                inicio = self._nos[inicio].origem_id
+            return tuple(ids)
+
+        novo = caminho(nova_origem_id)
+        antigo = caminho(no.origem_id)
+        alterou = no.origem_id != nova_origem_id
+        afetados = []
+        if alterou:
+            pendentes = deque([review_id])
+            while pendentes:
+                atual = pendentes.popleft()
+                afetados.append(atual)
+                pendentes.extend(self._filhos[atual])
+        plano = PlanoTrocaOrigem(review_id, no.origem_id, nova_origem_id,
+                                tuple(afetados), antigo, novo, alterou,
+                                self._instancia, self._revisao)
+        self._planos.add(plano)
+        return plano
+
+    def aplicar_troca_origem(self, plano: PlanoTrocaOrigem) -> PlanoTrocaOrigem:
+        """Aplica plano emitido nesta revisão; chamador garante sincronização."""
+        if (not isinstance(plano, PlanoTrocaOrigem)
+                or plano not in self._planos
+                or plano._instancia is not self._instancia
+                or plano._revisao != self._revisao):
+            raise PlanoTrocaInvalido('Plano desconhecido ou estado da floresta alterado')
+        if not plano.alterou:
+            return plano
+        # Prepara cópias antes de publicar os novos vínculos.
+        antigo = self._filhos[plano.origem_anterior_id].copy()
+        antigo.remove(plano.review_id)
+        novo = [*self._filhos[plano.nova_origem_id], plano.review_id]
+        registro = replace(self._nos[plano.review_id], origem_id=plano.nova_origem_id)
+        self._filhos[plano.origem_anterior_id] = antigo
+        self._filhos[plano.nova_origem_id] = novo
+        self._nos[plano.review_id] = registro
+        self._revisao += 1
+        return plano
 
     def pai(self, review_id: Identificador) -> RegistroReview | None:
         origem = self.consultar(review_id).origem_id

@@ -717,6 +717,26 @@ nenhum banco pessoal alterado.
 - O PR #89 propõe encerrar a #42 e a #56 apenas quanto ao front, validado com respostas simuladas, como o texto das issues permite. O funcionamento com o servidor continua pendente na #10 e na #23. As issues pedem revisão de outra pessoa; o time havia decidido não revisar PRs.
 - Claude Code fez as telas e os testes.
 
+## Troca estrutural de origem — #49 (26/11/2026)
+
+- Implementação pura em `FlorestaReviews`, em duas etapas: preparar sem mutação
+  e aplicar plano imutável. Retorna subárvore BFS completa e caminhos anterior/novo
+  para consumo futuro da #51; não calcula reputação nem cria eventos.
+- Somente review ativa derivada pode mudar para destino ativo da mesma música.
+  Impede próprio nó e descendentes, inclusive através de referências apagadas.
+  Origem anterior apagada pode ser corrigida. Não converte raiz nem remove origem.
+- Origem atual ativa é sucesso sem alteração: afetados vazios e caminhos iguais.
+  Mutação efetiva ou reconstrução invalida planos; falhas/no-ops não invalidam.
+  Planos copiados, de outra instância ou antigos são rejeitados antes da escrita.
+- A revisão é global à instância: até alterações em outro ramo invalidam planos,
+  favorecendo segurança e simplicidade. Referências fracas evitam reter planos.
+- Movimento acrescenta a review ao fim dos filhos do destino e conserva a ordem
+  dos demais nós; reconstruções seguem a ordem dos registros carregados.
+- Preparo O(S + H), aplicação O(D) por cópias das listas dos pais; não é O(1)
+  global. Contrato completo e integração de sincronização estão no README do core.
+- Banco/API/recuperação permanecem na #10; recálculo na #51 e interface na #42.
+  Esta implementação não comprova integração dessas entregas.
+
 ## API do Descobrir — issue #23 — 27/11/2026
 
 Liga o recomendador TF-IDF do Bruno (`core/recomendador.py`, #55) à API, no contrato que a tela da Cecília (#56) já usa.
